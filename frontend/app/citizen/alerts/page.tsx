@@ -1,125 +1,111 @@
-import { Bell, AlertTriangle, CheckCircle, Info, Phone, Shield } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+'use client';
 
-// Mock data - in production this would come from API
-const alerts = [
-  {
-    id: 1,
-    type: 'info',
-    title: 'Normal Water Levels',
-    message: 'Water levels in your district are within normal range.',
-    timestamp: '2 hours ago',
-    active: true,
-  },
-];
+import Link from 'next/link';
+import { ArrowLeft, Bell, MessageSquare, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 
 export default function AlertsPage() {
+  const [activeTab, setActiveTab] = useState('all');
+
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 pb-20">
+
       {/* Header */}
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-200 mb-2">
-          <Bell className="h-8 w-8 text-white" />
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+          <Link href="/citizen" className="p-2 -ml-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">Flood Alerts</h1>
-        <p className="text-slate-600">
-          Real-time flood warnings for your area
-        </p>
       </div>
 
-      {/* Current Status */}
-      <Card className="border-0 bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg shadow-emerald-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <CheckCircle className="h-7 w-7 text-white" />
+      <div className="max-w-3xl mx-auto px-6 py-6">
+
+        {/* Settings Toggle */}
+        <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-[#006DC4]">
+              <MessageSquare className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">All Clear</h3>
-              <p className="text-sm text-emerald-100">No active flood warnings in your area</p>
+              <h4 className="text-sm font-bold text-slate-900">SMS Alerts</h4>
+              <p className="text-xs text-slate-500">Receive critical updates on your phone</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="h-6 w-10 bg-[#006DC4] rounded-full relative cursor-pointer">
+            <div className="absolute top-1 right-1 h-4 w-4 bg-white rounded-full shadow-sm" />
+          </div>
+        </div>
 
-      {/* Alert History */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-slate-700">Recent Updates</h3>
-        
-        {alerts.map((alert) => (
-          <div key={alert.id} className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-            <div className="flex items-start gap-3">
-              <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                <Info className="h-4 w-4 text-blue-600" />
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          {['all', 'critical', 'info'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-colors ${activeTab === tab
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        <div className="space-y-4">
+          {/* Alert 1 */}
+          <div className="bg-white p-4 rounded-xl border border-l-4 border-slate-100 border-l-amber-500 shadow-sm flex gap-4">
+            <div className="mt-1">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-1">
+                <h4 className="text-sm font-bold text-slate-900">Flood Warning: Zone B</h4>
+                <span className="text-[10px] text-slate-400">2h ago</span>
               </div>
-              <div>
-                <h4 className="font-semibold text-blue-800">{alert.title}</h4>
-                <p className="text-sm text-blue-700 mt-0.5">{alert.message}</p>
-                <span className="text-xs text-blue-500 mt-1 block">{alert.timestamp}</span>
-              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Water level rising above danger mark at Ravidas Ghat. Please avoid the area.
+              </p>
             </div>
           </div>
-        ))}
+
+          {/* Alert 2 */}
+          <div className="bg-white p-4 rounded-xl border border-l-4 border-slate-100 border-l-emerald-500 shadow-sm flex gap-4">
+            <div className="mt-1">
+              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-1">
+                <h4 className="text-sm font-bold text-slate-900">Report Verified</h4>
+                <span className="text-[10px] text-slate-400">Yesterday</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your report regarding "Blocked Drain" in Sector 4 has been verified and forwarded to municipal authorites.
+              </p>
+            </div>
+          </div>
+
+          {/* Alert 3 */}
+          <div className="bg-white p-4 rounded-xl border border-l-4 border-slate-100 border-l-blue-500 shadow-sm flex gap-4 opacity-75">
+            <div className="mt-1">
+              <Bell className="h-5 w-5 text-blue-500" />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-1">
+                <h4 className="text-sm font-bold text-slate-900">Weekly Forecast</h4>
+                <span className="text-[10px] text-slate-400">2 days ago</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Expect light to moderate rainfall over the weekend. No flooding is anticipated.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
-
-      {/* Alert Types Explanation */}
-      <Card className="border-slate-200 shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <CardTitle className="text-lg">Understanding Alerts</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-red-50 rounded-xl">
-            <Badge className="bg-gradient-to-r from-red-500 to-rose-600 text-white border-0">Critical</Badge>
-            <span className="text-sm text-slate-700">Evacuate immediately</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-xl">
-            <Badge className="bg-gradient-to-r from-orange-500 to-amber-600 text-white border-0">High</Badge>
-            <span className="text-sm text-slate-700">Prepare for evacuation</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-xl">
-            <Badge className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0">Medium</Badge>
-            <span className="text-sm text-slate-700">Stay alert, avoid low areas</span>
-          </div>
-          <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
-            <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0">Low</Badge>
-            <span className="text-sm text-slate-700">Normal conditions</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Emergency Contacts */}
-      <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-        <div className="absolute inset-0 gradient-mesh opacity-20" />
-        <CardHeader className="relative pb-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
-              <Phone className="h-5 w-5 text-white" />
-            </div>
-            <CardTitle className="text-lg text-white">Emergency Contacts</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="relative space-y-3">
-          <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-            <span className="text-slate-300">National Emergency</span>
-            <a href="tel:112" className="font-bold text-emerald-400 text-lg">112</a>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-            <span className="text-slate-300">NDMA Helpline</span>
-            <a href="tel:1078" className="font-bold text-emerald-400 text-lg">1078</a>
-          </div>
-          <div className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-            <span className="text-slate-300">Flood Control Room</span>
-            <a href="tel:1070" className="font-bold text-emerald-400 text-lg">1070</a>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

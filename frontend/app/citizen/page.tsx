@@ -2,359 +2,224 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useMutation } from '@tanstack/react-query';
 import {
-  Bell, AlertTriangle, MapPin, Navigation, TrendingUp,
-  Droplets, Phone, FileText, ChevronRight, Activity,
-  Calendar, Clock, Shield, CheckCircle2, MessageSquare,
-  Loader2
+  Shield, AlertTriangle, FileText, Leaf, Bell,
+  MapPin, ChevronRight, Phone, Trophy, ExternalLink
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { emergencyAPI } from '@/lib/api';
 
 export default function CitizenDashboard() {
   const [activeAlert, setActiveAlert] = useState(true);
-  const [citizenPhone, setCitizenPhone] = useState('');
-  const [whatsappSubscribed, setWhatsappSubscribed] = useState(false);
 
-  const testAlertMutation = useMutation({
-    mutationFn: () => emergencyAPI.activate({
-      message: 'This is a TEST alert from AquaGuardians. You are now subscribed to emergency WhatsApp alerts for flood warnings in your area. Stay safe!',
-      severity: 'info',
-    }),
-    onSuccess: (data: any) => {
-      toast.success('✅ Test WhatsApp alert sent! Check your WhatsApp.');
-      setWhatsappSubscribed(true);
-    },
-    onError: (error: any) => {
-      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
-      toast.error(`Failed to send test alert: ${detail}`);
-    },
-  });
-
-  const handleSubscribe = () => {
-    if (!citizenPhone.trim()) {
-      toast.error('Please enter your phone number');
-      return;
-    }
-    testAlertMutation.mutate();
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+    <div className="pb-20 font-sans">
+
+      {/* ── Header Section ── */}
+      <div className="bg-white border-b border-slate-100 sticky top-14 md:top-0 z-20">
+        <div className="max-w-5xl mx-auto px-6 py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Citizen Dashboard</h1>
-              <p className="text-sm text-slate-500 mt-0.5">Stay safe, stay informed</p>
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
+                Welcome back, <span className="text-[#006DC4]">Citizen</span>
+              </h1>
+              <p className="text-slate-500 mt-1 flex items-center gap-2 text-sm font-medium">
+                <MapPin className="h-4 w-4 text-emerald-500" />
+                Varanasi, Sector 4 • <span className="text-emerald-600">Safe Zone</span>
+              </p>
             </div>
+
             <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-xs text-slate-500">Current Location</p>
-                <p className="text-sm font-medium text-slate-900 flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5 text-emerald-600" />
-                  Varanasi, UP
-                </p>
+              <div className="bg-blue-50 px-4 py-2 rounded-xl border border-blue-100 flex items-center gap-3">
+                <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                <div className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                  River Level: Normal
+                </div>
               </div>
-              <Button size="sm" variant="outline" className="rounded-lg">
-                <Bell className="h-4 w-4 mr-1.5" />
-                Alerts
-              </Button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Active Alert Banner */}
-        {activeAlert && (
-          <Alert className="mb-6 border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-900 flex items-center justify-between">
-              <span>
-                <strong>Moderate Flood Warning:</strong> Water level rising in Ganga River. Expected to reach 45.2m by tomorrow.
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => setActiveAlert(false)} className="text-amber-900 hover:text-amber-950">
-                Dismiss
-              </Button>
-            </AlertDescription>
-          </Alert>
+      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+
+        {/* ── Status Banner (Conditional) ── */}
+        {activeAlert ? (
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-100 p-6 flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
+            <div className="h-12 w-12 rounded-full bg-amber-100 flex items-center justify-center shrink-0 text-amber-600">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-amber-900">Moderate Flood Warning</h3>
+              <p className="text-amber-800/80 text-sm mt-1 leading-relaxed">
+                Water levels in Ganga rising near Ghat 4. Expected to increase by 45cm in the next 6 hours. Please stay alert.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveAlert(false)}
+              className="px-4 py-2 bg-white rounded-lg text-sm font-bold text-amber-700 shadow-sm hover:bg-amber-50 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        ) : (
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-6 flex items-center gap-6 shadow-sm">
+            <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+              <Shield className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-emerald-900">You are safe</h3>
+              <p className="text-emerald-800/80 text-sm mt-1">No immediate flood risks detected in your area.</p>
+            </div>
+          </div>
         )}
 
-        {/* Today's Highlights */}
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Today's Highlights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="border-slate-200 bg-white hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <Shield className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">Safe</div>
-                </div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Your Area Status</p>
-              </CardContent>
-            </Card>
+        {/* ── Quick Actions Grid ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            <Card className="border-slate-200 bg-white hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Droplets className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">42.8m</div>
-                </div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Current Water Level</p>
-              </CardContent>
-            </Card>
+          {/* Am I Safe? */}
+          <Link href="/citizen/safety" className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-blue-100 transition-all duration-300">
+            <div className="absolute top-6 right-6 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#006DC4] mb-4 group-hover:scale-110 transition-transform">
+              <Shield className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Am I Safe?</h3>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Check real-time flood risk for your current location and find nearest shelters.
+            </p>
+          </Link>
 
-            <Card className="border-slate-200 bg-white hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">24h</div>
-                </div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Next Alert Check</p>
-              </CardContent>
-            </Card>
+          {/* Report Issue */}
+          <Link href="/citizen/report" className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-blue-100 transition-all duration-300">
+            <div className="absolute top-6 right-6 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 mb-4 group-hover:scale-110 transition-transform">
+              <FileText className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Report Issue</h3>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Spot rising water or blocked drains? Upload a photo and alert authorities instantly.
+            </p>
+          </Link>
 
-            <Card className="border-slate-200 bg-white hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-violet-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">3</div>
-                </div>
-                <p className="text-xs text-slate-500 uppercase tracking-wide">Active Warnings</p>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+          {/* Alerts */}
+          <Link href="/citizen/alerts" className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-blue-100 transition-all duration-300">
+            <div className="absolute top-6 right-6 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 mb-4 group-hover:scale-110 transition-transform">
+              <Bell className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">My Alerts</h3>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Manage your SMS/WhatsApp subscriptions and view past emergency notifications.
+            </p>
+          </Link>
 
-        {/* Main Features Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Feature 1: Alerts & Notifications */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-                  <Bell className="h-4 w-4 text-white" />
-                </div>
-                Alerts & Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 mb-4">
-                Get instant WhatsApp & SMS alerts when flood levels rise above safe thresholds in your area.
-              </p>
-              <div className="space-y-3 mb-4">
-                {/* WhatsApp Alerts — functional */}
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                  <div className="flex items-start gap-3">
-                    <MessageSquare className="h-4 w-4 text-emerald-600 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">WhatsApp Alerts</p>
-                      {whatsappSubscribed ? (
-                        <div className="flex items-center gap-1 mt-1">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                          <p className="text-xs text-emerald-700 font-medium">Subscribed — you'll receive flood alerts on WhatsApp</p>
-                        </div>
-                      ) : (
-                        <div className="mt-2 space-y-2">
-                          <Input
-                            placeholder="Enter your WhatsApp number (e.g. +919031851732)"
-                            value={citizenPhone}
-                            onChange={(e) => setCitizenPhone(e.target.value)}
-                            className="h-8 text-sm"
-                          />
-                          <Button
-                            size="sm"
-                            onClick={handleSubscribe}
-                            disabled={testAlertMutation.isPending}
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8"
-                          >
-                            {testAlertMutation.isPending ? (
-                              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
-                            ) : (
-                              <MessageSquare className="h-3 w-3 mr-1.5" />
-                            )}
-                            {testAlertMutation.isPending ? 'Sending test...' : 'Subscribe & Send Test Alert'}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+          {/* Farming Tips */}
+          <Link href="/citizen/farming" className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-blue-100 transition-all duration-300">
+            <div className="absolute top-6 right-6 h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
+              <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+              <Leaf className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Farming Tips</h3>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Get AI-powered crop advice based on water levels and seasonal weather forecasts.
+            </p>
+          </Link>
 
-                {/* SMS Alerts */}
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                  <Phone className="h-4 w-4 text-emerald-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">SMS Alerts Enabled</p>
-                    <p className="text-xs text-slate-500 mt-0.5">+91 98765-43210</p>
-                  </div>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                </div>
-
-                {/* Push Notifications */}
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
-                  <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">Push Notifications</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Real-time updates</p>
-                  </div>
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                </div>
-              </div>
-              <Link href="/citizen/alerts">
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-                  Manage Alerts
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Feature 2: Report Incidents */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <FileText className="h-4 w-4 text-white" />
-                </div>
-                Report Incidents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 mb-4">
-                Report blocked drainage, water logging, or infrastructure issues in your community.
-              </p>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-3 rounded-lg border border-slate-200 text-center hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer">
-                  <AlertTriangle className="h-5 w-5 text-slate-600 mx-auto mb-1.5" />
-                  <p className="text-xs font-medium text-slate-900">Drainage Block</p>
-                </div>
-                <div className="p-3 rounded-lg border border-slate-200 text-center hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer">
-                  <Droplets className="h-5 w-5 text-slate-600 mx-auto mb-1.5" />
-                  <p className="text-xs font-medium text-slate-900">Water Logging</p>
-                </div>
-              </div>
-              <Link href="/citizen/report">
-                <Button variant="outline" className="w-full border-slate-300 rounded-lg">
-                  Submit New Report
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Feature 3: Flood Predictions */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-violet-600 flex items-center justify-center">
-                  <TrendingUp className="h-4 w-4 text-white" />
-                </div>
-                Flood Predictions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 mb-4">
-                AI-powered 7-day flood forecasts for your area based on real-time data.
-              </p>
-              <div className="space-y-2 mb-4">
-                {[
-                  { day: 'Today', level: 'Low', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                  { day: 'Tomorrow', level: 'Moderate', color: 'text-amber-600', bg: 'bg-amber-50' },
-                  { day: 'Day 3', level: 'Low', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                ].map((item) => (
-                  <div key={item.day} className="flex items-center justify-between p-2 rounded-lg bg-slate-50">
-                    <span className="text-sm text-slate-700">{item.day}</span>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-md ${item.bg} ${item.color}`}>
-                      {item.level}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <Link href="/citizen/safety">
-                <Button variant="outline" className="w-full border-slate-300 rounded-lg">
-                  View Full Forecast
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Feature 4: Evacuation Routes */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center">
-                  <Navigation className="h-4 w-4 text-white" />
-                </div>
-                Evacuation Routes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600 mb-4">
-                Find the safest and fastest evacuation path during flood emergencies.
-              </p>
-              <div className="p-4 rounded-lg bg-slate-50 mb-4 border border-slate-200">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">Nearest Safe Zone</p>
-                    <p className="text-xs text-slate-500 mt-1">Sigra Relief Camp - 2.3 km away</p>
-                    <div className="flex items-center gap-1 mt-2 text-xs text-slate-600">
-                      <Clock className="h-3 w-3" />
-                      <span>Est. travel: 8 mins</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <Link href="/citizen/safety">
-                <Button variant="outline" className="w-full border-slate-300 rounded-lg">
-                  View Route Map
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <Card className="border-slate-200 bg-white">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          {/* NGO Ranking (New) */}
+          <div className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg hover:border-amber-100 transition-all duration-300">
+            <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-4 group-hover:scale-110 transition-transform">
+              <Trophy className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">NGO Heroes</h3>
+            <div className="space-y-3 mb-3">
               {[
-                { icon: Bell, text: 'Flood alert sent to your phone', time: '2 hours ago', color: 'text-emerald-600' },
-                { icon: FileText, text: 'Your drainage report was verified', time: '1 day ago', color: 'text-blue-600' },
-                { icon: TrendingUp, text: 'Water level decreased by 0.5m', time: '2 days ago', color: 'text-violet-600' },
-              ].map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                  <activity.icon className={`h-4 w-4 ${activity.color} mt-0.5`} />
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-900">{activity.text}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{activity.time}</p>
-                  </div>
+                { rank: 1, name: 'Red Cross', pts: '2.8k' },
+                { rank: 2, name: 'Green Earth', pts: '2.6k' },
+              ].map((ngo) => (
+                <div key={ngo.rank} className="flex items-center justify-between text-sm p-2 rounded-lg bg-slate-50">
+                  <span className="font-bold text-slate-700">#{ngo.rank} {ngo.name}</span>
+                  <span className="text-xs font-bold text-amber-600">{ngo.pts} pts</span>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+            <button className="text-xs font-bold text-[#006DC4] hover:underline flex items-center gap-1">
+              View Leaderboard <ChevronRight className="h-3 w-3" />
+            </button>
+          </div>
+
+          {/* Emergency Contacts (New) */}
+          <div className="group relative bg-red-50 rounded-2xl p-6 border border-red-100 shadow-[0_4px_20px_-4px_rgba(239,68,68,0.05)] hover:shadow-lg hover:border-red-200 transition-all duration-300">
+            <div className="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center text-red-600 mb-4 group-hover:scale-110 transition-transform animate-pulse">
+              <Phone className="h-6 w-6" />
+            </div>
+            <h3 className="text-xl font-bold text-red-900 mb-2">Emergency</h3>
+            <div className="space-y-2 mb-3">
+              <button
+                onClick={() => copyToClipboard('1077')}
+                className="w-full flex items-center justify-between p-2 bg-white/60 rounded-lg hover:bg-white transition-colors border border-red-100/50"
+              >
+                <span className="text-sm font-bold text-red-800">Flood Control</span>
+                <span className="text-sm font-mono text-red-600 font-bold">1077</span>
+              </button>
+              <button
+                onClick={() => copyToClipboard('100')}
+                className="w-full flex items-center justify-between p-2 bg-white/60 rounded-lg hover:bg-white transition-colors border border-red-100/50"
+              >
+                <span className="text-sm font-bold text-red-800">Police</span>
+                <span className="text-sm font-mono text-red-600 font-bold">100</span>
+              </button>
+              <button
+                onClick={() => copyToClipboard('102')}
+                className="w-full flex items-center justify-between p-2 bg-white/60 rounded-lg hover:bg-white transition-colors border border-red-100/50"
+              >
+                <span className="text-sm font-bold text-red-800">Ambulance</span>
+                <span className="text-sm font-mono text-red-600 font-bold">102</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-red-600/70 font-medium text-center">Tap numbers to copy</p>
+          </div>
+
+        </div>
+
+        {/* ── River Stats Summary (Mini Dashboard) ── */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Live River Statistics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-1">Water Level</div>
+              <div className="text-2xl font-black text-[#006DC4]">84.5m</div>
+              <div className="text-xs text-emerald-600 font-bold mt-1">Normal Range</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-1">Flow Rate</div>
+              <div className="text-2xl font-black text-slate-800">1,240</div>
+              <div className="text-xs text-slate-400 mt-1">cusecs</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-1">Rainfall (24h)</div>
+              <div className="text-2xl font-black text-slate-800">12mm</div>
+              <div className="text-xs text-slate-400 mt-1">Light Rain</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-slate-500 mb-1">Forecast</div>
+              <div className="text-2xl font-black text-slate-800">Sunny</div>
+              <div className="text-xs text-slate-400 mt-1">Next 12 hours</div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

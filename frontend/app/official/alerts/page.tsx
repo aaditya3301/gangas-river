@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import {
   Bell,
   AlertOctagon,
@@ -17,14 +17,9 @@ import {
   Smartphone,
   Mail,
   Siren,
-  PhoneCall
+  PhoneCall,
+  History
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { emergencyAPI } from '@/lib/api';
 
@@ -79,387 +74,233 @@ export default function AlertsPage() {
   const [severity, setSeverity] = useState<string>('warning');
   const [targetZone, setTargetZone] = useState<string>('all');
   const [channels, setChannels] = useState<string[]>(['sms', 'push']);
-  const [phoneNumbers, setPhoneNumbers] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
 
   const sendAlertMutation = useMutation({
     mutationFn: async (data: { title: string; message: string; severity: string; zone: string; channels: string[] }) => {
-      // In production, this would call the API
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      return { success: true, recipients: Math.floor(Math.random() * 20000) + 5000 };
+      // Format message with title since backend takes a single message string
+      const formattedMessage = `*${data.title.toUpperCase()}*\n\n${data.message}`;
+      return await emergencyAPI.activate({
+        message: formattedMessage,
+        severity: data.severity
+      });
     },
-    onSuccess: (data) => {
-      toast.success(`Alert sent to ${data.recipients.toLocaleString()} recipients!`);
+    onSuccess: (data: any) => {
+      toast.success(`Broadcast Initiated`, {
+        description: `Sent to ${data.successful} / ${data.total} emergency contacts.`
+      });
       setTitle('');
       setMessage('');
       setShowConfirm(false);
     },
-    onError: (error: Error) => {
-      toast.error('Failed to send alert: ' + error.message);
+    onError: (error: any) => {
+      toast.error('Broadcast Failed', {
+        description: error.message || 'Check connection details'
+      });
     },
   });
 
   const handleSend = () => {
     if (!title || !message) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-    if (channels.length === 0) {
-      toast.error('Please select at least one channel');
+      toast.error('Please fill in all fields');
       return;
     }
     setShowConfirm(true);
   };
 
-  const emergencyCallMutation = useMutation({
-    mutationFn: emergencyAPI.activate,
-    onSuccess: (data: any) => {
-      toast.success(`Voice calls initiated! ${data.successful}/${data.total_calls} calls successful.`);
-      setShowConfirm(false);
-      setPhoneNumbers('');
-    },
-    onError: (error: any) => {
-      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
-      toast.error(`Voice call failed: ${detail}`);
-    },
-  });
-
   const confirmSend = () => {
-    // If voice call channel is selected, also trigger Twilio calls
-    if (channels.includes('voice')) {
-      const numbers = phoneNumbers.split(',').map(n => n.trim()).filter(n => n.length > 0);
-      if (numbers.length === 0) {
-        toast.error('Please enter phone numbers for voice call channel');
-        return;
-      }
-      emergencyCallMutation.mutate({
-        title,
-        message,
-        severity,
-        phone_numbers: numbers,
-      });
-    }
-
-    // Also send the regular alert (SMS, push, etc.)
-    sendAlertMutation.mutate({
-      title,
-      message,
-      severity,
-      zone: targetZone,
-      channels,
-    });
+    sendAlertMutation.mutate({ title, message, severity, zone: targetZone, channels });
   };
 
   const toggleChannel = (channel: string) => {
     if (channels.includes(channel)) {
-      setChannels(channels.filter((c) => c !== channel));
+      setChannels(channels.filter(c => c !== channel));
     } else {
       setChannels([...channels, channel]);
     }
   };
 
-  const getSeverityStyles = (sev: string) => {
-    switch (sev) {
-      case 'critical':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'warning':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'info':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  const getSeverityIcon = (sev: string) => {
-    switch (sev) {
-      case 'critical':
-        return <AlertOctagon className="h-4 w-4" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4" />;
-      case 'info':
-        return <Bell className="h-4 w-4" />;
-      default:
-        return <Bell className="h-4 w-4" />;
-    }
-  };
-
-  const totalReached = mockAlertHistory.reduce((sum, a) => sum + a.recipients, 0);
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-200">
-          <Siren className="h-6 w-6 text-white" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Emergency Alerts</h1>
-          <p className="text-slate-500">Broadcast critical notifications to citizens</p>
+    <div className="pb-20 font-sans">
+
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Broadcast Alerts</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Send emergency notifications to citizens</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+            <Radio className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+            SYSTEM ONLINE
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* ── Send Alert Form ── */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+                <Megaphone className="h-5 w-5" />
+              </div>
               <div>
-                <p className="text-sm text-slate-500">Alerts Sent Today</p>
-                <p className="text-3xl font-bold text-slate-900">3</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                <Megaphone className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">People Reached</p>
-                <p className="text-3xl font-bold text-slate-900">{totalReached.toLocaleString()}</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Delivery Rate</p>
-                <p className="text-3xl font-bold text-slate-900">98.5%</p>
-              </div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <CheckCircle className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* New Alert Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Siren className="h-5 w-5 text-red-500" />
-              Broadcast New Alert
-            </CardTitle>
-            <CardDescription>Send emergency notifications to affected zones</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                Alert Title *
-              </label>
-              <Input
-                placeholder="e.g., Flash Flood Warning - Varanasi"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                Message *
-              </label>
-              <Textarea
-                placeholder="Enter the alert message..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={3}
-              />
-              <p className="text-xs text-gray-400 mt-1">{message.length}/160 characters (SMS limit)</p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                  Severity Level
-                </label>
-                <Select value={severity} onValueChange={setSeverity}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="info">Info (Blue)</SelectItem>
-                    <SelectItem value="warning">Warning (Yellow)</SelectItem>
-                    <SelectItem value="critical">Critical (Red)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                  Target Zone
-                </label>
-                <Select value={targetZone} onValueChange={setTargetZone}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {zones.map((zone) => (
-                      <SelectItem key={zone.value} value={zone.value}>
-                        {zone.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h2 className="text-lg font-bold text-slate-900">Compose Alert</h2>
+                <p className="text-sm text-slate-500">Select target zone and severity level</p>
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                Notification Channels
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant={channels.includes('sms') ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleChannel('sms')}
-                >
-                  <Smartphone className="h-4 w-4 mr-1" />
-                  SMS
-                </Button>
-                <Button
-                  type="button"
-                  variant={channels.includes('push') ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleChannel('push')}
-                >
-                  <Bell className="h-4 w-4 mr-1" />
-                  Push
-                </Button>
-                <Button
-                  type="button"
-                  variant={channels.includes('email') ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleChannel('email')}
-                >
-                  <Mail className="h-4 w-4 mr-1" />
-                  Email
-                </Button>
-                <Button
-                  type="button"
-                  variant={channels.includes('sirens') ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleChannel('sirens')}
-                >
-                  <Radio className="h-4 w-4 mr-1" />
-                  Sirens
-                </Button>
-                <Button
-                  type="button"
-                  variant={channels.includes('voice') ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleChannel('voice')}
-                >
-                  <PhoneCall className="h-4 w-4 mr-1" />
-                  Voice Call
-                </Button>
-              </div>
-            </div>
-
-            {channels.includes('voice') && (
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                  Voice Call Phone Numbers *
-                </label>
-                <Textarea
-                  placeholder="Enter phone numbers separated by commas&#10;e.g. +919876543210, +919876543211"
-                  value={phoneNumbers}
-                  onChange={(e) => setPhoneNumbers(e.target.value)}
-                  rows={2}
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  E.164 format required. Twilio trial accounts can only call verified numbers.
-                </p>
-              </div>
-            )}
-
-            {showConfirm ? (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3">
-                <p className="text-sm font-medium text-yellow-800">
-                  ⚠️ Confirm Emergency Alert Broadcast
-                </p>
-                <p className="text-xs text-yellow-700">
-                  This will send a {severity.toUpperCase()} alert to {targetZone === 'all' ? 'ALL zones' : targetZone} via {channels.join(', ').toUpperCase()}.
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={confirmSend}
-                    disabled={sendAlertMutation.isPending || emergencyCallMutation.isPending}
-                    className="bg-red-600 hover:bg-red-700"
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Target Zone</label>
+                  <select
+                    value={targetZone}
+                    onChange={(e) => setTargetZone(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   >
-                    {sendAlertMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 mr-2" />
-                    )}
-                    Confirm & Send
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowConfirm(false)}>
-                    Cancel
-                  </Button>
+                    {zones.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
+                  </select>
                 </div>
-              </div>
-            ) : (
-              <Button onClick={handleSend} className="w-full">
-                <Send className="h-4 w-4 mr-2" />
-                Review & Send Alert
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Alert History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Alerts</CardTitle>
-            <CardDescription>Last 24 hours of emergency broadcasts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {mockAlertHistory.map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-4 rounded-lg border ${getSeverityStyles(alert.severity)}`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {getSeverityIcon(alert.severity)}
-                    <span className="font-medium text-sm">{alert.title}</span>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Severity Level</label>
+                  <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                    {['info', 'warning', 'critical'].map((sev) => (
+                      <button
+                        key={sev}
+                        onClick={() => setSeverity(sev)}
+                        className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${severity === sev
+                          ? sev === 'critical' ? 'bg-red-500 text-white shadow-md' :
+                            sev === 'warning' ? 'bg-amber-500 text-white shadow-md' : 'bg-blue-500 text-white shadow-md'
+                          : 'text-slate-500 hover:bg-slate-200'
+                          }`}
+                      >
+                        {sev}
+                      </button>
+                    ))}
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                    {alert.status}
-                  </Badge>
-                </div>
-
-                <p className="text-sm opacity-80 mb-3">{alert.message}</p>
-
-                <div className="flex flex-wrap gap-3 text-xs opacity-70">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {new Date(alert.sentAt).toLocaleString()}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    {alert.recipients.toLocaleString()} reached
-                  </span>
-                  <span>
-                    Channels: {alert.channels.join(', ').toUpperCase()}
-                  </span>
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Alert Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Flash Flood Warning"
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase">Message Content</label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe the emergency and required actions..."
+                  className="w-full h-32 rounded-xl border border-slate-200 bg-white p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+                />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-500 uppercase">Delivery Channels</label>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => toggleChannel('sms')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sms') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>
+                    <Smartphone className="h-4 w-4" /> SMS
+                  </button>
+                  <button onClick={() => toggleChannel('push')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('push') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200'}`}>
+                    <Bell className="h-4 w-4" /> Push Notif
+                  </button>
+                  <button onClick={() => toggleChannel('sirens')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sirens') ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-500 border-slate-200'}`}>
+                    <Siren className="h-4 w-4" /> Public Sirens
+                  </button>
+                </div>
+              </div>
+
+              {!showConfirm ? (
+                <button
+                  onClick={handleSend}
+                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg shadow-slate-900/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  Review & Broadcast
+                </button>
+              ) : (
+                <div className="bg-red-50 rounded-xl p-4 border border-red-100 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+                    <div>
+                      <p className="text-sm font-bold text-red-800">Confirm Broadcast?</p>
+                      <p className="text-xs text-red-600 mt-0.5">This will immediately notify ~12,500 citizens in the selected zone.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={confirmSend}
+                      disabled={sendAlertMutation.isPending}
+                      className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+                    >
+                      {sendAlertMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
+                      CONFIRM SEND
+                    </button>
+                    <button
+                      onClick={() => setShowConfirm(false)}
+                      className="px-4 py-2.5 bg-white border border-red-200 text-red-700 font-bold rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Side Panel: History ── */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full max-h-[600px]">
+            <div className="px-6 py-4 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
+              <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                <History className="h-4 w-4 text-slate-400" />
+                Recent Alerts
+              </h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {mockAlertHistory.map((alert) => (
+                <div key={alert.id} className="p-4 rounded-xl border border-slate-100 bg-white hover:border-slate-200 transition-colors shadow-sm group">
+                  <div className="flex items-start justify-between mb-2">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${alert.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                      alert.severity === 'warning' ? 'bg-amber-100 text-amber-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                      {alert.severity}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-400">
+                      {new Date(alert.sentAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-sm mb-1 line-clamp-1">{alert.title}</h4>
+                  <p className="text-xs text-slate-500 mb-3 line-clamp-2">{alert.message}</p>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-50">
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                      <Users className="h-3 w-3" />
+                      {alert.recipients.toLocaleString()}
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                      <CheckCircle className="h-3 w-3" />
+                      {alert.status}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -7,24 +7,18 @@ import {
   BarChart2,
   LineChart,
   PieChart,
-  Calendar,
   Droplets,
-  ThermometerSun,
   Mountain,
   Users,
-  AlertTriangle,
-  FileText,
   Download,
   ArrowUp,
   ArrowDown,
-  Minus
+  Minus,
+  FileText
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// Mock historical data
+// Mock data
 const yearlyFloodData = [
   { year: 2019, events: 12, deaths: 45, displaced: 125000, damage_cr: 450 },
   { year: 2020, events: 8, deaths: 23, displaced: 78000, damage_cr: 280 },
@@ -35,25 +29,10 @@ const yearlyFloodData = [
   { year: 2025, events: 3, deaths: 8, displaced: 34000, damage_cr: 95 },
 ];
 
-const monthlyWaterLevel = [
-  { month: 'Jan', level: 62.3, avg: 61.5 },
-  { month: 'Feb', level: 60.8, avg: 60.2 },
-  { month: 'Mar', level: 59.2, avg: 58.9 },
-  { month: 'Apr', level: 58.5, avg: 58.1 },
-  { month: 'May', level: 60.1, avg: 59.8 },
-  { month: 'Jun', level: 68.4, avg: 67.2 },
-  { month: 'Jul', level: 78.9, avg: 76.5 },
-  { month: 'Aug', level: 82.3, avg: 79.8 },
-  { month: 'Sep', level: 76.5, avg: 74.2 },
-  { month: 'Oct', level: 69.8, avg: 68.5 },
-  { month: 'Nov', level: 65.2, avg: 64.8 },
-  { month: 'Dec', level: 63.1, avg: 62.5 },
-];
-
 const zoneDistribution = [
   { zone: 'Zone A (High Risk)', count: 45, area_km2: 125, population: 234000, color: 'bg-red-500' },
-  { zone: 'Zone B (Medium Risk)', count: 89, area_km2: 310, population: 567000, color: 'bg-yellow-500' },
-  { zone: 'Zone C (Low Risk)', count: 156, area_km2: 520, population: 890000, color: 'bg-green-500' },
+  { zone: 'Zone B (Medium Risk)', count: 89, area_km2: 310, population: 567000, color: 'bg-amber-500' },
+  { zone: 'Zone C (Low Risk)', count: 156, area_km2: 520, population: 890000, color: 'bg-emerald-500' },
 ];
 
 const recentPatterns = [
@@ -75,283 +54,162 @@ const recentPatterns = [
     trend: 'down',
     impact: 'Faster evacuation response required',
   },
-  {
-    title: 'Urbanization Impact',
-    description: 'Impervious surface area increased by 15% since 2015',
-    trend: 'up',
-    impact: 'Increased runoff and waterlogging',
-  },
 ];
 
 export default function InsightsPage() {
   const [timeRange, setTimeRange] = useState('5y');
-
   const totalEvents = yearlyFloodData.reduce((s, d) => s + d.events, 0);
-  const totalDisplaced = yearlyFloodData.reduce((s, d) => s + d.displaced, 0);
-  const avgDamage = yearlyFloodData.reduce((s, d) => s + d.damage_cr, 0) / yearlyFloodData.length;
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUp className="h-4 w-4 text-red-500" />;
-      case 'down':
-        return <ArrowDown className="h-4 w-4 text-green-500" />;
-      default:
-        return <Minus className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
-  const maxLevel = Math.max(...monthlyWaterLevel.map((m) => m.level));
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Research Insights</h1>
-          <p className="text-gray-500">Flood pattern analysis and trend visualizations</p>
-        </div>
-        <div className="flex gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1y">Last 1 Year</SelectItem>
-              <SelectItem value="5y">Last 5 Years</SelectItem>
-              <SelectItem value="10y">Last 10 Years</SelectItem>
-              <SelectItem value="all">All Time</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
+    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Research Insights</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Hydrological pattern analysis & archival data</p>
+          </div>
+          <div className="flex gap-2">
+            <select className="h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none">
+              <option>Last 5 Years</option>
+              <option>Last 10 Years</option>
+              <option>All Time</option>
+            </select>
+            <button className="flex items-center gap-2 px-4 py-2 bg-[#006DC4] hover:bg-[#005a9f] text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20">
+              <Download className="h-4 w-4" />
+              Export PDF
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Flood Events</p>
-                <p className="text-2xl font-bold">{totalEvents}</p>
-                <p className="text-xs text-gray-400">2019-2025</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Droplets className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">People Displaced</p>
-                <p className="text-2xl font-bold">{(totalDisplaced / 1000).toFixed(0)}K</p>
-                <p className="text-xs text-gray-400">Cumulative</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-orange-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Avg. Damage/Year</p>
-                <p className="text-2xl font-bold">₹{avgDamage.toFixed(0)}Cr</p>
-                <p className="text-xs text-gray-400">Economic loss</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-                <TrendingDown className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">High-Risk Zones</p>
-                <p className="text-2xl font-bold">{zoneDistribution[0].count}</p>
-                <p className="text-xs text-gray-400">Zone A areas</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Mountain className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Yearly Flood Events Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart2 className="h-5 w-5 text-blue-500" />
-              Flood Events by Year
-            </CardTitle>
-            <CardDescription>Number of significant flood events per year</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {yearlyFloodData.map((data) => (
-                <div key={data.year} className="flex items-center gap-3">
-                  <span className="w-12 text-sm font-medium text-gray-600">{data.year}</span>
-                  <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded flex items-center justify-end pr-2"
-                      style={{ width: `${(data.events / 15) * 100}%` }}
-                    >
-                      {data.events >= 5 && (
-                        <span className="text-xs text-white font-medium">{data.events}</span>
-                      )}
-                    </div>
-                  </div>
-                  {data.events < 5 && (
-                    <span className="text-xs text-gray-500">{data.events}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Water Level Trend */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LineChart className="h-5 w-5 text-cyan-500" />
-              Monthly Water Levels (2024)
-            </CardTitle>
-            <CardDescription>Actual vs historical average (meters above datum)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-1 h-40 mb-2">
-              {monthlyWaterLevel.map((data, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                  <div
-                    className="w-full bg-cyan-500 rounded-t"
-                    style={{ height: `${(data.level / maxLevel) * 100}%` }}
-                  />
-                  <div
-                    className="w-full bg-cyan-200 rounded-t opacity-50"
-                    style={{ height: `${(data.avg / maxLevel) * 100}%`, marginTop: '-100%' }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-gray-500">
-              {monthlyWaterLevel.map((data, i) => (
-                <span key={i} className="w-6 text-center">{data.month}</span>
-              ))}
-            </div>
-            <div className="flex gap-4 mt-4 text-xs">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-cyan-500 rounded" />
-                <span className="text-gray-600">2024 Actual</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-cyan-200 rounded" />
-                <span className="text-gray-600">Historical Average</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Zone Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-purple-500" />
-              Zone Distribution
-            </CardTitle>
-            <CardDescription>Flood zone classification breakdown</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {zoneDistribution.map((zone) => (
-                <div key={zone.zone} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded ${zone.color}`} />
-                      <span className="font-medium text-sm text-gray-900">{zone.zone}</span>
-                    </div>
-                    <span className="text-sm text-gray-500">{zone.count} areas</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${zone.color}`}
-                      style={{ width: `${(zone.count / 290) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>{zone.area_km2} km²</span>
-                    <span>{(zone.population / 1000).toFixed(0)}K population</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pattern Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-              Emerging Patterns
-            </CardTitle>
-            <CardDescription>Key trends identified from historical analysis</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentPatterns.map((pattern, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-start gap-2 mb-1">
-                    {getTrendIcon(pattern.trend)}
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm text-gray-900">{pattern.title}</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">{pattern.description}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 ml-6">
-                    <Badge variant="outline" className="text-xs">
-                      Impact: {pattern.impact}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Research Notes */}
-      <Card className="bg-emerald-50 border-emerald-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-              <FileText className="h-5 w-5 text-emerald-600" />
-            </div>
+        {/* ── KPI Cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-emerald-900">Research Methodology</h3>
-              <p className="text-sm text-emerald-700 mt-1">
-                Analysis based on NMCG LiDAR data (1.7GB), CWC water level records, IMD rainfall data,
-                and historical flood event records from 2010-2025. Zone classifications follow
-                NDMA guidelines with elevation thresholds relative to mean sea level.
-              </p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Events</p>
+              <p className="text-2xl font-black text-slate-900 mt-1">{totalEvents}</p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+              <Droplets className="h-5 w-5" />
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Displaced</p>
+              <p className="text-2xl font-black text-slate-900 mt-1">~1.2M</p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+              <Users className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Risk Zones</p>
+              <p className="text-2xl font-black text-slate-900 mt-1">290</p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+              <Mountain className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg Damage</p>
+              <p className="text-2xl font-black text-slate-900 mt-1">₹380Cr</p>
+            </div>
+            <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <TrendingDown className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* ── Yearly Flood Chart ── */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <BarChart2 className="h-5 w-5 text-blue-500" />
+              <h3 className="font-bold text-slate-900">Flood Frequency</h3>
+            </div>
+            <div className="h-64 flex items-end gap-2 justify-between">
+              {yearlyFloodData.map((d) => (
+                <div key={d.year} className="flex flex-col items-center gap-2 w-full">
+                  <div className="w-full bg-blue-500 rounded-t-md hover:bg-blue-600 transition-colors relative group" style={{ height: `${(d.events / 15) * 100}%` }}>
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                      {d.events} Events
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400">{d.year}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Patterns ── */}
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp className="h-5 w-5 text-emerald-500" />
+              <h3 className="font-bold text-slate-900">Emerging Patterns</h3>
+            </div>
+            <div className="space-y-4">
+              {recentPatterns.map((p, i) => (
+                <div key={i} className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${p.trend === 'up' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                    {p.trend === 'up' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{p.title}</h4>
+                    <p className="text-xs text-slate-500 mt-1">{p.description}</p>
+                    <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded bg-white border border-slate-200 text-[10px] font-bold text-slate-600">
+                      Impact: {p.impact}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Zone Dist ── */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <PieChart className="h-5 w-5 text-purple-500" />
+            <h3 className="font-bold text-slate-900">Zone Distribution Models</h3>
+          </div>
+          <div className="space-y-4">
+            {zoneDistribution.map((zone) => (
+              <div key={zone.zone} className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="font-bold text-slate-700">{zone.zone}</span>
+                  <span className="text-slate-500 text-xs">{zone.count} Areas</span>
+                </div>
+                <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
+                  <div className={`h-full ${zone.color}`} style={{ width: `${(zone.count / 290) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Methodology ── */}
+        <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 flex items-start gap-4">
+          <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="font-bold text-emerald-900 text-sm">Data Source Methodology</h4>
+            <p className="text-xs text-emerald-700 mt-1 leading-relaxed max-w-3xl">
+              Our insights are derived from a combination of real-time sensor data, historical CWC water level records (2010-2025), a
+              nd satellite imagery analysis. Predictive models use an ensemble of LSTM and Random Forest algorithms with a confidence interval of 95%.
+            </p>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }

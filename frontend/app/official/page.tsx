@@ -7,12 +7,8 @@ import {
   AlertTriangle, FileText, MapPin, Activity, Waves, Home, Map,
   Phone, Bell, Users, TrendingUp, Clock, Shield, Award,
   ChevronRight, PhoneCall, MessageSquare, CheckCircle2,
-  Upload, Star, Trophy, BarChart3, Droplets, Navigation, Loader2
+  Upload, Star, Trophy, BarChart3, Droplets, Navigation, Loader2, Megaphone, Siren
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { emergencyAPI } from '@/lib/api';
@@ -21,45 +17,17 @@ import { emergencyAPI } from '@/lib/api';
 const MapView = dynamic(() => import('@/components/MapView'), {
   ssr: false,
   loading: () => (
-    <div className="h-[350px] bg-slate-100 rounded-lg animate-pulse flex items-center justify-center">
-      <Map className="h-8 w-8 text-slate-400" />
+    <div className="h-[400px] w-full bg-slate-100/50 rounded-2xl animate-pulse flex items-center justify-center border border-slate-200">
+      <div className="flex flex-col items-center gap-3 text-slate-400">
+        <Map className="h-8 w-8" />
+        <span className="text-sm font-medium">Loading Command Map...</span>
+      </div>
     </div>
   ),
 });
 
-// Map markers
-const mapMarkers = [
-  { id: 'alert-1', latitude: 25.3109, longitude: 83.0107, type: 'alert' as const, title: 'Active Alert', description: 'Water rising at Dashashwamedh Ghat', severity: 'high' as const },
-  { id: 'shelter-1', latitude: 25.2890, longitude: 83.0023, type: 'shelter' as const, title: 'Community Center', description: 'Capacity: 500' },
-];
-
-const floodZones = [
-  {
-    id: 'zone-a-varanasi',
-    zone: 'A' as const,
-    name: 'Varanasi Ghats High Risk',
-    coordinates: [
-      [83.000, 25.305],
-      [83.020, 25.305],
-      [83.020, 25.320],
-      [83.000, 25.320],
-      [83.000, 25.305],
-    ],
-  },
-];
-
-// NGO Rankings
-const ngoRankings = [
-  { rank: 1, name: 'Red Cross Varanasi', contributions: 145, points: 2850, avatar: '🏆' },
-  { rank: 2, name: 'Green Earth Foundation', contributions: 132, points: 2640, avatar: '🥈' },
-  { rank: 3, name: 'River Care Initiative', contributions: 118, points: 2360, avatar: '🥉' },
-  { rank: 4, name: 'Community Aid Network', contributions: 95, points: 1900, avatar: '⭐' },
-  { rank: 5, name: 'Ganga Seva Trust', contributions: 87, points: 1740, avatar: '⭐' },
-];
-
 export default function OfficialDashboard() {
   const [emergencyActive, setEmergencyActive] = useState(false);
-  const [showContributionForm, setShowContributionForm] = useState(false);
   const [confirmingEmergency, setConfirmingEmergency] = useState(false);
 
   const emergencyMutation = useMutation({
@@ -67,439 +35,250 @@ export default function OfficialDashboard() {
     onSuccess: (data: any) => {
       setEmergencyActive(true);
       setConfirmingEmergency(false);
-      toast.success(
-        `✅ WhatsApp alerts sent! ${data.successful}/${data.total} delivered successfully.`
-      );
+      toast.success(`🚨 Alert Broadcast Sent!`, {
+        description: `${data.successful}/${data.total} citizens notified via WhatsApp/SMS.`
+      });
       setTimeout(() => setEmergencyActive(false), 8000);
     },
     onError: (error: any) => {
       setConfirmingEmergency(false);
-      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
-      toast.error(`❌ Emergency alert failed: ${detail}`);
+      toast.error('Broadcast Failed', {
+        description: error.message
+      });
     },
   });
 
-  const handleEmergencyClick = () => {
-    if (confirmingEmergency) {
-      // Second click = confirm and send
-      emergencyMutation.mutate();
-    } else {
-      // First click = show confirm state
-      setConfirmingEmergency(true);
-      // Auto-reset confirm after 5 seconds if not clicked
-      setTimeout(() => setConfirmingEmergency(false), 5000);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">NGO Command Center</h1>
-              <p className="text-sm text-slate-500 mt-0.5">Coordinate flood response & track contributions</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50 px-3 py-1">
-                <Activity className="h-3 w-3 mr-1.5" />
-                System Active
-              </Badge>
-              <Button size="sm" variant="outline" className="rounded-lg">
-                <Bell className="h-4 w-4 mr-1.5" />
-                Notifications
-              </Button>
+    <div className="pb-20 font-sans">
+
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+              Command <span className="text-[#006DC4]">Center</span>
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wide">System Operational • Varanasi HO</p>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Emergency Alert Status */}
-        {emergencyActive && (
-          <Alert className="mb-6 border-emerald-200 bg-emerald-50">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <AlertDescription className="text-emerald-900">
-              <strong>EMERGENCY ALERTS SENT!</strong> WhatsApp messages delivered to all emergency contacts.
-            </AlertDescription>
-          </Alert>
+          <button
+            onClick={() => setConfirmingEmergency(true)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${emergencyActive
+                ? 'bg-red-500 text-white animate-pulse'
+                : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/10'
+              }`}
+          >
+            {emergencyActive ? <Siren className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
+            {emergencyActive ? 'BROADCASTING...' : 'Broadcast Alert'}
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
+
+        {/* ── Confirm Modal ── */}
+        {confirmingEmergency && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95">
+              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center mb-4 mx-auto">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <h3 className="text-center text-lg font-bold text-slate-900 mb-2">Confirm Emergency Broadcast</h3>
+              <p className="text-center text-sm text-slate-500 mb-6">
+                This will send a <span className="font-bold text-red-600">CRITICAL ALERT</span> to all connected citizens in Varanasi region. This action cannot be undone.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setConfirmingEmergency(false)}
+                  className="py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => emergencyMutation.mutate()}
+                  disabled={emergencyMutation.isPending}
+                  className="py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 flex items-center justify-center gap-2"
+                >
+                  {emergencyMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Emergency Broadcast Button — ONE CLICK */}
-        <Card className={`mb-6 border-red-200 transition-all ${confirmingEmergency ? 'bg-gradient-to-br from-red-100 to-orange-100 ring-2 ring-red-400' : 'bg-gradient-to-br from-red-50 to-orange-50'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-xl bg-red-600 flex items-center justify-center">
-                  <MessageSquare className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Emergency Broadcast System</h2>
-                  <p className="text-sm text-slate-600 mt-0.5">
-                    {confirmingEmergency
-                      ? '⚠️ Click again to confirm — WhatsApp alerts will be sent to all emergency contacts'
-                      : 'Send instant WhatsApp alerts to all emergency contacts'
-                    }
-                  </p>
-                </div>
-              </div>
-              <Button
-                size="lg"
-                onClick={handleEmergencyClick}
-                disabled={emergencyActive || emergencyMutation.isPending}
-                className={`font-bold rounded-xl px-6 transition-all ${confirmingEmergency
-                    ? 'bg-red-700 hover:bg-red-800 text-white animate-pulse'
-                    : 'bg-red-600 hover:bg-red-700 text-white'
-                  }`}
-              >
-                {emergencyMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                ) : (
-                  <Phone className="h-5 w-5 mr-2" />
-                )}
-                {emergencyMutation.isPending
-                  ? 'Sending...'
-                  : confirmingEmergency
-                    ? 'Confirm & Send Now'
-                    : emergencyActive
-                      ? 'Alerts Sent ✓'
-                      : 'Activate Emergency Alert'
-                }
-              </Button>
+        {/* ── Status Grid ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Users className="h-5 w-5" /></div>
+              <span className="text-xs font-bold text-slate-400 uppercase">Active Teams</span>
             </div>
-            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-red-100">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>2</strong> Emergency contacts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>WhatsApp</strong> delivery</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>&lt;5s</strong> Delivery time</span>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-slate-900">12</span>
+              <div className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full">
+                <CheckCircle2 className="h-3 w-3" /> All units responsive
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Dashboard Stats */}
-        <section className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Today's Overview</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {[
-              { label: 'Active Alerts', value: '3', icon: AlertTriangle, color: 'text-red-600', bg: 'bg-red-100' },
-              { label: 'Water Level', value: '42.8m', icon: Droplets, color: 'text-blue-600', bg: 'bg-blue-100' },
-              { label: 'Shelters Active', value: '12', icon: Home, color: 'text-emerald-600', bg: 'bg-emerald-100' },
-              { label: 'People Evacuated', value: '1,234', icon: Users, color: 'text-violet-600', bg: 'bg-violet-100' },
-              { label: 'Reports Today', value: '45', icon: FileText, color: 'text-amber-600', bg: 'bg-amber-100' },
-              { label: 'NGOs Active', value: '28', icon: Shield, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-            ].map((stat, idx) => (
-              <Card key={idx} className="border-slate-200 bg-white hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className={`h-10 w-10 rounded-lg ${stat.bg} flex items-center justify-center mb-3`}>
-                    <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                  <p className="text-xs text-slate-500 uppercase tracking-wide mt-1">{stat.label}</p>
-                </CardContent>
-              </Card>
-            ))}
           </div>
-        </section>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Live Map - Spans 2 columns */}
-          <Card className="lg:col-span-2 border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base font-semibold">Live Flood Map</CardTitle>
-                  <CardDescription className="text-slate-500 text-sm">Real-time monitoring of flood zones</CardDescription>
-                </div>
-                <Link href="/official/zones">
-                  <Button size="sm" variant="outline" className="border-slate-300 rounded-lg">
-                    Manage Zones
-                  </Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4">
-              <MapView
-                initialViewState={{ latitude: 25.3109, longitude: 83.0065, zoom: 12 }}
-                markers={mapMarkers}
-                floodZones={floodZones}
-                height="380px"
-                showUserLocation={false}
-              />
-            </CardContent>
-          </Card>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><AlertTriangle className="h-5 w-5" /></div>
+              <span className="text-xs font-bold text-slate-400 uppercase">Pending Alerts</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-slate-900">3</span>
+              <span className="text-[10px] font-bold text-amber-600">Requires validation</span>
+            </div>
+          </div>
 
-          {/* Quick Actions */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <CardTitle className="text-base font-semibold">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-3">
-                <Link href="/official/evacuation">
-                  <Button variant="outline" className="w-full justify-start border-slate-200 rounded-lg h-auto py-3">
-                    <Navigation className="h-4 w-4 mr-3 text-blue-600" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">Plan Evacuation</p>
-                      <p className="text-xs text-slate-500">Route optimizer</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/official/zones">
-                  <Button variant="outline" className="w-full justify-start border-slate-200 rounded-lg h-auto py-3">
-                    <MapPin className="h-4 w-4 mr-3 text-violet-600" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">Manage Zones</p>
-                      <p className="text-xs text-slate-500">Flood risk areas</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/official/reports">
-                  <Button variant="outline" className="w-full justify-start border-slate-200 rounded-lg h-auto py-3">
-                    <FileText className="h-4 w-4 mr-3 text-emerald-600" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">Review Reports</p>
-                      <p className="text-xs text-slate-500">45 pending</p>
-                    </div>
-                  </Button>
-                </Link>
-                <Link href="/official/alerts">
-                  <Button variant="outline" className="w-full justify-start border-slate-200 rounded-lg h-auto py-3">
-                    <AlertTriangle className="h-4 w-4 mr-3 text-red-600" />
-                    <div className="text-left">
-                      <p className="font-medium text-sm">Send Alert</p>
-                      <p className="text-xs text-slate-500">Broadcast system</p>
-                    </div>
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Home className="h-5 w-5" /></div>
+              <span className="text-xs font-bold text-slate-400 uppercase">Shelter Capacity</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-slate-900">85%</span>
+              <span className="text-[10px] font-bold text-slate-500">1,240 spaces available</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Activity className="h-5 w-5" /></div>
+              <span className="text-xs font-bold text-slate-400 uppercase">System Load</span>
+            </div>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-slate-900">Normal</span>
+              <span className="text-[10px] font-bold text-slate-500">Latency: 45ms</span>
+            </div>
+          </div>
         </div>
 
-        {/* NGO Contribution System */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Submit Contribution */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <Upload className="h-4 w-4 text-white" />
-                </div>
-                Submit Your Contribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-sm text-slate-600 mb-4">
-                Log your NGO's flood relief activities to earn ranking points and showcase your impact.
-              </p>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {[
-                  { icon: Users, label: 'People Helped', color: 'text-emerald-600' },
-                  { icon: Home, label: 'Shelters Setup', color: 'text-blue-600' },
-                  { icon: Droplets, label: 'Water Supplied', color: 'text-cyan-600' },
-                  { icon: Shield, label: 'Safety Training', color: 'text-violet-600' },
-                ].map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setShowContributionForm(true)}
-                    className="p-3 rounded-lg border border-slate-200 text-center hover:border-blue-300 hover:bg-blue-50 transition-all"
-                  >
-                    <item.icon className={`h-5 w-5 ${item.color} mx-auto mb-1.5`} />
-                    <p className="text-xs font-medium text-slate-900">{item.label}</p>
-                  </button>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* ── Main Map View ── */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm relative group">
+              <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                LIVE FEEDS
               </div>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 rounded-lg">
-                <Upload className="h-4 w-4 mr-2" />
-                Submit New Contribution
-              </Button>
-              <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Your Points This Month</span>
-                  <span className="font-bold text-slate-900">285 pts</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <MapView />
+            </div>
 
-          {/* Achievement Tracking */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-amber-600 flex items-center justify-center">
-                  <Trophy className="h-4 w-4 text-white" />
-                </div>
-                Your Achievements
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-3 mb-4">
-                {[
-                  { title: 'Total Contributions', value: '42', icon: Award, progress: 84 },
-                  { title: 'People Impacted', value: '1,250', icon: Users, progress: 62 },
-                  { title: 'Current Ranking', value: '#8', icon: Trophy, progress: 45 },
-                ].map((item, idx) => (
-                  <div key={idx} className="p-3 rounded-lg bg-slate-50">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm text-slate-700">{item.title}</span>
-                      </div>
-                      <span className="text-sm font-bold text-slate-900">{item.value}</span>
-                    </div>
-                    <div className="w-full bg-slate-200 rounded-full h-1.5">
-                      <div
-                        className="bg-amber-600 h-1.5 rounded-full transition-all"
-                        style={{ width: `${item.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+            {/* Recent Reports List */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-[#006DC4]" />
+                  Incoming Citizen Reports
+                </h3>
+                <button className="text-xs font-bold text-[#006DC4] hover:underline">View All</button>
               </div>
-              <Link href="#rankings">
-                <Button variant="outline" className="w-full border-slate-300 rounded-lg">
-                  View Full Leaderboard
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* NGO Rankings Leaderboard */}
-        <Card id="rankings" className="border-slate-200 bg-white">
-          <CardHeader className="pb-4 border-b border-slate-100">
-            <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-600" />
-                  NGO Contribution Rankings
-                </CardTitle>
-                <CardDescription className="text-sm text-slate-500 mt-1">
-                  Top performing NGOs in flood relief efforts this month
-                </CardDescription>
-              </div>
-              <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1">
-                Live Rankings
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-3">
-              {ngoRankings.map((ngo) => (
-                <div
-                  key={ngo.rank}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${ngo.rank <= 3
-                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
-                    : 'bg-slate-50 border-slate-200'
-                    }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`text-3xl ${ngo.rank <= 3 ? 'scale-110' : ''}`}>
-                      {ngo.avatar}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
+                    <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                      <MapPin className="h-5 w-5" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-slate-900">{ngo.name}</p>
-                        {ngo.rank <= 3 && (
-                          <Badge variant="outline" className="border-amber-300 text-amber-700 bg-amber-100 text-xs">
-                            Top {ngo.rank}
-                          </Badge>
-                        )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-slate-900">High Water Level</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">UNVERIFIED</span>
                       </div>
-                      <p className="text-sm text-slate-500 mt-0.5">
-                        {ngo.contributions} contributions • {ngo.points} points
-                      </p>
+                      <p className="text-xs text-slate-500 truncate">Reported at Ghat 4 • 12 mins ago</p>
                     </div>
+                    <ChevronRight className="h-4 w-4 text-slate-300" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500 uppercase tracking-wide">Rank</p>
-                      <p className="text-2xl font-black text-slate-900">#{ngo.rank}</p>
-                    </div>
-                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Sidebar Feed ── */}
+          <div className="space-y-6">
+
+            {/* ── Action Center ── */}
+            <div className="bg-[#006DC4] rounded-2xl p-6 text-white shadow-xl shadow-blue-500/20">
+              <h3 className="font-bold text-lg mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
+                  <Megaphone className="h-4 w-4 mr-3" /> Broadcast Advisory
+                </button>
+                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
+                  <Users className="h-4 w-4 mr-3" /> Deploy Response Team
+                </button>
+                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
+                  <FileText className="h-4 w-4 mr-3" /> Generate Status Report
+                </button>
+              </div>
+            </div>
+
+            {/* Emergency Contacts Widget */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-red-50/50">
+                <h3 className="font-bold text-red-900 flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-red-500" />
+                  Emergency Contacts
+                </h3>
+              </div>
+              <div className="p-4 space-y-2">
+                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+                  <span className="text-sm font-medium text-slate-600">Flood Control</span>
+                  <span className="text-sm font-mono font-bold text-slate-900">1077</span>
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              <div className="flex items-center justify-between text-sm text-slate-600">
-                <span>Rankings updated every hour</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  Last update: 5 mins ago
-                </span>
+                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+                  <span className="text-sm font-medium text-slate-600">NDRF HQ</span>
+                  <span className="text-sm font-mono font-bold text-slate-900">011-24363260</span>
+                </div>
+                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
+                  <span className="text-sm font-medium text-slate-600">Police Control</span>
+                  <span className="text-sm font-mono font-bold text-slate-900">112</span>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Active Zones & Reports */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          {/* Risk Zones */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <CardTitle className="text-base font-semibold">High Risk Zones</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-3">
-                {[
-                  { name: 'Zone A - Varanasi Ghats', risk: 'high', affected: '5,200', trend: 'up' },
-                  { name: 'Zone B - Allahabad Bank', risk: 'medium', affected: '2,800', trend: 'stable' },
-                  { name: 'Zone C - Patna East', risk: 'low', affected: '1,100', trend: 'down' },
-                ].map((zone, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-2 w-2 rounded-full ${zone.risk === 'high' ? 'bg-red-500' :
-                        zone.risk === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`} />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{zone.name}</p>
-                        <p className="text-xs text-slate-500">{zone.affected} people affected</p>
-                      </div>
-                    </div>
-                    <TrendingUp className={`h-4 w-4 ${zone.trend === 'up' ? 'text-red-600' :
-                      zone.trend === 'down' ? 'text-emerald-600' : 'text-slate-400'
-                      } ${zone.trend === 'down' ? 'rotate-180' : ''}`} />
-                  </div>
-                ))}
+            {/* NGO Leaderboard */}
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-amber-500" />
+                  Top NGOs
+                </h3>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Reports */}
-          <Card className="border-slate-200 bg-white">
-            <CardHeader className="pb-4 border-b border-slate-100">
-              <CardTitle className="text-base font-semibold">Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-3">
+              <div className="divide-y divide-slate-50">
                 {[
-                  { icon: PhoneCall, text: 'Emergency broadcast sent', time: '5 mins ago', color: 'text-red-600' },
-                  { icon: FileText, text: 'New report verified', time: '15 mins ago', color: 'text-emerald-600' },
-                  { icon: Users, text: '50 people evacuated to shelter', time: '1 hour ago', color: 'text-blue-600' },
-                ].map((activity, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
-                    <activity.icon className={`h-4 w-4 ${activity.color} mt-0.5`} />
+                  { rank: 1, name: 'Red Cross Varanasi', points: 2850, award: '🏆' },
+                  { rank: 2, name: 'Green Earth', points: 2640, award: '🥈' },
+                  { rank: 3, name: 'River Care', points: 2360, award: '🥉' },
+                ].map((ngo) => (
+                  <div key={ngo.rank} className="flex items-center gap-4 px-6 py-4">
+                    <div className="font-black text-slate-300 w-4">{ngo.rank}</div>
                     <div className="flex-1">
-                      <p className="text-sm text-slate-900">{activity.text}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{activity.time}</p>
+                      <div className="text-sm font-bold text-slate-900">{ngo.name}</div>
+                      <div className="text-xs text-slate-500">{ngo.points} pts</div>
                     </div>
+                    <div className="text-lg">{ngo.award}</div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+              <div className="p-4 bg-slate-50 border-t border-slate-100">
+                <button className="w-full py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                  View Full Standings
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
+
       </div>
     </div>
   );

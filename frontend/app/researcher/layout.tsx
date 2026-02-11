@@ -106,7 +106,7 @@ export default function ResearcherLayout({
       {/* Main content */}
       <div className="lg:pl-56">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4">
+        <header className="sticky top-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900"
@@ -117,7 +117,7 @@ export default function ResearcherLayout({
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">{children}</main>
+        <main>{children}</main>
       </div>
     </div>
   );

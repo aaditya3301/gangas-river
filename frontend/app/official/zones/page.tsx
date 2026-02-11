@@ -2,22 +2,17 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { 
-  Map, 
-  Search, 
-  Filter, 
-  MapPin, 
+import {
+  Map,
+  Search,
+  Filter,
+  MapPin,
   AlertTriangle,
-  CheckCircle,
   Info,
   Loader2,
-  Navigation
+  Navigation,
+  Globe
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useLocationStore } from '@/lib/store';
 import { zonesAPI } from '@/lib/api';
 import { toast } from 'sonner';
@@ -56,27 +51,16 @@ const zones = [
   },
 ];
 
-const zoneColors = {
-  zone_a: { bg: 'bg-red-100', text: 'text-red-700', badge: 'bg-red-500', label: 'Zone A (High Risk)' },
-  zone_b: { bg: 'bg-yellow-100', text: 'text-yellow-700', badge: 'bg-yellow-500', label: 'Zone B (Moderate)' },
-  zone_c: { bg: 'bg-green-100', text: 'text-green-700', badge: 'bg-green-500', label: 'Zone C (Low Risk)' },
+const zoneColors: Record<string, { bg: string; text: string; badge: string; label: string }> = {
+  zone_a: { bg: 'bg-red-50', text: 'text-red-700', badge: 'bg-red-500', label: 'Zone A (High Risk)' },
+  zone_b: { bg: 'bg-amber-50', text: 'text-amber-700', badge: 'bg-amber-500', label: 'Zone B (Moderate)' },
+  zone_c: { bg: 'bg-emerald-50', text: 'text-emerald-700', badge: 'bg-emerald-500', label: 'Zone C (Low Risk)' },
 };
-
-interface ClassifyResult {
-  zone_type: string;
-  flood_depth_1m: number;
-  flood_depth_3m: number;
-  flood_depth_5m: number;
-  restrictions: string[];
-  recommendation: string;
-}
 
 export default function ZonesPage() {
   const { latitude, longitude, isLoading: locationLoading, requestLocation } = useLocationStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [classifyResult, setClassifyResult] = useState<ClassifyResult | null>(null);
-  const [manualLat, setManualLat] = useState('');
-  const [manualLng, setManualLng] = useState('');
+  const [classifyResult, setClassifyResult] = useState<any | null>(null);
 
   const classifyMutation = useMutation({
     mutationFn: zonesAPI.classify,
@@ -95,251 +79,136 @@ export default function ZonesPage() {
     }
   };
 
-  const handleClassifyManual = () => {
-    const lat = parseFloat(manualLat);
-    const lng = parseFloat(manualLng);
-    if (!isNaN(lat) && !isNaN(lng)) {
-      classifyMutation.mutate({ latitude: lat, longitude: lng });
-    } else {
-      toast.error('Please enter valid coordinates');
-    }
-  };
-
   const filteredZones = zones.filter(zone =>
     zone.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200">
-            <Map className="h-6 w-6 text-white" />
-          </div>
+    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Zone Management</h1>
-            <p className="text-slate-500">Policy zones and land classification</p>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Zone Management</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Land classification & construction policies</p>
           </div>
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold shadow-lg shadow-slate-900/10">
+            <Globe className="h-4 w-4" />
+            View Master Plan
+          </button>
         </div>
       </div>
 
-      {/* Zone Classification Tool */}
-      <Card className="border-0 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-              <MapPin className="h-5 w-5 text-white" />
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+        {/* ── Classification Tool ── */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -mr-16 -mt-16 pointer-events-none" />
+
+          <div className="flex items-center gap-3 mb-6 relative z-10">
+            <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center text-[#006DC4]">
+              <MapPin className="h-5 w-5" />
             </div>
-            Classify Location
-          </CardTitle>
-          <CardDescription>
-            Check zone classification and building restrictions for any location
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* GPS Option */}
-            <div className="space-y-3 p-5 rounded-xl bg-white border border-slate-100 shadow-sm">
-              <h4 className="font-semibold text-slate-900">Use GPS Location</h4>
-              {latitude && longitude ? (
-                <div className="text-sm text-slate-600 font-mono bg-slate-100 p-2 rounded-lg">
-                  {latitude.toFixed(6)}, {longitude.toFixed(6)}
-                </div>
-              ) : (
-                <Button
-                  variant="outline"
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Quick Classification</h2>
+              <p className="text-sm text-slate-500">Determine zone restrictions for any location</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+            <div className="space-y-4">
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                {latitude ? (
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                      <MapPin className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">GPS Locked</p>
+                      <p className="text-[10px] text-slate-500 font-mono">{latitude.toFixed(6)}, {longitude?.toFixed(6)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">Location not detected.</p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
                   onClick={requestLocation}
                   disabled={locationLoading}
-                  className="w-full border-slate-300"
+                  className="flex-1 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
-                  {locationLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Navigation className="h-4 w-4 mr-2" />
-                  )}
-                  Get Current Location
-                </Button>
-              )}
-              {latitude && longitude && (
-                <Button
+                  {locationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+                  Get Location
+                </button>
+                <button
                   onClick={handleClassifyGPS}
-                  disabled={classifyMutation.isPending}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+                  disabled={!latitude || classifyMutation.isPending}
+                  className="flex-1 py-3 bg-[#006DC4] hover:bg-[#005a9f] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                 >
-                  {classifyMutation.isPending && (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  )}
-                  Classify This Location
-                </Button>
-              )}
+                  {classifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  Analyze Zone
+                </button>
+              </div>
             </div>
 
-            {/* Manual Entry */}
-            <div className="space-y-3 p-5 rounded-xl bg-white border border-slate-100 shadow-sm">
-              <h4 className="font-semibold text-slate-900">Enter Coordinates</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  placeholder="Latitude"
-                  value={manualLat}
-                  onChange={(e) => setManualLat(e.target.value)}
-                  step="any"
-                  className="border-slate-200"
-                />
-                <Input
-                  type="number"
-                  placeholder="Longitude"
-                  value={manualLng}
-                  onChange={(e) => setManualLng(e.target.value)}
-                  step="any"
-                  className="border-slate-200"
-                />
-              </div>
-              <Button
-                onClick={handleClassifyManual}
-                disabled={classifyMutation.isPending || !manualLat || !manualLng}
-                variant="outline"
-                className="w-full border-slate-300"
-              >
-                Classify Coordinates
-              </Button>
+            {/* Result Area */}
+            <div className="min-h-[160px] flex items-center justify-center bg-slate-50 rounded-xl border border-slate-100 border-dashed">
+              {classifyResult ? (
+                <div className="w-full h-full p-4 bg-white rounded-xl border border-slate-200 border-solid animate-in zoom-in-95">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${zoneColors[classifyResult.zone_type]?.bg} ${zoneColors[classifyResult.zone_type]?.text}`}>
+                      {zoneColors[classifyResult.zone_type]?.label}
+                    </span>
+                    <span className="text-xs font-bold text-slate-400">Verified just now</span>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-slate-900">Restrictions:</p>
+                    <ul className="text-xs text-slate-600 space-y-1">
+                      {classifyResult.restrictions.map((r: string, i: number) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <AlertTriangle className="h-3 w-3 text-amber-500" /> {r}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs font-medium text-slate-400">Result will appear here</p>
+              )}
             </div>
           </div>
-
-          {/* Classification Result */}
-          {classifyResult && (
-            <div className={`rounded-lg p-4 ${zoneColors[classifyResult.zone_type as keyof typeof zoneColors]?.bg || 'bg-gray-100'}`}>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className={`font-bold text-lg ${zoneColors[classifyResult.zone_type as keyof typeof zoneColors]?.text || 'text-gray-700'}`}>
-                  {zoneColors[classifyResult.zone_type as keyof typeof zoneColors]?.label || classifyResult.zone_type}
-                </h4>
-                <Badge className={zoneColors[classifyResult.zone_type as keyof typeof zoneColors]?.badge || 'bg-gray-500'}>
-                  Classified
-                </Badge>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-2 bg-white/50 rounded">
-                  <p className="text-xs text-gray-600">1m Rise</p>
-                  <p className="font-bold">{classifyResult.flood_depth_1m.toFixed(2)}m</p>
-                </div>
-                <div className="text-center p-2 bg-white/50 rounded">
-                  <p className="text-xs text-gray-600">3m Rise</p>
-                  <p className="font-bold">{classifyResult.flood_depth_3m.toFixed(2)}m</p>
-                </div>
-                <div className="text-center p-2 bg-white/50 rounded">
-                  <p className="text-xs text-gray-600">5m Rise</p>
-                  <p className="font-bold">{classifyResult.flood_depth_5m.toFixed(2)}m</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Restrictions:</h5>
-                <ul className="text-sm space-y-1">
-                  {classifyResult.restrictions.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <Alert className="mt-4 bg-white/70">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Recommendation</AlertTitle>
-                <AlertDescription>{classifyResult.recommendation}</AlertDescription>
-              </Alert>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Search */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            placeholder="Search zones..."
-            className="pl-10"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
         </div>
-        <Button variant="outline">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </div>
 
-      {/* Zone Legend */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-red-500" />
-          <span className="text-sm text-gray-600">Zone A - No Construction</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-yellow-500" />
-          <span className="text-sm text-gray-600">Zone B - Conditional</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-green-500" />
-          <span className="text-sm text-gray-600">Zone C - Permitted</span>
-        </div>
-      </div>
-
-      {/* Zones List */}
-      <div className="grid gap-4">
-        {filteredZones.map((zone) => (
-          <Card key={zone.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex-1">
+        {/* ── Zone List ── */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900">Defined Zones</h3>
+          {filteredZones.map((zone) => (
+            <div key={zone.id} className="group bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-md transition-all">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <Badge className={zoneColors[zone.type as keyof typeof zoneColors].badge}>
-                      {zone.type.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                    <h3 className="font-semibold text-gray-900">{zone.name}</h3>
+                    <span className={`h-3 w-3 rounded-full ${zoneColors[zone.type as keyof typeof zoneColors]?.badge}`} />
+                    <h4 className="font-bold text-slate-900">{zone.name}</h4>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
-                    <div>
-                      <span className="text-gray-500">Area:</span>
-                      <span className="font-medium ml-1">{zone.area_km2} km²</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Population:</span>
-                      <span className="font-medium ml-1">{zone.population.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Updated:</span>
-                      <span className="font-medium ml-1">{zone.last_updated}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {zone.restrictions.map((restriction, i) => (
-                      <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                        {restriction}
-                      </span>
-                    ))}
+                  <div className="text-xs text-slate-500 space-x-3">
+                    <span className="font-bold">{zone.area_km2} km²</span>
+                    <span>•</span>
+                    <span>{zone.population.toLocaleString()} pop</span>
+                    <span>•</span>
+                    <span>Updated {zone.last_updated}</span>
                   </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Map className="h-4 w-4 mr-1" />
-                    View Map
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                </div>
+                <button className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
+                  Edit Polygons
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );

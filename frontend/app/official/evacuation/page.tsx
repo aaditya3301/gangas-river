@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import {
   Route,
   Home,
@@ -10,22 +10,15 @@ import {
   MapPin,
   Navigation,
   Loader2,
-  CheckCircle,
-  AlertTriangle,
-  Droplets,
   Heart,
-  Utensils
+  Utensils,
+  Droplets
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocationStore } from '@/lib/store';
 import { evacuationAPI } from '@/lib/api';
 import { toast } from 'sonner';
 
-// Mock shelter data - in production from API
+// Mock shelter data
 const mockShelters = [
   {
     id: 1,
@@ -55,7 +48,7 @@ const mockShelters = [
   },
   {
     id: 3,
-    name: 'Sports Complex Emergency Shelter',
+    name: 'Sports Complex Emergency',
     address: 'BHU Campus, Varanasi, UP 221005',
     total_capacity: 800,
     current_occupancy: 230,
@@ -68,26 +61,17 @@ const mockShelters = [
   },
 ];
 
-interface RouteResult {
-  distance_km: number;
-  estimated_time_min: number;
-  safety_score: number;
-  route_type: string;
-  waypoints: Array<{ lat: number; lng: number }>;
-  warnings: string[];
-}
-
 export default function EvacuationPage() {
   const { latitude, longitude, isLoading: locationLoading, requestLocation } = useLocationStore();
   const [selectedShelter, setSelectedShelter] = useState<number | null>(null);
   const [routePreference, setRoutePreference] = useState<string>('safest');
-  const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
+  const [routeResult, setRouteResult] = useState<any | null>(null);
 
   const routeMutation = useMutation({
     mutationFn: evacuationAPI.getRoute,
     onSuccess: (data) => {
       setRouteResult(data);
-      toast.success('Route calculated!');
+      toast.success('Optimal route calculated');
     },
     onError: (error: Error) => {
       toast.error('Route calculation failed: ' + error.message);
@@ -99,9 +83,6 @@ export default function EvacuationPage() {
       toast.error('Please enable location first');
       return;
     }
-    
-    const shelter = mockShelters.find(s => s.id === shelterId);
-    if (!shelter) return;
 
     setSelectedShelter(shelterId);
     routeMutation.mutate({
@@ -111,242 +92,195 @@ export default function EvacuationPage() {
     });
   };
 
-  const getOccupancyColor = (occupancy: number, capacity: number) => {
-    const ratio = occupancy / capacity;
-    if (ratio < 0.5) return 'text-green-600 bg-green-100';
-    if (ratio < 0.8) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
   const totalCapacity = mockShelters.reduce((sum, s) => sum + s.total_capacity, 0);
   const totalOccupancy = mockShelters.reduce((sum, s) => sum + s.current_occupancy, 0);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Evacuation Management</h1>
-          <p className="text-gray-500">Shelters, routes, and capacity management</p>
-        </div>
-        <Button onClick={requestLocation} disabled={locationLoading}>
-          {locationLoading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Navigation className="h-4 w-4 mr-2" />
-          )}
-          {latitude ? 'Location Active' : 'Enable Location'}
-        </Button>
-      </div>
+    <div className="pb-20 font-sans">
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Active Shelters</p>
-                <p className="text-2xl font-bold">{mockShelters.length}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Home className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Capacity</p>
-                <p className="text-2xl font-bold">{totalCapacity.toLocaleString()}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Current Occupancy</p>
-                <p className="text-2xl font-bold">{totalOccupancy.toLocaleString()}</p>
-                <p className="text-xs text-gray-400">
-                  {((totalOccupancy / totalCapacity) * 100).toFixed(1)}% utilized
-                </p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Users className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Route Preferences */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Route Preferences</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            <Select value={routePreference} onValueChange={setRoutePreference}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="safest">Safest Route</SelectItem>
-                <SelectItem value="fastest">Fastest Route</SelectItem>
-                <SelectItem value="shortest">Shortest Route</SelectItem>
-              </SelectContent>
-            </Select>
-            {latitude && longitude && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPin className="h-4 w-4" />
-                Current: {latitude.toFixed(4)}, {longitude.toFixed(4)}
-              </div>
-            )}
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Evacuation Grid</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Real-time shelter capacity and route planning</p>
           </div>
-        </CardContent>
-      </Card>
+          <button
+            onClick={requestLocation}
+            disabled={locationLoading}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-slate-900/10"
+          >
+            {locationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
+            {latitude ? 'Location Active' : 'Enable Location'}
+          </button>
+        </div>
+      </div>
 
-      {/* Route Result */}
-      {routeResult && selectedShelter && (
-        <Card className="border-2 border-green-200 bg-green-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center">
-                <Route className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-green-800">Route Calculated</h3>
-                <p className="text-sm text-green-600">
-                  To: {mockShelters.find(s => s.id === selectedShelter)?.name}
-                </p>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
+
+        {/* ── Stats Overview ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Shelters</p>
+              <p className="text-3xl font-black text-slate-900 mt-1">{mockShelters.length}</p>
             </div>
-
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 bg-white rounded-lg">
-                <p className="text-xs text-gray-500">Distance</p>
-                <p className="text-xl font-bold text-gray-900">{routeResult.distance_km.toFixed(1)} km</p>
-              </div>
-              <div className="text-center p-3 bg-white rounded-lg">
-                <p className="text-xs text-gray-500">Est. Time</p>
-                <p className="text-xl font-bold text-gray-900">{routeResult.estimated_time_min} min</p>
-              </div>
-              <div className="text-center p-3 bg-white rounded-lg">
-                <p className="text-xs text-gray-500">Safety Score</p>
-                <p className="text-xl font-bold text-gray-900">{routeResult.safety_score}/100</p>
-              </div>
+            <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#006DC4]">
+              <Home className="h-6 w-6" />
             </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total capacity</p>
+              <p className="text-3xl font-black text-slate-900 mt-1">{totalCapacity.toLocaleString()}</p>
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <Users className="h-6 w-6" />
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Occupancy Rate</p>
+              <p className="text-3xl font-black text-slate-900 mt-1">{((totalOccupancy / totalCapacity) * 100).toFixed(0)}%</p>
+              <p className="text-xs text-slate-400 font-medium">Stable</p>
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <Users className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
 
-            {routeResult.warnings.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-yellow-800">Warnings:</p>
-                {routeResult.warnings.map((warning, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-yellow-700">
-                    <AlertTriangle className="h-4 w-4" />
-                    {warning}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* ── Shelter List ── */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Available Facilities</h2>
+            </div>
+            {mockShelters.map((shelter) => {
+              const occupancyPct = shelter.current_occupancy / shelter.total_capacity;
+              const statusColor = occupancyPct < 0.5 ? 'bg-emerald-500' : occupancyPct < 0.8 ? 'bg-amber-500' : 'bg-red-500';
+              return (
+                <div key={shelter.id} className={`group bg-white rounded-2xl border p-6 transition-all ${selectedShelter === shelter.id ? 'border-blue-500 shadow-md ring-1 ring-blue-500' : 'border-slate-100 shadow-sm hover:border-slate-300'}`}>
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-start gap-4 mb-4">
+                        <div className="h-12 w-12 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                          <Home className="h-6 w-6 text-slate-400 group-hover:text-[#006DC4] transition-colors" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#006DC4] transition-colors">{shelter.name}</h3>
+                          <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {shelter.address}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          <span>Occupancy</span>
+                          <span className={occupancyPct > 0.8 ? 'text-red-500' : 'text-emerald-600'}>
+                            {shelter.current_occupancy} <span className="text-slate-300">/</span> {shelter.total_capacity}
+                          </span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${statusColor}`}
+                            style={{ width: `${occupancyPct * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {shelter.has_medical && <span className="inline-flex items-center px-2 py-1 rounded bg-red-50 text-red-600 text-xs font-bold"><Heart className="h-3 w-3 mr-1" /> Medical</span>}
+                        {shelter.has_food && <span className="inline-flex items-center px-2 py-1 rounded bg-orange-50 text-orange-600 text-xs font-bold"><Utensils className="h-3 w-3 mr-1" /> Food</span>}
+                        {shelter.has_water && <span className="inline-flex items-center px-2 py-1 rounded bg-blue-50 text-blue-600 text-xs font-bold"><Droplets className="h-3 w-3 mr-1" /> Water</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-slate-50 pt-4 md:pt-0 md:pl-6 md:w-48">
+                      <div className="text-center mb-2">
+                        <p className="text-2xl font-black text-slate-900">{shelter.distance_km}<span className="text-sm font-bold text-slate-400">km</span></p>
+                        <p className="text-xs text-slate-400">Distance</p>
+                      </div>
+                      <button
+                        onClick={() => handleCalculateRoute(shelter.id)}
+                        disabled={routeMutation.isPending}
+                        className="w-full py-2.5 bg-[#006DC4] hover:bg-[#005a9f] text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        {routeMutation.isPending && selectedShelter === shelter.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Route className="h-4 w-4" />}
+                        Get Route
+                      </button>
+                      <button className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl transition-colors">
+                        Contact
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                </div>
+              );
+            })}
+          </div>
 
-      {/* Shelters List */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Available Shelters</h2>
-        
-        {mockShelters.map((shelter) => (
-          <Card key={shelter.id} className={`transition-all ${selectedShelter === shelter.id ? 'ring-2 ring-blue-500' : ''}`}>
-            <CardContent className="pt-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex-1">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <Home className="h-6 w-6 text-blue-600" />
+          {/* ── Route Panel ── */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 sticky top-24">
+              <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Navigation className="h-5 w-5 text-slate-400" />
+                Route Planner
+              </h3>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase">Preference</label>
+                  <select
+                    value={routePreference}
+                    onChange={(e) => setRoutePreference(e.target.value)}
+                    className="w-full h-11 bg-slate-50 border border-slate-200 rounded-xl px-3 text-sm font-bold focus:outline-none"
+                  >
+                    <option value="safest">Safest (Avoid Flood Zones)</option>
+                    <option value="fastest">Fastest</option>
+                    <option value="shortest">Shortest</option>
+                  </select>
+                </div>
+
+                {latitude && (
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                      <MapPin className="h-4 w-4" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{shelter.name}</h3>
-                      <p className="text-sm text-gray-500">{shelter.address}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Elevation: {shelter.elevation}m • {shelter.distance_km} km away
-                      </p>
+                      <p className="text-xs font-bold text-emerald-800">Location Locked</p>
+                      <p className="text-[10px] text-emerald-600 font-mono">{latitude.toFixed(4)}, {longitude?.toFixed(4)}</p>
                     </div>
                   </div>
+                )}
 
-                  {/* Capacity Bar */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-500">Capacity</span>
-                      <span className={`font-medium ${getOccupancyColor(shelter.current_occupancy, shelter.total_capacity).split(' ')[0]}`}>
-                        {shelter.current_occupancy}/{shelter.total_capacity}
-                      </span>
+                {routeResult && selectedShelter && (
+                  <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-bottom-2">
+                    <h4 className="font-bold text-slate-900 text-sm mb-3">Route Summary</h4>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 bg-slate-50 rounded-lg text-center">
+                        <p className="text-xs text-slate-400 font-bold uppercase">Time</p>
+                        <p className="text-xl font-black text-slate-800">{routeResult.estimated_time_min}m</p>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-lg text-center">
+                        <p className="text-xs text-slate-400 font-bold uppercase">Safety</p>
+                        <p className="text-xl font-black text-emerald-600">{routeResult.safety_score}%</p>
+                      </div>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${
-                          shelter.current_occupancy / shelter.total_capacity < 0.5 ? 'bg-green-500' :
-                          shelter.current_occupancy / shelter.total_capacity < 0.8 ? 'bg-yellow-500' : 'bg-red-500'
-                        }`}
-                        style={{ width: `${(shelter.current_occupancy / shelter.total_capacity) * 100}%` }}
-                      />
-                    </div>
+                    <button className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2">
+                      <Navigation className="h-4 w-4" />
+                      Start Navigation
+                    </button>
                   </div>
-
-                  {/* Amenities */}
-                  <div className="flex flex-wrap gap-2">
-                    {shelter.has_medical && (
-                      <Badge variant="outline" className="text-xs">
-                        <Heart className="h-3 w-3 mr-1 text-red-500" />
-                        Medical
-                      </Badge>
-                    )}
-                    {shelter.has_food && (
-                      <Badge variant="outline" className="text-xs">
-                        <Utensils className="h-3 w-3 mr-1 text-orange-500" />
-                        Food
-                      </Badge>
-                    )}
-                    {shelter.has_water && (
-                      <Badge variant="outline" className="text-xs">
-                        <Droplets className="h-3 w-3 mr-1 text-blue-500" />
-                        Water
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col gap-2 lg:items-end">
-                  <Button
-                    onClick={() => handleCalculateRoute(shelter.id)}
-                    disabled={!latitude || routeMutation.isPending}
-                    className="w-full lg:w-auto"
-                  >
-                    {routeMutation.isPending && selectedShelter === shelter.id ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Route className="h-4 w-4 mr-2" />
-                    )}
-                    Calculate Route
-                  </Button>
-                  <a href={`tel:${shelter.contact_phone}`}>
-                    <Button variant="outline" className="w-full lg:w-auto">
-                      <Phone className="h-4 w-4 mr-2" />
-                      Contact
-                    </Button>
-                  </a>
-                </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );

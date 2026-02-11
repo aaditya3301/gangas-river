@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import {
   FileText,
   CheckCircle,
@@ -20,12 +20,6 @@ import {
   ThumbsDown,
   Bot
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { reportsAPI } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Mock reports data
@@ -70,21 +64,6 @@ const mockReports = [
     submitted_at: '2025-01-15T10:05:00Z',
     user: { name: 'Suresh Yadav', phone: '+91 76543xxxxx' },
   },
-  {
-    id: 4,
-    type: 'flood',
-    description: 'False flood report - actually just normal puddle',
-    latitude: 25.3200,
-    longitude: 83.0250,
-    location_name: 'Cantt Area, Varanasi',
-    photo_url: '/images/false-report.jpg',
-    ai_verification_score: 0.23,
-    status: 'rejected',
-    rejected_at: '2025-01-14T16:00:00Z',
-    submitted_at: '2025-01-14T15:30:00Z',
-    rejection_reason: 'AI and manual verification confirmed false report',
-    user: { name: 'Anonymous', phone: null },
-  },
 ];
 
 type ReportStatus = 'all' | 'pending' | 'verified' | 'rejected';
@@ -124,267 +103,163 @@ export default function ReportsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <span className="inline-flex items-center px-2 py-1 rounded bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-100 uppercase tracking-wide"><Clock className="h-3 w-3 mr-1" />Pending</span>;
       case 'verified':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="h-3 w-3 mr-1" />Verified</Badge>;
+        return <span className="inline-flex items-center px-2 py-1 rounded bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100 uppercase tracking-wide"><CheckCircle className="h-3 w-3 mr-1" />Verified</span>;
       case 'rejected':
-        return <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
+        return <span className="inline-flex items-center px-2 py-1 rounded bg-red-50 text-red-700 text-[10px] font-bold border border-red-100 uppercase tracking-wide"><XCircle className="h-3 w-3 mr-1" />Rejected</span>;
       default:
         return null;
     }
   };
 
-  const getAIScoreColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-600 bg-green-100';
-    if (score >= 0.5) return 'text-yellow-600 bg-yellow-100';
-    return 'text-red-600 bg-red-100';
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'flood':
-        return '🌊';
-      case 'blocked_drain':
-        return '🚰';
-      case 'road_damage':
-        return '🚧';
-      default:
-        return '📍';
-    }
-  };
-
   const pendingCount = mockReports.filter((r) => r.status === 'pending').length;
   const verifiedCount = mockReports.filter((r) => r.status === 'verified').length;
-  const rejectedCount = mockReports.filter((r) => r.status === 'rejected').length;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Community Reports</h1>
-        <p className="text-gray-500">Review and verify citizen flood reports</p>
-      </div>
+    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Reports</p>
-                <p className="text-2xl font-bold">{mockReports.length}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <FileText className="h-5 w-5 text-blue-600" />
-              </div>
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Report Validation</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Review and verify incoming citizen reports</p>
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-amber-50 text-amber-700 px-3 py-1.5 rounded-lg border border-amber-100 text-xs font-bold flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {pendingCount} Pending Reviews
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Pending Review</p>
-                <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <Clock className="h-5 w-5 text-yellow-600" />
-              </div>
+            <div className="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-100 text-xs font-bold flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              {verifiedCount} Verified Today
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Verified</p>
-                <p className="text-2xl font-bold text-green-600">{verifiedCount}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Rejected</p>
-                <p className="text-2xl font-bold text-red-600">{rejectedCount}</p>
-              </div>
-              <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search reports..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ReportStatus)}>
-          <SelectTrigger className="w-40">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="verified">Verified</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Reports List */}
-      <div className="space-y-4">
-        {filteredReports.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center text-gray-500">
-              No reports found matching your filters
-            </CardContent>
-          </Card>
-        ) : (
-          filteredReports.map((report) => (
-            <Card key={report.id} className={`transition-all ${selectedReport === report.id ? 'ring-2 ring-blue-500' : ''}`}>
-              <CardContent className="pt-6">
-                <div className="flex flex-col gap-4 lg:flex-row">
-                  {/* Left: Report Info */}
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+        {/* ── Filters ── */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search reports..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            />
+          </div>
+          <div className="flex gap-2 p-1 bg-white rounded-xl border border-slate-200 h-11 items-center">
+            {['all', 'pending', 'verified', 'rejected'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status as ReportStatus)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${statusFilter === status
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Reports List ── */}
+        <div className="space-y-4">
+          {filteredReports.length === 0 ? (
+            <div className="text-center py-20 bg-white rounded-2xl border border-slate-100 border-dashed">
+              <p className="text-slate-400 font-medium">No reports matching your criteria</p>
+            </div>
+          ) : (
+            filteredReports.map((report) => (
+              <div
+                key={report.id}
+                className={`group bg-white rounded-2xl border p-6 transition-all ${selectedReport === report.id ? 'border-blue-500 shadow-md ring-1 ring-blue-500' : 'border-slate-100 shadow-sm hover:border-slate-300'}`}
+              >
+                <div className="flex flex-col lg:flex-row gap-6">
                   <div className="flex-1">
-                    <div className="flex items-start gap-3 mb-3">
-                      <span className="text-2xl">{getTypeIcon(report.type)}</span>
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-4xl shrink-0">
+                        {report.type === 'flood' ? '🌊' : report.type === 'blocked_drain' ? '🚧' : '📍'}
+                      </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="font-semibold text-gray-900 capitalize">
-                            {report.type.replace('_', ' ')}
-                          </span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-bold text-slate-900 capitalize">{report.type.replace('_', ' ')}</h3>
                           {getStatusBadge(report.status)}
                         </div>
-                        <p className="text-sm text-gray-600">{report.description}</p>
-                      </div>
-                    </div>
+                        <p className="text-slate-600 text-sm leading-relaxed mb-4">{report.description}</p>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {report.location_name}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {new Date(report.submitted_at).toLocaleString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        {report.user.name}
-                      </span>
+                        <div className="flex flex-wrap gap-4 text-xs text-slate-500 font-medium font-mono">
+                          <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-50">
+                            <MapPin className="h-3 w-3" /> {report.location_name}
+                          </span>
+                          <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-50">
+                            <User className="h-3 w-3" /> {report.user.name}
+                          </span>
+                          <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-50">
+                            <Clock className="h-3 w-3" /> {new Date(report.submitted_at).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
                     {/* AI Score */}
-                    <div className="flex items-center gap-2">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-medium ${getAIScoreColor(report.ai_verification_score)}`}>
-                        <Bot className="h-4 w-4" />
+                    <div className="ml-16 flex items-center gap-3">
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-bold ${report.ai_verification_score > 0.8
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                          : 'bg-amber-50 text-amber-700 border-amber-100'
+                        }`}>
+                        <Bot className="h-3.5 w-3.5" />
                         AI Score: {(report.ai_verification_score * 100).toFixed(0)}%
                       </div>
-                      {report.ai_verification_score >= 0.8 && (
-                        <span className="text-xs text-green-600">High confidence</span>
-                      )}
-                      {report.ai_verification_score < 0.5 && (
-                        <span className="text-xs text-red-600">Low confidence - needs manual review</span>
+                      {report.photo_url && (
+                        <span className="text-xs font-bold text-blue-600 flex items-center gap-1 cursor-pointer hover:underline">
+                          <Camera className="h-3.5 w-3.5" /> View Photo
+                        </span>
                       )}
                     </div>
-
-                    {report.status === 'rejected' && report.rejection_reason && (
-                      <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                        Rejection reason: {report.rejection_reason}
-                      </div>
-                    )}
                   </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex flex-col gap-2 lg:w-40">
-                    {report.photo_url && (
-                      <Button variant="outline" size="sm">
-                        <Camera className="h-4 w-4 mr-2" />
-                        View Photo
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedReport(selectedReport === report.id ? null : report.id)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      {selectedReport === report.id ? 'Close' : 'Details'}
-                    </Button>
-
-                    {report.status === 'pending' && (
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2 lg:w-48 lg:border-l lg:border-slate-50 lg:pl-6 justify-center">
+                    {report.status === 'pending' ? (
                       <>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
+                        <button
                           onClick={() => verifyMutation.mutate({ id: report.id, action: 'verify' })}
-                          disabled={verifyMutation.isPending}
+                          className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
                         >
-                          {verifyMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <ThumbsUp className="h-4 w-4 mr-2" />
-                          )}
+                          {verifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsUp className="h-4 w-4" />}
                           Verify
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
+                        </button>
+                        <button
                           onClick={() => verifyMutation.mutate({ id: report.id, action: 'reject' })}
-                          disabled={verifyMutation.isPending}
+                          className="w-full py-2.5 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-slate-600 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                         >
-                          {verifyMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          ) : (
-                            <ThumbsDown className="h-4 w-4 mr-2" />
-                          )}
+                          {verifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ThumbsDown className="h-4 w-4" />}
                           Reject
-                        </Button>
+                        </button>
                       </>
+                    ) : (
+                      <button
+                        onClick={() => setSelectedReport(selectedReport === report.id ? null : report.id)}
+                        className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Details
+                      </button>
                     )}
                   </div>
                 </div>
+              </div>
+            ))
+          )}
+        </div>
 
-                {/* Expanded Details */}
-                {selectedReport === report.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-900 mb-2">Location Details</h4>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p>Coordinates: {report.latitude.toFixed(6)}, {report.longitude.toFixed(6)}</p>
-                          <p>Address: {report.location_name}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm text-gray-900 mb-2">Reporter Info</h4>
-                        <div className="space-y-1 text-sm text-gray-600">
-                          <p>Name: {report.user.name}</p>
-                          <p>Phone: {report.user.phone || 'Not provided'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
       </div>
     </div>
   );

@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Map, 
-  Route, 
-  Bell, 
-  Users, 
+import {
+  LayoutDashboard,
+  Map,
+  Route,
+  Bell,
+  Users,
   Menu,
   X,
   Waves
@@ -130,7 +130,7 @@ export default function OfficialLayout({
         </header>
 
         {/* Page Content */}
-        <main className="p-4 md:p-6">{children}</main>
+        <main>{children}</main>
       </div>
     </div>
   );

@@ -1,95 +1,86 @@
-import { Leaf, Droplets, Sun, CloudRain } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+'use client';
 
-export default function FarmingPage() {
+import Link from 'next/link';
+import { ArrowLeft, CloudRain, Sun, Droplets, ArrowUpRight } from 'lucide-react';
+
+export default function FarmingTipsPage() {
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 pb-20">
+
       {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-amber-100 mb-2">
-          <Leaf className="h-8 w-8 text-amber-600" />
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
+        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+          <Link href="/citizen" className="p-2 -ml-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="text-xl font-bold text-slate-900">Farming Insights</h1>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Farming Advisory</h1>
-        <p className="text-gray-600">
-          AI-powered crop recommendations based on satellite data
-        </p>
       </div>
 
-      {/* Coming Soon */}
-      <Card className="border-2 border-amber-200 bg-amber-50">
-        <CardContent className="pt-6 text-center">
-          <Badge className="bg-amber-500 mb-4">Coming Soon</Badge>
-          <h3 className="font-semibold text-amber-800 mb-2">
-            Satellite-Based Smart Farming
-          </h3>
-          <p className="text-sm text-amber-700">
-            This feature will integrate with Sentinel Hub to provide:
-          </p>
-        </CardContent>
-      </Card>
+      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
 
-      {/* Features Preview */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center mb-2">
-              <Leaf className="h-5 w-5 text-green-600" />
+        {/* Weather Summary */}
+        <div className="bg-gradient-to-br from-[#006DC4] to-blue-600 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+          {/* Abstract Circles */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+
+          <div className="relative z-10 flex justify-between items-center">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Tomorrow's Forecast</p>
+              <h2 className="text-3xl font-black mt-1">Light Rain</h2>
+              <p className="text-white/80 text-sm mt-1">Humidity: 85% • Wind: 12km/h</p>
             </div>
-            <CardTitle className="text-sm">NDVI Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-xs">
-              Vegetation health index from satellite imagery
-            </CardDescription>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center mb-2">
-              <Droplets className="h-5 w-5 text-blue-600" />
+            <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <CloudRain className="h-8 w-8 text-white" />
             </div>
-            <CardTitle className="text-sm">Soil Moisture</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-xs">
-              Real-time soil moisture index mapping
-            </CardDescription>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center mb-2">
-              <Sun className="h-5 w-5 text-amber-600" />
+        {/* Crop Recommendations */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Recommended Actions</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+
+            <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:border-emerald-200 transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 mb-4">
+                <ArrowUpRight className="h-5 w-5" />
+              </div>
+              <h4 className="font-bold text-slate-900">Plant Rice now</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Soil moisture is optimal (78%). Expected rainfall will support early growth.
+              </p>
             </div>
-            <CardTitle className="text-sm">Crop Advisory</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-xs">
-              AI recommendations for your specific plot
-            </CardDescription>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center mb-2">
-              <CloudRain className="h-5 w-5 text-purple-600" />
+            <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm hover:border-amber-200 transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 mb-4">
+                <Sun className="h-5 w-5" />
+              </div>
+              <h4 className="font-bold text-slate-900">Delay Wheat sowing</h4>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Wait 3 days for ground temperature to stabilize after current cold snap.
+              </p>
             </div>
-            <CardTitle className="text-sm">Irrigation Tips</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CardDescription className="text-xs">
-              When and how much to irrigate
-            </CardDescription>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="text-center text-xs text-gray-500">
-        <p>Powered by Sentinel Hub API & Groundwater Data</p>
+          </div>
+        </div>
+
+        {/* Soil Health */}
+        <div className="bg-white rounded-xl border border-slate-100 p-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center text-[#006DC4]">
+              <Droplets className="h-6 w-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900">Soil Moisture</h4>
+              <p className="text-xs text-slate-500">Sensor ID: #4492</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-black text-slate-800">78%</div>
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">OPTIMAL</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );

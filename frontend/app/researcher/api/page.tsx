@@ -17,9 +17,6 @@ import {
   Route,
   FileText
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 const endpoints = [
@@ -75,113 +72,6 @@ const endpoints = [
   "longitude": 83.0065
 }`,
   },
-  {
-    id: 'predict-flood',
-    method: 'POST',
-    path: '/api/predict/flood',
-    description: 'AI-powered flood risk prediction for next 72 hours',
-    category: 'Prediction',
-    icon: Zap,
-    params: [
-      { name: 'latitude', type: 'number', required: true, description: 'Latitude coordinate' },
-      { name: 'longitude', type: 'number', required: true, description: 'Longitude coordinate' },
-      { name: 'hours', type: 'number', required: false, description: 'Prediction horizon (default: 72)' },
-    ],
-    response: `{
-  "predictions": [
-    { "hour": 24, "risk": 0.15, "water_level": 68.2 },
-    { "hour": 48, "risk": 0.45, "water_level": 71.5 },
-    { "hour": 72, "risk": 0.72, "water_level": 74.8 }
-  ],
-  "peak_risk_hour": 72,
-  "recommended_action": "prepare_evacuation"
-}`,
-    example: `POST /api/predict/flood
-{
-  "latitude": 25.3176,
-  "longitude": 83.0065,
-  "hours": 72
-}`,
-  },
-  {
-    id: 'reports-submit',
-    method: 'POST',
-    path: '/api/reports/submit',
-    description: 'Submit a community flood report with optional photo',
-    category: 'Reports',
-    icon: FileText,
-    params: [
-      { name: 'type', type: 'string', required: true, description: 'Report type: flood, blocked_drain, road_damage' },
-      { name: 'description', type: 'string', required: true, description: 'Detailed description' },
-      { name: 'latitude', type: 'number', required: true, description: 'Location latitude' },
-      { name: 'longitude', type: 'number', required: true, description: 'Location longitude' },
-      { name: 'photo_base64', type: 'string', required: false, description: 'Base64 encoded photo' },
-    ],
-    response: `{
-  "id": 123,
-  "status": "pending",
-  "ai_verification_score": 0.87,
-  "created_at": "2025-01-15T14:30:00Z"
-}`,
-    example: `POST /api/reports/submit
-{
-  "type": "flood",
-  "description": "Water rising near ghat",
-  "latitude": 25.3109,
-  "longitude": 83.0107
-}`,
-  },
-  {
-    id: 'evacuation-route',
-    method: 'GET',
-    path: '/api/evacuation/route',
-    description: 'Calculate safest evacuation route to nearest shelter',
-    category: 'Evacuation',
-    icon: Route,
-    params: [
-      { name: 'start_lat', type: 'number', required: true, description: 'Starting latitude' },
-      { name: 'start_lng', type: 'number', required: true, description: 'Starting longitude' },
-      { name: 'preference', type: 'string', required: false, description: 'Route type: safest, fastest, shortest' },
-    ],
-    response: `{
-  "distance_km": 3.2,
-  "estimated_time_min": 15,
-  "safety_score": 85,
-  "shelter": {
-    "name": "Community Center",
-    "capacity": 500,
-    "occupancy": 120
-  },
-  "waypoints": [...]
-}`,
-    example: 'GET /api/evacuation/route?start_lat=25.31&start_lng=83.01&preference=safest',
-  },
-  {
-    id: 'alerts-active',
-    method: 'GET',
-    path: '/api/alerts/active',
-    description: 'Get all currently active flood alerts',
-    category: 'Alerts',
-    icon: AlertTriangle,
-    params: [
-      { name: 'zone', type: 'string', required: false, description: 'Filter by zone name' },
-      { name: 'severity', type: 'string', required: false, description: 'Filter by severity: info, warning, critical' },
-    ],
-    response: `{
-  "alerts": [
-    {
-      "id": 1,
-      "title": "Flash Flood Warning",
-      "severity": "critical",
-      "zone": "Varanasi Ghats",
-      "message": "Move to higher ground",
-      "created_at": "2025-01-15T14:30:00Z"
-    }
-  ],
-  "total": 1
-}`,
-    example: 'GET /api/alerts/active?severity=critical',
-  },
 ];
 
 const codeExamples = {
@@ -232,195 +122,155 @@ export default function ApiDocsPage() {
 
   const getMethodColor = (method: string) => {
     switch (method) {
-      case 'GET':
-        return 'bg-green-100 text-green-800';
-      case 'POST':
-        return 'bg-blue-100 text-blue-800';
-      case 'PUT':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'DELETE':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'GET': return 'bg-emerald-100 text-emerald-700';
+      case 'POST': return 'bg-blue-100 text-blue-700';
+      case 'PUT': return 'bg-amber-100 text-amber-700';
+      case 'DELETE': return 'bg-red-100 text-red-700';
+      default: return 'bg-slate-100 text-slate-700';
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">API Documentation</h1>
-          <p className="text-gray-500">REST API reference for flood prediction and monitoring</p>
+    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">API Reference</h1>
+            <p className="text-slate-500 text-xs font-medium mt-1">Integrate flood intelligence into your apps</p>
+          </div>
+          <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">
+            <ExternalLink className="h-4 w-4" />
+            Swagger UI
+          </a>
         </div>
-        <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer">
-          <Button variant="outline">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            OpenAPI Spec
-          </Button>
-        </a>
       </div>
 
-      {/* Auth Section */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-amber-900">
-            <Key className="h-5 w-5" />
-            Authentication
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-amber-800">
-            All API requests require a Bearer token in the Authorization header.
-          </p>
-          <div className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-sm overflow-x-auto">
-            Authorization: Bearer your-api-key
-          </div>
-          <div className="flex items-center gap-2 text-xs text-amber-700">
-            <Lock className="h-4 w-4" />
-            Rate limit: 1000 requests/hour per API key
-          </div>
-        </CardContent>
-      </Card>
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-      {/* Quick Start */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Start</CardTitle>
-          <CardDescription>Get started with a simple API call</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 mb-4">
-            {(['python', 'javascript', 'curl'] as const).map((lang) => (
-              <Button
-                key={lang}
-                variant={selectedLang === lang ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedLang(lang)}
+        {/* ── Auth Card ── */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 bg-amber-50/50 flex items-center justify-between">
+            <h3 className="font-bold text-amber-900 flex items-center gap-2">
+              <Key className="h-4 w-4 text-amber-500" />
+              Authentication
+            </h3>
+          </div>
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-slate-600">All requests must include your API key in the header.</p>
+            <div className="bg-slate-900 rounded-xl p-4 font-mono text-sm text-emerald-400 border border-slate-800 flex items-center justify-between">
+              <span>Authorization: Bearer &lt;your_api_key&gt;</span>
+              <Lock className="h-4 w-4 text-slate-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Quick Start ── */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50 flex items-center justify-between">
+            <h3 className="font-bold text-slate-900 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-blue-500" />
+              Quick Start
+            </h3>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              {['python', 'javascript', 'curl'].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => setSelectedLang(lang as any)}
+                  className={`px-3 py-1 rounded-md text-xs font-bold capitalize transition-all ${selectedLang === lang ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="p-0">
+            <div className="relative group">
+              <pre className="p-6 bg-[#0B1120] text-slate-300 font-mono text-sm overflow-x-auto">
+                {codeExamples[selectedLang]}
+              </pre>
+              <button
+                onClick={() => copyToClipboard(codeExamples[selectedLang], 'quickstart')}
+                className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"
               >
-                {lang.charAt(0).toUpperCase() + lang.slice(1)}
-              </Button>
-            ))}
+                {copiedId === 'quickstart' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-          <div className="relative">
-            <pre className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-              {codeExamples[selectedLang]}
-            </pre>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 text-gray-400 hover:text-white"
-              onClick={() => copyToClipboard(codeExamples[selectedLang], 'quickstart')}
-            >
-              {copiedId === 'quickstart' ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Endpoints */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Endpoints</h2>
-        
-        {endpoints.map((endpoint) => (
-          <Card key={endpoint.id} className="overflow-hidden">
-            <button
-              className="w-full text-left"
-              onClick={() => setExpandedEndpoint(expandedEndpoint === endpoint.id ? null : endpoint.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  {expandedEndpoint === endpoint.id ? (
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-500" />
-                  )}
-                  <Badge className={`text-xs font-mono ${getMethodColor(endpoint.method)}`}>
+        {/* ── Endpoints ── */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900 px-2">Available Endpoints</h3>
+          {endpoints.map((endpoint) => (
+            <div key={endpoint.id} className="bg-white rounded-2xl border border-slate-100 overflow-hidden transition-all hover:border-slate-300">
+              <button
+                onClick={() => setExpandedEndpoint(expandedEndpoint === endpoint.id ? null : endpoint.id)}
+                className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-50/50 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-mono tracking-wide ${getMethodColor(endpoint.method)}`}>
                     {endpoint.method}
-                  </Badge>
-                  <code className="font-mono text-sm text-gray-900">{endpoint.path}</code>
-                  <Badge variant="outline" className="text-xs ml-auto">
-                    {endpoint.category}
-                  </Badge>
+                  </span>
+                  <code className="text-sm font-bold text-slate-700">{endpoint.path}</code>
                 </div>
-                <CardDescription className="ml-7 mt-1">{endpoint.description}</CardDescription>
-              </CardHeader>
-            </button>
+                <div className="flex items-center gap-4">
+                  <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">{endpoint.category}</span>
+                  {expandedEndpoint === endpoint.id ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
+                </div>
+              </button>
 
-            {expandedEndpoint === endpoint.id && (
-              <CardContent className="border-t bg-gray-50 space-y-4">
-                {/* Parameters */}
-                <div>
-                  <h4 className="font-medium text-sm text-gray-900 mb-2">Parameters</h4>
-                  <div className="bg-white rounded-lg border overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="text-left px-3 py-2 font-medium">Name</th>
-                          <th className="text-left px-3 py-2 font-medium">Type</th>
-                          <th className="text-left px-3 py-2 font-medium">Required</th>
-                          <th className="text-left px-3 py-2 font-medium">Description</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {endpoint.params.map((param) => (
-                          <tr key={param.name} className="border-t">
-                            <td className="px-3 py-2 font-mono text-purple-600">{param.name}</td>
-                            <td className="px-3 py-2 text-gray-600">{param.type}</td>
-                            <td className="px-3 py-2">
-                              {param.required ? (
-                                <Badge variant="destructive" className="text-xs">Required</Badge>
-                              ) : (
-                                <Badge variant="outline" className="text-xs">Optional</Badge>
-                              )}
-                            </td>
-                            <td className="px-3 py-2 text-gray-600">{param.description}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              {expandedEndpoint === endpoint.id && (
+                <div className="border-t border-slate-100 bg-slate-50 p-6 space-y-6 animate-in slide-in-from-top-2">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Parameters</h4>
+                      <div className="bg-white rounded-xl border border-slate-100 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500">Name</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500">Type</th>
+                              <th className="px-4 py-2 text-left text-xs font-bold text-slate-500">Required</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-50">
+                            {endpoint.params.map(p => (
+                              <tr key={p.name}>
+                                <td className="px-4 py-2.5 font-mono text-blue-600">{p.name}</td>
+                                <td className="px-4 py-2.5 text-slate-500">{p.type}</td>
+                                <td className="px-4 py-2.5">
+                                  {p.required ? <span className="text-red-500 text-xs font-bold">Yes</span> : <span className="text-slate-400 text-xs">No</span>}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Example Response</h4>
+                      <div className="bg-[#0B1120] rounded-xl p-4 overflow-hidden relative group">
+                        <pre className="text-emerald-400 font-mono text-xs overflow-x-auto">
+                          {endpoint.response}
+                        </pre>
+                        <button
+                          onClick={() => copyToClipboard(endpoint.response, `resp-${endpoint.id}`)}
+                          className="absolute top-2 right-2 p-1.5 bg-slate-800 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          {copiedId === `resp-${endpoint.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              )}
+            </div>
+          ))}
+        </div>
 
-                {/* Example Request */}
-                <div>
-                  <h4 className="font-medium text-sm text-gray-900 mb-2">Example Request</h4>
-                  <div className="relative">
-                    <pre className="bg-gray-900 text-green-400 p-3 rounded-lg font-mono text-xs overflow-x-auto">
-                      {endpoint.example}
-                    </pre>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-1 right-1 text-gray-400 hover:text-white h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(endpoint.example, `example-${endpoint.id}`)}
-                    >
-                      {copiedId === `example-${endpoint.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Response */}
-                <div>
-                  <h4 className="font-medium text-sm text-gray-900 mb-2">Response</h4>
-                  <div className="relative">
-                    <pre className="bg-gray-900 text-blue-400 p-3 rounded-lg font-mono text-xs overflow-x-auto">
-                      {endpoint.response}
-                    </pre>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-1 right-1 text-gray-400 hover:text-white h-6 w-6 p-0"
-                      onClick={() => copyToClipboard(endpoint.response, `response-${endpoint.id}`)}
-                    >
-                      {copiedId === `response-${endpoint.id}` ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
       </div>
     </div>
   );
