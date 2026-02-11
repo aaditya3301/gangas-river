@@ -25,8 +25,13 @@ class Settings(BaseSettings):
     MAPBOX_API_KEY: str | None = None
     TWILIO_ACCOUNT_SID: str | None = None
     TWILIO_AUTH_TOKEN: str | None = None
+    TWILIO_PHONE_NUMBER: str | None = None
+    TWILIO_WHATSAPP_NUMBER: str | None = None  # e.g. whatsapp:+14155238886
     SENTINEL_HUB_CLIENT_ID: str | None = None
     SENTINEL_HUB_CLIENT_SECRET: str | None = None
+    
+    # Emergency Contacts (comma-separated phone numbers with country code)
+    EMERGENCY_CONTACTS: str = ""
     
     # App Settings
     DEBUG: bool = True
@@ -39,6 +44,13 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         """Parse CORS origins string into list"""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+    
+    @property
+    def emergency_contacts_list(self) -> List[str]:
+        """Parse emergency contacts string into list"""
+        if not self.EMERGENCY_CONTACTS:
+            return []
+        return [c.strip() for c in self.EMERGENCY_CONTACTS.split(",") if c.strip()]
     
     class Config:
         env_file = ".env"

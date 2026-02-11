@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.session import init_db, close_db
-from app.api.routes import auth, safety, reports, predict, zones, evacuation, health
+from app.api.routes import auth, safety, reports, predict, zones, evacuation, health, emergency
 
 
 @asynccontextmanager
@@ -68,6 +68,7 @@ app.include_router(reports.router, prefix="/api/reports", tags=["Community Repor
 app.include_router(predict.router, prefix="/api/predict", tags=["Flood Prediction"])
 app.include_router(zones.router, prefix="/api/zones", tags=["Policy Zones"])
 app.include_router(evacuation.router, prefix="/api/evacuation", tags=["Evacuation"])
+app.include_router(emergency.router, prefix="/api/emergency", tags=["Emergency Alerts"])
 
 
 @app.get("/")

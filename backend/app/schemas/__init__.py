@@ -202,3 +202,26 @@ class PaginatedResponse(BaseModel):
     page: int
     per_page: int
     pages: int
+
+
+# ============== Emergency Alert Schemas ==============
+
+class EmergencyAlertRequest(BaseModel):
+    """Request to activate emergency voice calls"""
+    title: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=500)
+    severity: str = Field("warning", pattern="^(info|warning|critical)$")
+    phone_numbers: list[str] = Field(..., min_length=1, max_length=50)
+
+
+class EmergencyAlertResponse(BaseModel):
+    """Response from emergency alert activation"""
+    success: bool
+    title: str
+    message: str
+    severity: str
+    total_calls: int
+    successful: int
+    failed: int
+    call_details: list[dict] = []
+

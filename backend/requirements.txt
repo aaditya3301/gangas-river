@@ -41,3 +41,6 @@ starlette==0.36.3
 
 # Environment
 python-dotenv==1.0.1
+
+# Twilio (Voice calls for emergency alerts)
+twilio==9.0.0
