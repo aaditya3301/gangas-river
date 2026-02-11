@@ -2,17 +2,20 @@
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { 
-  AlertTriangle, FileText, MapPin, Activity, Waves, Home, Map, 
+import { useMutation } from '@tanstack/react-query';
+import {
+  AlertTriangle, FileText, MapPin, Activity, Waves, Home, Map,
   Phone, Bell, Users, TrendingUp, Clock, Shield, Award,
   ChevronRight, PhoneCall, MessageSquare, CheckCircle2,
-  Upload, Star, Trophy, BarChart3, Droplets, Navigation
+  Upload, Star, Trophy, BarChart3, Droplets, Navigation, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 import Link from 'next/link';
+import { emergencyAPI } from '@/lib/api';
 
 // Dynamic import for MapView
 const MapView = dynamic(() => import('@/components/MapView'), {
@@ -57,13 +60,35 @@ const ngoRankings = [
 export default function OfficialDashboard() {
   const [emergencyActive, setEmergencyActive] = useState(false);
   const [showContributionForm, setShowContributionForm] = useState(false);
+  const [confirmingEmergency, setConfirmingEmergency] = useState(false);
 
-  const handleEmergencyAlert = () => {
-    setEmergencyActive(true);
-    // Simulate emergency broadcast
-    setTimeout(() => {
-      setEmergencyActive(false);
-    }, 5000);
+  const emergencyMutation = useMutation({
+    mutationFn: () => emergencyAPI.activate({ severity: 'critical' }),
+    onSuccess: (data: any) => {
+      setEmergencyActive(true);
+      setConfirmingEmergency(false);
+      toast.success(
+        `✅ WhatsApp alerts sent! ${data.successful}/${data.total} delivered successfully.`
+      );
+      setTimeout(() => setEmergencyActive(false), 8000);
+    },
+    onError: (error: any) => {
+      setConfirmingEmergency(false);
+      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
+      toast.error(`❌ Emergency alert failed: ${detail}`);
+    },
+  });
+
+  const handleEmergencyClick = () => {
+    if (confirmingEmergency) {
+      // Second click = confirm and send
+      emergencyMutation.mutate();
+    } else {
+      // First click = show confirm state
+      setConfirmingEmergency(true);
+      // Auto-reset confirm after 5 seconds if not clicked
+      setTimeout(() => setConfirmingEmergency(false), 5000);
+    }
   };
 
   return (
@@ -93,51 +118,68 @@ export default function OfficialDashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Emergency Alert Status */}
         {emergencyActive && (
-          <Alert className="mb-6 border-red-200 bg-red-50 animate-pulse">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-900 flex items-center justify-between">
-              <span>
-                <strong>EMERGENCY BROADCAST ACTIVE:</strong> SMS & Voice calls being sent to all registered citizens and officials...
-              </span>
+          <Alert className="mb-6 border-emerald-200 bg-emerald-50">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <AlertDescription className="text-emerald-900">
+              <strong>EMERGENCY ALERTS SENT!</strong> WhatsApp messages delivered to all emergency contacts.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Emergency Broadcast Button */}
-        <Card className="mb-6 border-red-200 bg-gradient-to-br from-red-50 to-orange-50">
+        {/* Emergency Broadcast Button — ONE CLICK */}
+        <Card className={`mb-6 border-red-200 transition-all ${confirmingEmergency ? 'bg-gradient-to-br from-red-100 to-orange-100 ring-2 ring-red-400' : 'bg-gradient-to-br from-red-50 to-orange-50'}`}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="h-14 w-14 rounded-xl bg-red-600 flex items-center justify-center">
-                  <PhoneCall className="h-7 w-7 text-white" />
+                  <MessageSquare className="h-7 w-7 text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Emergency Broadcast System</h2>
-                  <p className="text-sm text-slate-600 mt-0.5">Send instant SMS & voice alerts to all citizens in affected zones</p>
+                  <p className="text-sm text-slate-600 mt-0.5">
+                    {confirmingEmergency
+                      ? '⚠️ Click again to confirm — WhatsApp alerts will be sent to all emergency contacts'
+                      : 'Send instant WhatsApp alerts to all emergency contacts'
+                    }
+                  </p>
                 </div>
               </div>
-              <Button 
-                size="lg" 
-                onClick={handleEmergencyAlert}
-                disabled={emergencyActive}
-                className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-6"
+              <Button
+                size="lg"
+                onClick={handleEmergencyClick}
+                disabled={emergencyActive || emergencyMutation.isPending}
+                className={`font-bold rounded-xl px-6 transition-all ${confirmingEmergency
+                    ? 'bg-red-700 hover:bg-red-800 text-white animate-pulse'
+                    : 'bg-red-600 hover:bg-red-700 text-white'
+                  }`}
               >
-                <Phone className="h-5 w-5 mr-2" />
-                {emergencyActive ? 'Broadcasting...' : 'Activate Emergency Alert'}
+                {emergencyMutation.isPending ? (
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                ) : (
+                  <Phone className="h-5 w-5 mr-2" />
+                )}
+                {emergencyMutation.isPending
+                  ? 'Sending...'
+                  : confirmingEmergency
+                    ? 'Confirm & Send Now'
+                    : emergencyActive
+                      ? 'Alerts Sent ✓'
+                      : 'Activate Emergency Alert'
+                }
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-red-100">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>4,523</strong> Citizens registered</span>
+                <span className="text-sm text-slate-700"><strong>2</strong> Emergency contacts</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>156</strong> Officials on duty</span>
+                <Phone className="h-4 w-4 text-red-600" />
+                <span className="text-sm text-slate-700"><strong>WhatsApp</strong> delivery</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-red-600" />
-                <span className="text-sm text-slate-700"><strong>&lt;30s</strong> Delivery time</span>
+                <span className="text-sm text-slate-700"><strong>&lt;5s</strong> Delivery time</span>
               </div>
             </div>
           </CardContent>
@@ -316,8 +358,8 @@ export default function OfficialDashboard() {
                       <span className="text-sm font-bold text-slate-900">{item.value}</span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-1.5">
-                      <div 
-                        className="bg-amber-600 h-1.5 rounded-full transition-all" 
+                      <div
+                        className="bg-amber-600 h-1.5 rounded-full transition-all"
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>
@@ -355,13 +397,12 @@ export default function OfficialDashboard() {
           <CardContent className="p-6">
             <div className="space-y-3">
               {ngoRankings.map((ngo) => (
-                <div 
+                <div
                   key={ngo.rank}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
-                    ngo.rank <= 3 
-                      ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200' 
-                      : 'bg-slate-50 border-slate-200'
-                  }`}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${ngo.rank <= 3
+                    ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
+                    : 'bg-slate-50 border-slate-200'
+                    }`}
                 >
                   <div className="flex items-center gap-4">
                     <div className={`text-3xl ${ngo.rank <= 3 ? 'scale-110' : ''}`}>
@@ -418,19 +459,17 @@ export default function OfficialDashboard() {
                 ].map((zone, idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
                     <div className="flex items-center gap-3">
-                      <div className={`h-2 w-2 rounded-full ${
-                        zone.risk === 'high' ? 'bg-red-500' :
+                      <div className={`h-2 w-2 rounded-full ${zone.risk === 'high' ? 'bg-red-500' :
                         zone.risk === 'medium' ? 'bg-amber-500' : 'bg-emerald-500'
-                      }`} />
+                        }`} />
                       <div>
                         <p className="text-sm font-medium text-slate-900">{zone.name}</p>
                         <p className="text-xs text-slate-500">{zone.affected} people affected</p>
                       </div>
                     </div>
-                    <TrendingUp className={`h-4 w-4 ${
-                      zone.trend === 'up' ? 'text-red-600' :
+                    <TrendingUp className={`h-4 w-4 ${zone.trend === 'up' ? 'text-red-600' :
                       zone.trend === 'down' ? 'text-emerald-600' : 'text-slate-400'
-                    } ${zone.trend === 'down' ? 'rotate-180' : ''}`} />
+                      } ${zone.trend === 'down' ? 'rotate-180' : ''}`} />
                   </div>
                 ))}
               </div>

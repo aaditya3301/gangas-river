@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   Smartphone,
   Mail,
-  Siren
+  Siren,
+  PhoneCall
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { emergencyAPI } from '@/lib/api';
 
 // Mock alert history
 const mockAlertHistory = [
@@ -77,6 +79,7 @@ export default function AlertsPage() {
   const [severity, setSeverity] = useState<string>('warning');
   const [targetZone, setTargetZone] = useState<string>('all');
   const [channels, setChannels] = useState<string[]>(['sms', 'push']);
+  const [phoneNumbers, setPhoneNumbers] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
 
   const sendAlertMutation = useMutation({
@@ -108,7 +111,36 @@ export default function AlertsPage() {
     setShowConfirm(true);
   };
 
+  const emergencyCallMutation = useMutation({
+    mutationFn: emergencyAPI.activate,
+    onSuccess: (data: any) => {
+      toast.success(`Voice calls initiated! ${data.successful}/${data.total_calls} calls successful.`);
+      setShowConfirm(false);
+      setPhoneNumbers('');
+    },
+    onError: (error: any) => {
+      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
+      toast.error(`Voice call failed: ${detail}`);
+    },
+  });
+
   const confirmSend = () => {
+    // If voice call channel is selected, also trigger Twilio calls
+    if (channels.includes('voice')) {
+      const numbers = phoneNumbers.split(',').map(n => n.trim()).filter(n => n.length > 0);
+      if (numbers.length === 0) {
+        toast.error('Please enter phone numbers for voice call channel');
+        return;
+      }
+      emergencyCallMutation.mutate({
+        title,
+        message,
+        severity,
+        phone_numbers: numbers,
+      });
+    }
+
+    // Also send the regular alert (SMS, push, etc.)
     sendAlertMutation.mutate({
       title,
       message,
@@ -322,8 +354,34 @@ export default function AlertsPage() {
                   <Radio className="h-4 w-4 mr-1" />
                   Sirens
                 </Button>
+                <Button
+                  type="button"
+                  variant={channels.includes('voice') ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => toggleChannel('voice')}
+                >
+                  <PhoneCall className="h-4 w-4 mr-1" />
+                  Voice Call
+                </Button>
               </div>
             </div>
+
+            {channels.includes('voice') && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                  Voice Call Phone Numbers *
+                </label>
+                <Textarea
+                  placeholder="Enter phone numbers separated by commas&#10;e.g. +919876543210, +919876543211"
+                  value={phoneNumbers}
+                  onChange={(e) => setPhoneNumbers(e.target.value)}
+                  rows={2}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  E.164 format required. Twilio trial accounts can only call verified numbers.
+                </p>
+              </div>
+            )}
 
             {showConfirm ? (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg space-y-3">
@@ -336,7 +394,7 @@ export default function AlertsPage() {
                 <div className="flex gap-2">
                   <Button
                     onClick={confirmSend}
-                    disabled={sendAlertMutation.isPending}
+                    disabled={sendAlertMutation.isPending || emergencyCallMutation.isPending}
                     className="bg-red-600 hover:bg-red-700"
                   >
                     {sendAlertMutation.isPending ? (

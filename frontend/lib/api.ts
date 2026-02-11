@@ -155,6 +155,21 @@ export const evacuationAPI = {
   },
 };
 
+// ============ Emergency API ============
+export const emergencyAPI = {
+  /** One-click: sends WhatsApp alerts to pre-configured emergency contacts */
+  activate: async (data?: { message?: string; severity?: string }) => {
+    const response = await api.post('/api/emergency/activate', data || {});
+    return response.data;
+  },
+
+  /** Get configured emergency contacts */
+  getContacts: async () => {
+    const response = await api.get('/api/emergency/contacts');
+    return response.data;
+  },
+};
+
 // ============ Health API ============
 export const healthAPI = {
   check: async () => {
