@@ -1,228 +1,423 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { Shield, Users, BarChart3, ArrowRight, Waves, Zap, Globe, Activity, ChevronRight, Play } from 'lucide-react';
+import {
+  Shield, Users, BarChart3, ArrowRight, Waves, Zap, Globe, Activity,
+  Droplets, MapPin, Satellite, AlertTriangle, Database, Eye, Radio,
+  ChevronRight, Sparkles, CheckCircle2, Smartphone, Microscope, Heart,
+  ShoppingCart, Menu,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+/* ─── portal data ─── */
 const portals = [
   {
+    id: 0,
     href: '/citizen',
     icon: Shield,
+    heroIcon: Droplets,
     title: 'Citizens',
-    description: 'Check safety status, report issues, and receive alerts.',
-    color: 'bg-blue-600',
+    subtitle: 'Safety First',
+    gradient: 'from-blue-400 to-cyan-300',
+    glow: 'rgba(34,211,238,0.35)',
+    iconBg: 'bg-gradient-to-br from-blue-500 to-cyan-500',
+    cardBg: 'from-sky-100 to-blue-50',
+    cardBorder: 'border-blue-200',
+    illustration: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=400&fit=crop',
   },
   {
+    id: 1,
     href: '/official',
     icon: Users,
+    heroIcon: Waves,
     title: 'Officials',
-    description: 'Manage alerts, evacuations, and monitor flood zones.',
-    color: 'bg-violet-600',
+    subtitle: 'Command Center',
+    gradient: 'from-violet-400 to-fuchsia-300',
+    glow: 'rgba(168,85,247,0.35)',
+    iconBg: 'bg-gradient-to-br from-violet-500 to-fuchsia-500',
+    cardBg: 'from-violet-100 to-fuchsia-50',
+    cardBorder: 'border-violet-200',
+    illustration: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=400&fit=crop',
   },
   {
+    id: 2,
     href: '/researcher',
     icon: BarChart3,
+    heroIcon: Activity,
     title: 'Researchers',
-    description: 'Access datasets, train models, and analyze patterns.',
-    color: 'bg-emerald-600',
+    subtitle: 'Data Lab',
+    gradient: 'from-emerald-400 to-teal-300',
+    glow: 'rgba(52,211,153,0.35)',
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500',
+    cardBg: 'from-emerald-100 to-teal-50',
+    cardBorder: 'border-emerald-200',
+    illustration: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=400&h=400&fit=crop',
   },
 ];
 
-const stats = [
-  { value: '1.7GB', label: 'LiDAR Data', icon: Globe },
-  { value: '99.2%', label: 'Accuracy', icon: Activity },
-  { value: '<30s', label: 'Alert Time', icon: Zap },
-  { value: '24/7', label: 'Monitoring', icon: Waves },
-];
+/** Returns [left, centre, right] portals with the active one in centre */
+function getOrbOrder(activeId: number) {
+  const others = portals.filter((p) => p.id !== activeId);
+  return [others[0], portals[activeId], others[1]];
+}
 
 export default function HomePage() {
+  const [active, setActive] = useState(0);
+  const current = portals[active];
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-sm border-b border-white/10">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-blue-500 flex items-center justify-center">
-              <Waves className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-lg text-white">AquaGuardians</span>
+    <div className="landing-scene">
+
+      {/* ───────── NAV (Layer 5 — top UI) ───────── */}
+      <nav className="fixed top-0 inset-x-0 z-50">
+        <div className="mx-auto max-w-7xl px-8 pt-6 flex items-center justify-center">
+          {/* logo */}
+          <Link href="/" className="absolute left-8 flex items-center gap-2 group">
+            <Waves className="h-6 w-6 text-white/80 group-hover:text-white transition-colors" />
+            <span className="text-white/90 font-semibold text-sm tracking-wide">AquaGuardians</span>
           </Link>
-          <div className="flex items-center gap-8">
-            <Link href="/" className="hidden md:block text-sm text-white hover:text-blue-300 transition-colors">
-              Home
-            </Link>
-            <Link href="/citizen" className="hidden md:block text-sm text-white hover:text-blue-300 transition-colors">
-              Solutions
-            </Link>
-            <Link href="/researcher" className="hidden md:block text-sm text-white hover:text-blue-300 transition-colors">
-              About Us
-            </Link>
-            <Link href="/official" className="hidden md:block text-sm text-white hover:text-blue-300 transition-colors">
-              Customers
-            </Link>
-            <Link href="/citizen">
-              <Button className="bg-blue-500 hover:bg-blue-600 text-white border-0">
-                Get In Touch
-              </Button>
-            </Link>
+
+          {/* center nav pills */}
+          <div className="flex items-center gap-1 bg-white/[0.08] backdrop-blur-xl rounded-xl px-1.5 py-1.5 border border-white/[0.08]">
+            {portals.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setActive(p.id)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 ${
+                  active === p.id
+                    ? 'bg-white/[0.15] text-white shadow-sm'
+                    : 'text-white/50 hover:text-white/80'
+                }`}
+              >
+                {p.title}
+              </button>
+            ))}
           </div>
+
+          {/* right action */}
+          <Link href={current.href} className="absolute right-8">
+            <div className="h-10 w-10 rounded-xl bg-white/[0.08] backdrop-blur-xl border border-white/[0.08] grid place-items-center hover:bg-white/[0.15] transition-all cursor-pointer">
+              <ArrowRight className="h-4 w-4 text-white/70" />
+            </div>
+          </Link>
         </div>
       </nav>
 
-      {/* Hero Section with Background Image */}
-      <section className="relative min-h-[600px] flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
+      {/* ───────── FULL SCENE (single viewport) ───────── */}
+      <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col items-center justify-end">
+
+        {/* ── Layer 1: Background ── */}
+        <div className="absolute inset-0 landing-bg" />
+
+        {/* ambient glow behind hero */}
+        <div
+          className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full blur-[120px] transition-all duration-700"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?q=80&w=2070')",
+            top: '12%',
+            background: `radial-gradient(circle, ${current.glow} 0%, transparent 70%)`,
           }}
-        >
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/90 via-slate-800/85 to-slate-900/90" />
+        />
+
+        {/* ── THREE ORBS: left · active centre · right ── */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[24%] md:top-[22%] z-20 flex flex-col items-center">
+
+          {/* Orb row */}
+          <div className="flex items-center gap-8 md:gap-14">
+            {getOrbOrder(active).map((portal, idx) => {
+              const isCenter = idx === 1;
+              return (
+                <button
+                  key={portal.id}
+                  onClick={() => setActive(portal.id)}
+                  className={`relative group cursor-pointer transition-all duration-700 ease-[cubic-bezier(.4,0,.2,1)] ${
+                    isCenter ? 'z-10' : 'z-0 hover:scale-110'
+                  }`}
+                >
+                  {/* glow behind orb */}
+                  <div
+                    className={`absolute rounded-full blur-2xl transition-all duration-700 ${
+                      isCenter ? '-inset-8 opacity-100' : '-inset-4 opacity-50 group-hover:opacity-80'
+                    }`}
+                    style={{ background: `radial-gradient(circle, ${portal.glow} 0%, transparent 70%)` }}
+                  />
+
+                  {/* orb body */}
+                  <div className={`relative rounded-full bg-gradient-to-b ${portal.gradient} grid place-items-center shadow-2xl transition-all duration-700 ${
+                    isCenter
+                      ? 'w-48 h-48 md:w-64 md:h-64 landing-float ring-2 ring-white/20'
+                      : 'w-36 h-36 md:w-48 md:h-48 opacity-80 group-hover:opacity-100'
+                  }`}>
+                    <img 
+                      src={portal.illustration} 
+                      alt={portal.title}
+                      className={`rounded-full object-cover drop-shadow-2xl transition-all duration-500 ${
+                        isCenter ? 'w-48 h-48 md:w-64 md:h-64' : 'w-36 h-36 md:w-48 md:h-48'
+                      }`}
+                    />
+                    {/* glass shine */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-b from-white/25 via-transparent to-transparent" />
+                  </div>
+
+                  {/* label below orb */}
+                  <p className={`mt-3 text-center font-bold uppercase tracking-widest transition-all duration-500 ${
+                    isCenter
+                      ? 'text-[11px] md:text-xs text-white/80'
+                      : 'text-[9px] md:text-[10px] text-white/40 group-hover:text-white/60'
+                  }`}>
+                    {portal.title}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* ── Layer 2: TERRAIN (mountain/wave) ── */}
+        <div className="absolute bottom-0 inset-x-0 z-30 pointer-events-none">
+          {/* main terrain shape */}
+          <svg viewBox="0 0 1440 520" className="w-full h-auto" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="tGrad1" x1="0.5" y1="0" x2="0.5" y2="1">
+                <stop offset="0%" stopColor="#1a3a5c" stopOpacity="0.9"/>
+                <stop offset="40%" stopColor="#0f2744" stopOpacity="0.95"/>
+                <stop offset="100%" stopColor="#080c18" stopOpacity="1"/>
+              </linearGradient>
+              <linearGradient id="tGrad2" x1="0.5" y1="0" x2="0.5" y2="1">
+                <stop offset="0%" stopColor="#163552" stopOpacity="0.7"/>
+                <stop offset="100%" stopColor="#080c18" stopOpacity="1"/>
+              </linearGradient>
+              {/* noise filter for texture */}
+              <filter id="terrainNoise">
+                <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+                <feColorMatrix type="saturate" values="0"/>
+                <feBlend in="SourceGraphic" mode="multiply"/>
+              </filter>
+            </defs>
+            {/* back ridge */}
+            <path fill="url(#tGrad2)" d="M0,380 C200,300 350,260 500,280 C650,300 720,200 900,220 C1080,240 1200,300 1440,280 L1440,520 L0,520 Z"/>
+            {/* main mountain */}
+            <path fill="url(#tGrad1)" d="M0,420 C180,380 320,320 520,300 C620,290 680,240 720,200 C760,240 820,290 920,300 C1120,320 1260,380 1440,420 L1440,520 L0,520 Z"/>
+            {/* front ridge */}
+            <path fill="#080c18" fillOpacity="0.6" d="M0,460 C200,440 400,420 600,430 C800,440 1000,425 1200,440 C1340,450 1400,460 1440,460 L1440,520 L0,520 Z"/>
+          </svg>
+          {/* glow line on ridge top */}
+          <div className="absolute bottom-[140px] md:bottom-[200px] inset-x-[20%] h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        </div>
+
+        {/* ── Layer 5: BOTTOM DISPLAY TEXT ── */}
+        <div className="relative z-40 pb-10 md:pb-14 text-center px-6">
+          <Link href={current.href} className="group cursor-pointer inline-block">
+            <h1 className="landing-heading group-hover:scale-105 transition-transform duration-300">
+              Choose your portal
+            </h1>
+          </Link>
+          <p className="mt-3 text-white/50 text-sm md:text-base max-w-lg mx-auto font-medium">
+            AI-powered flood monitoring &amp; LiDAR terrain analysis for the Ganga River
+          </p>
+        </div>
+      </div>
+
+      {/* ───────── BELOW-FOLD: Stats & Features ───────── */}
+      <section className="relative bg-[#0d1117] py-24">
+        <div className="mx-auto max-w-7xl px-6">
+          {/* stats row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-28">
+            {[
+              { value: '1.7 GB', label: 'LiDAR Data' },
+              { value: '99.2%', label: 'AI Accuracy' },
+              { value: '<30 s', label: 'Alert Time' },
+              { value: '24/7', label: 'Monitoring' },
+            ].map((s) => (
+              <div key={s.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 text-center hover:border-white/[0.1] transition-colors duration-200">
+                <div className="text-2xl md:text-3xl font-bold text-white mb-1">{s.value}</div>
+                <div className="text-[10px] uppercase tracking-wide text-white/30 font-medium">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* portal detail cards */}
+          <div className="text-center mb-16">
+            <div className="inline-block mb-4">
+              <span className="px-4 py-1.5 rounded-lg bg-white/[0.08] border border-white/[0.08] text-[11px] uppercase tracking-widest text-white/60 font-bold">Three Pathways</span>
+            </div>
+            <h2 className="text-5xl md:text-6xl font-black tracking-tight text-white mb-5">
+              <span className="landing-gradient-text">One Mission</span>, Three Portals
+            </h2>
+            <p className="text-white/50 text-lg max-w-2xl mx-auto leading-relaxed">
+              Purpose-built experiences for every stakeholder in the flood management ecosystem
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-20">
+            {portals.map((p, idx) => (
+              <Link key={p.id} href={p.href} className="group">
+                <div className="relative rounded-[2rem] border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm overflow-hidden hover:border-white/20 transition-all duration-500 h-full hover:scale-[1.02] hover:shadow-2xl">
+                  {/* Image header */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img 
+                      src={p.illustration} 
+                      alt={p.title}
+                      className="w-full h-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-110 transition-all duration-700"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-b ${p.gradient} opacity-40 mix-blend-overlay`} />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#080c18] via-[#080c18]/50 to-transparent" />
+                    
+                    {/* Floating icon */}
+                    <div className={`absolute top-6 right-6 h-12 w-12 rounded-xl ${p.iconBg} grid place-items-center shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
+                      <p.icon className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-8">
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-2xl font-black text-white">{p.title}</h3>
+                      <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+                    </div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">{p.subtitle}</p>
+                    <p className="text-sm text-white/50 leading-relaxed mb-6">
+                      {p.id === 0 && 'GPS-based safety checker, AI-verified community reports, smart farming advisory, and real-time flood alerts.'}
+                      {p.id === 1 && '3D flood simulation, policy zoning engine, evacuation route optimizer, and emergency voice-call broadcasting.'}
+                      {p.id === 2 && 'Download 1.7 GB LiDAR data, train flood-prediction models, interactive API docs, and research insights.'}
+                    </p>
+                    <div className="flex items-center gap-2 text-sm font-bold text-white/80 group-hover:text-white group-hover:gap-3 transition-all">
+                      Explore Portal 
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────── CTA ───────── */}
+      <section className="relative py-40 bg-[#080c18] overflow-hidden">
+        {/* Dramatic background */}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-r from-cyan-500/[0.08] via-blue-500/[0.08] to-violet-500/[0.08] blur-[140px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#080c18]" />
         </div>
         
-        {/* Content */}
-        <div className="relative z-10 container mx-auto px-6 py-32">
-          <div className="max-w-4xl">
-            <p className="text-blue-300 text-sm font-medium mb-4 uppercase tracking-wider">
-              AI-Powered River Protection
-            </p>
-            
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-6">
-              Focused<br />
-              advocacy for<br />
-              your legal<br />
-              <span className="text-blue-400">success</span>
-            </h1>
-            
-            <p className="text-slate-300 text-lg max-w-2xl mb-8 leading-relaxed">
-              Expert legal guidance protecting your rights and delivering
-              justice with dedication and integrity
-            </p>
-            
-            {/* Stats Circle and CTA */}
-            <div className="flex flex-wrap items-center gap-8">
-              {/* Play Button Circle */}
-              <button className="relative group">
-                <div className="absolute inset-0 border-2 border-blue-400/50 rounded-full animate-ping" />
-                <div className="relative h-24 w-24 rounded-full border-2 border-blue-400 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm group-hover:bg-blue-500 transition-all">
-                  <Play className="h-8 w-8 text-white fill-white ml-1" />
-                </div>
-              </button>
-              
-              {/* Success Years Badge */}
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-6xl font-bold text-blue-400">12</span>
-                  <div className="text-white">
-                    <div className="text-sm font-medium">Years of success in</div>
-                    <div className="text-sm font-medium">legal advocacy</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Tagline */}
-        <div className="absolute bottom-8 right-8 max-w-md text-right">
-          <p className="text-white text-sm leading-relaxed">
-            Expert legal guidance protecting your rights and delivering<br />
-            justice with dedication and integrity
-          </p>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-20 bg-slate-50">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-                  <stat.icon className="h-8 w-8 text-blue-600" />
-                </div>
-                <div className="text-3xl md:text-4xl font-bold text-slate-900 mb-1">{stat.value}</div>
-                <div className="text-sm text-slate-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Portals Section */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Choose Your Portal</h2>
-            <p className="text-slate-600 text-lg">Three specialized interfaces for different stakeholders</p>
+        <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+          <div className="inline-block mb-6">
+            <span className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 text-xs uppercase tracking-widest text-cyan-300 font-bold backdrop-blur-sm">
+              <Sparkles className="inline h-3 w-3 mr-1.5" />
+              Join the Movement
+            </span>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {portals.map((portal) => (
-              <Link key={portal.href} href={portal.href} className="group">
-                <div className="h-full p-8 rounded-2xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
-                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${portal.color} mb-6`}>
-                    <portal.icon className="h-7 w-7 text-white" />
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-slate-900 mb-3 flex items-center gap-2">
-                    {portal.title}
-                    <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
-                  </h3>
-                  
-                  <p className="text-slate-600 leading-relaxed">{portal.description}</p>
-                </div>
-              </Link>
-            ))}
+          <h2 className="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-tight">
+            Protect Lives.<br/>
+            <span className="landing-gradient-text">Save Communities.</span>
+          </h2>
+          
+          <p className="text-white/50 text-xl mb-12 max-w-2xl mx-auto leading-relaxed">
+            Real-time flood monitoring, AI-powered predictions, and life-saving alerts for the Ganga River basin.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+            <Link href="/citizen">
+              <Button size="lg" className="h-14 px-8 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 border-0 transition-all hover:scale-105">
+                <Shield className="mr-2 h-5 w-5" /> Get Started Free
+              </Button>
+            </Link>
+            <Link href="/researcher">
+              <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl border-2 border-white/20 bg-white/[0.05] backdrop-blur-sm text-white font-bold hover:bg-white/[0.1] hover:border-white/30 transition-all hover:scale-105">
+                <Database className="mr-2 h-5 w-5" /> Explore Data
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="flex items-center justify-center gap-12 text-white/30 text-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <span>Free Forever</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <span>Open Source</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              <span>NMCG Certified</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-600 to-blue-700">
-        <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to protect your community?
-          </h2>
-          <p className="text-blue-100 mb-10 max-w-2xl mx-auto text-lg">
-            Start using AquaGuardians today for better river management and flood prediction
-          </p>
-          <Link href="/citizen">
-            <Button size="lg" className="h-14 px-8 bg-white text-blue-600 hover:bg-slate-50 text-lg font-semibold">
-              Get Started
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
-      </section>
+      {/* ───────── FOOTER ───────── */}
+      <footer className="bg-[#0a0f1a] border-t border-white/[0.08]">
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="grid md:grid-cols-4 gap-12 mb-12">
+            {/* Brand */}
+            <div className="md:col-span-1">
+              <Link href="/" className="flex items-center gap-2 group mb-4">
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 grid place-items-center shadow-lg">
+                  <Waves className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-white font-bold text-lg">AquaGuardians</span>
+              </Link>
+              <p className="text-white/40 text-sm leading-relaxed mb-4">
+                AI-powered flood management for the Ganga River ecosystem.
+              </p>
+              <div className="flex items-center gap-3">
+                <a href="#" className="h-9 w-9 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] grid place-items-center transition-all">
+                  <Globe className="h-4 w-4 text-white/60" />
+                </a>
+                <a href="#" className="h-9 w-9 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] grid place-items-center transition-all">
+                  <Activity className="h-4 w-4 text-white/60" />
+                </a>
+              </div>
+            </div>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-800 py-12">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center">
-                <Waves className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-lg block">AquaGuardians</span>
-                <span className="text-slate-400 text-xs">Protecting communities</span>
+            {/* Portals */}
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Portals</h4>
+              <div className="space-y-3">
+                {portals.map((p) => (
+                  <Link key={p.id} href={p.href} className="block text-white/50 hover:text-white text-sm transition-colors">
+                    {p.title}
+                  </Link>
+                ))}
               </div>
             </div>
-            <div className="flex items-center gap-8">
-              <Link href="/citizen" className="text-slate-400 hover:text-white text-sm transition-colors">
-                Citizens
-              </Link>
-              <Link href="/official" className="text-slate-400 hover:text-white text-sm transition-colors">
-                Officials
-              </Link>
-              <Link href="/researcher" className="text-slate-400 hover:text-white text-sm transition-colors">
-                Researchers
-              </Link>
+
+            {/* Resources */}
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Resources</h4>
+              <div className="space-y-3">
+                <Link href="/researcher" className="block text-white/50 hover:text-white text-sm transition-colors">API Documentation</Link>
+                <Link href="/researcher" className="block text-white/50 hover:text-white text-sm transition-colors">LiDAR Dataset</Link>
+                <Link href="#" className="block text-white/50 hover:text-white text-sm transition-colors">Research Papers</Link>
+                <Link href="#" className="block text-white/50 hover:text-white text-sm transition-colors">GitHub</Link>
+              </div>
             </div>
-            <p className="text-slate-500 text-sm">
-              Built for Riverathon 1.0 • NMCG LiDAR Data • © 2026
+
+            {/* About */}
+            <div>
+              <h4 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Project</h4>
+              <div className="space-y-3">
+                <a href="#" className="block text-white/50 hover:text-white text-sm transition-colors">Riverathon 1.0</a>
+                <a href="#" className="block text-white/50 hover:text-white text-sm transition-colors">NMCG Partnership</a>
+                <a href="#" className="block text-white/50 hover:text-white text-sm transition-colors">Open Source</a>
+                <a href="#" className="block text-white/50 hover:text-white text-sm transition-colors">Contact</a>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-white/30 text-xs">
+              © 2026 AquaGuardians. Built for Riverathon 1.0 · Powered by NMCG LiDAR Data
             </p>
+            <div className="flex items-center gap-6 text-white/30 text-xs">
+              <a href="#" className="hover:text-white/60 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white/60 transition-colors">Terms</a>
+              <a href="#" className="hover:text-white/60 transition-colors">License</a>
+            </div>
           </div>
         </div>
       </footer>

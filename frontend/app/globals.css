@@ -172,6 +172,21 @@
   100% { transform: rotate(0deg); }
 }
 
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
 /* ===== UTILITY CLASSES ===== */
 .animate-float { animation: float 3s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
@@ -188,6 +203,100 @@
   animation: gradient-shift 3s ease infinite;
 }
 .animate-wave { animation: wave 2s ease-in-out; }
+
+/* Landing page — orbiting rings */
+.landing-spin-slow         { animation: spin-slow 30s linear infinite; }
+.landing-spin-slow-reverse { animation: spin-slow-reverse 24s linear infinite; }
+
+/* Landing page — gradient text */
+.landing-gradient-text {
+  background: linear-gradient(90deg, #22d3ee, #3b82f6, #a855f7, #22d3ee);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-x 6s ease infinite;
+}
+
+/* ===== KUMO-STYLE LANDING PAGE ===== */
+
+/* scene wrapper */
+.landing-scene {
+  background: #080c18;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* full-scene background */
+.landing-bg {
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, #0f2744 0%, #080c18 80%);
+}
+
+/* the floating hero orb */
+@keyframes landing-float-hero {
+  0%, 100% { transform: translateY(0px); }
+  50%      { transform: translateY(-12px); }
+}
+.landing-float {
+  animation: landing-float-hero 4s ease-in-out infinite;
+}
+
+/* arc cards — solid white rounded squares with 3D illustrations */
+.landing-card {
+  width: 110px;
+  height: 130px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 16px 12px;
+}
+.landing-card:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+@media (min-width: 768px) {
+  .landing-card {
+    width: 150px;
+    height: 170px;
+    border-radius: 28px;
+    padding: 20px 16px;
+  }
+}
+
+/* price/action pill below the hero */
+.landing-price-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+.landing-price-pill:hover {
+  background: #fff;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* bottom heading — large serif-like display text */
+.landing-heading {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(0deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.85) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* Staggered animations */
 .stagger-1 { animation-delay: 0.1s; }
