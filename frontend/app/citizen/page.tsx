@@ -2,17 +2,47 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Bell, AlertTriangle, MapPin, Navigation, TrendingUp, 
+import { useMutation } from '@tanstack/react-query';
+import {
+  Bell, AlertTriangle, MapPin, Navigation, TrendingUp,
   Droplets, Phone, FileText, ChevronRight, Activity,
-  Calendar, Clock, Shield, CheckCircle2
+  Calendar, Clock, Shield, CheckCircle2, MessageSquare,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { emergencyAPI } from '@/lib/api';
 
 export default function CitizenDashboard() {
   const [activeAlert, setActiveAlert] = useState(true);
+  const [citizenPhone, setCitizenPhone] = useState('');
+  const [whatsappSubscribed, setWhatsappSubscribed] = useState(false);
+
+  const testAlertMutation = useMutation({
+    mutationFn: () => emergencyAPI.activate({
+      message: 'This is a TEST alert from AquaGuardians. You are now subscribed to emergency WhatsApp alerts for flood warnings in your area. Stay safe!',
+      severity: 'info',
+    }),
+    onSuccess: (data: any) => {
+      toast.success('✅ Test WhatsApp alert sent! Check your WhatsApp.');
+      setWhatsappSubscribed(true);
+    },
+    onError: (error: any) => {
+      const detail = error?.response?.data?.detail || error.message || 'Unknown error';
+      toast.error(`Failed to send test alert: ${detail}`);
+    },
+  });
+
+  const handleSubscribe = () => {
+    if (!citizenPhone.trim()) {
+      toast.error('Please enter your phone number');
+      return;
+    }
+    testAlertMutation.mutate();
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -125,9 +155,48 @@ export default function CitizenDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-slate-600 mb-4">
-                Get instant SMS alerts when flood levels rise above safe thresholds in your area.
+                Get instant WhatsApp & SMS alerts when flood levels rise above safe thresholds in your area.
               </p>
               <div className="space-y-3 mb-4">
+                {/* WhatsApp Alerts — functional */}
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <div className="flex items-start gap-3">
+                    <MessageSquare className="h-4 w-4 text-emerald-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">WhatsApp Alerts</p>
+                      {whatsappSubscribed ? (
+                        <div className="flex items-center gap-1 mt-1">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                          <p className="text-xs text-emerald-700 font-medium">Subscribed — you'll receive flood alerts on WhatsApp</p>
+                        </div>
+                      ) : (
+                        <div className="mt-2 space-y-2">
+                          <Input
+                            placeholder="Enter your WhatsApp number (e.g. +919031851732)"
+                            value={citizenPhone}
+                            onChange={(e) => setCitizenPhone(e.target.value)}
+                            className="h-8 text-sm"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={handleSubscribe}
+                            disabled={testAlertMutation.isPending}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8"
+                          >
+                            {testAlertMutation.isPending ? (
+                              <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
+                            ) : (
+                              <MessageSquare className="h-3 w-3 mr-1.5" />
+                            )}
+                            {testAlertMutation.isPending ? 'Sending test...' : 'Subscribe & Send Test Alert'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* SMS Alerts */}
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
                   <Phone className="h-4 w-4 text-emerald-600 mt-0.5" />
                   <div className="flex-1">
@@ -136,6 +205,8 @@ export default function CitizenDashboard() {
                   </div>
                   <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                 </div>
+
+                {/* Push Notifications */}
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
                   <Bell className="h-4 w-4 text-blue-600 mt-0.5" />
                   <div className="flex-1">
