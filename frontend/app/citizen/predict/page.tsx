@@ -22,8 +22,8 @@ export default function FloodPredictionPage() {
   const { t } = useLanguage();
   const [logs, setLogs] = useState<string[]>([]);
   const [isLive, setIsLive] = useState(false);
-  const [waterLevel, setWaterLevel] = useState(12.4);
-  const [dataPoints, setDataPoints] = useState<number[]>([12.2, 12.3, 12.3, 12.4, 12.4, 12.5, 12.4]);
+  const [waterLevel, setWaterLevel] = useState(213.4);
+  const [dataPoints, setDataPoints] = useState<number[]>([213.2, 213.3, 213.3, 213.4, 213.4, 213.5, 213.4]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Simulate Boot Sequence
@@ -53,7 +53,7 @@ export default function FloodPredictionPage() {
         // Fluctuate water level slightly
         const change = (Math.random() - 0.5) * 0.1;
         setWaterLevel(prev => {
-            const newVal = Math.max(10, Math.min(15, prev + change));
+            const newVal = Math.max(210, Math.min(215, prev + change));
             
             // Add to data points for graph
             setDataPoints(prevData => {
@@ -78,8 +78,8 @@ export default function FloodPredictionPage() {
 
   // Simple Graph Generator
   const generatePath = () => {
-    const max = 13.0;
-    const min = 12.0;
+    const max = 214.0;
+    const min = 212.0;
     const width = 100; // percent
     const height = 60; // pixels
     
@@ -128,8 +128,8 @@ export default function FloodPredictionPage() {
                    {waterLevel.toFixed(2)} m
                 </div>
                 <div className="text-sm text-blue-600 font-medium mb-1.5 flex items-center gap-1 animate-pulse">
-                     {waterLevel > 12.3 ? <ArrowUpRight className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4"/>}
-                     {waterLevel > 12.3 ? t("risingSlowly") : "Stable"}
+                     {waterLevel > 213.3 ? <ArrowUpRight className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4"/>}
+                     {waterLevel > 213.3 ? t("risingSlowly") : "Stable"}
                 </div>
             </div>
             
@@ -164,17 +164,17 @@ export default function FloodPredictionPage() {
                     <div className="flex justify-between items-center border-b py-3 first:pt-0">
                         <span className="text-sm font-medium">12:00 PM</span>
                         <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{t("lightRain")}</span>
-                        <span className="text-sm font-bold">12.5 m</span>
+                        <span className="text-sm font-bold">213.5 m</span>
                     </div>
                     <div className="flex justify-between items-center border-b py-3">
                         <span className="text-sm font-medium">06:00 PM</span>
                         <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{t("cloudy")}</span>
-                        <span className="text-sm font-bold">12.5 m</span>
+                        <span className="text-sm font-bold">213.5 m</span>
                     </div>
                     <div className="flex justify-between items-center py-3 last:pb-0">
                         <span className="text-sm font-medium">12:00 AM</span>
                         <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium">{t("heavyRain")}</span>
-                        <span className="text-sm font-bold text-orange-600">12.8 m</span>
+                        <span className="text-sm font-bold text-orange-600">213.8 m</span>
                     </div>
                  </>
              ) : (
