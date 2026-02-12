@@ -59,17 +59,51 @@ const quickLinks = [
 ];
 
 const datasets = [
-  { name: 'Varanasi LiDAR Point Cloud', size: '856 MB', format: 'LAZ', downloads: 234 },
-  { name: 'Ganga River Cross-sections', size: '45 MB', format: 'GeoJSON', downloads: 189 },
-  { name: 'Historical Flood Records', size: '12 MB', format: 'CSV', downloads: 456 },
+  { name: 'SRTM Digital Elevation Model', size: '856 MB', format: 'GeoTIFF', downloads: 234 },
+  { name: 'OpenStreetMap River Network', size: '45 MB', format: 'GeoJSON', downloads: 189 },
+  { name: 'NOAA Flood Event Database', size: '12 MB', format: 'CSV', downloads: 456 },
 ];
+
+const handleExportReport = () => {
+  const reportContent = `
+AquaGuardians Research Portal - Activity Report
+Generated: ${new Date().toLocaleString()}
+
+=== SYSTEM STATISTICS ===
+Total Datasets: 8
+Total Storage: 3.8 GB
+API Requests (24h): 4,200
+Active Models: 4
+
+=== RECENT ACTIVITY ===
+- SRTM DEM downloaded
+- LSTM model executed
+- API endpoints accessed
+
+=== MODEL PERFORMANCE ===
+LSTM Flood Predictor: 92.5% accuracy
+Random Forest Classifier: 88.7% accuracy
+XGBoost Risk Model: 94.2% accuracy
+Kriging Elevation: 95.3% accuracy
+  `;
+  
+  const blob = new Blob([reportContent], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aquaguardians-report-${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
 
 export default function ResearcherDashboard() {
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
 
       {/* ── Header ── */}
-      <header className="bg-white border-b border-slate-200 sticky top-[57px] z-30">
+      <header className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
@@ -88,7 +122,10 @@ export default function ResearcherDashboard() {
                 className="bg-transparent border-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none w-48"
               />
             </div>
-            <Button className="bg-[#006DC4] hover:bg-[#005a9f] text-white rounded-xl shadow-lg shadow-blue-500/20">
+            <Button 
+              onClick={handleExportReport}
+              className="bg-[#006DC4] hover:bg-[#005a9f] text-white rounded-xl shadow-lg shadow-blue-500/20"
+            >
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>

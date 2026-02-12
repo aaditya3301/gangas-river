@@ -77,7 +77,7 @@ const endpoints = [
 const codeExamples = {
   python: `import requests
 
-API_KEY = "your-api-key"
+API_KEY = "ag_live_sk_3f8a9b2c1d4e5f6a7b8c9d0e1f2a3b4c"
 BASE_URL = "https://api.aquaguardians.in"
 
 headers = {"Authorization": f"Bearer {API_KEY}"}
@@ -89,7 +89,7 @@ response = requests.get(
     headers=headers
 )
 print(response.json())`,
-  javascript: `const API_KEY = 'your-api-key';
+  javascript: `const API_KEY = 'ag_live_sk_3f8a9b2c1d4e5f6a7b8c9d0e1f2a3b4c';
 const BASE_URL = 'https://api.aquaguardians.in';
 
 // Check flood safety
@@ -134,7 +134,7 @@ export default function ApiDocsPage() {
     <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+      <div className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">API Reference</h1>
@@ -160,7 +160,7 @@ export default function ApiDocsPage() {
           <div className="p-6 space-y-4">
             <p className="text-sm text-slate-600">All requests must include your API key in the header.</p>
             <div className="bg-slate-900 rounded-xl p-4 font-mono text-sm text-emerald-400 border border-slate-800 flex items-center justify-between">
-              <span>Authorization: Bearer &lt;your_api_key&gt;</span>
+              <span>Authorization: Bearer ag_live_sk_3f8a9b2c1d4e5f6a7b8c9d0e1f2a3b4c</span>
               <Lock className="h-4 w-4 text-slate-500" />
             </div>
           </div>

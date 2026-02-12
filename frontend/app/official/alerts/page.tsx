@@ -27,10 +27,10 @@ import { emergencyAPI } from '@/lib/api';
 const mockAlertHistory = [
   {
     id: 1,
-    title: 'Flash Flood Warning - Varanasi',
+    title: 'Flash Flood Warning - Hapur',
     message: 'Heavy rainfall expected. Move to higher ground immediately.',
     severity: 'critical',
-    zone: 'Varanasi Ghats',
+    zone: 'Garh Road Area',
     sentAt: '2025-01-15T14:30:00Z',
     recipients: 15420,
     channels: ['sms', 'push', 'sirens'],
@@ -38,10 +38,10 @@ const mockAlertHistory = [
   },
   {
     id: 2,
-    title: 'Evacuation Advisory - Allahabad',
+    title: 'Evacuation Advisory - Hapur',
     message: 'Water levels rising. Prepare for possible evacuation.',
     severity: 'warning',
-    zone: 'Sangam Area',
+    zone: 'Mandi Area',
     sentAt: '2025-01-15T10:15:00Z',
     recipients: 8930,
     channels: ['sms', 'push'],
@@ -49,10 +49,10 @@ const mockAlertHistory = [
   },
   {
     id: 3,
-    title: 'All Clear - Patna',
+    title: 'All Clear - Hapur',
     message: 'Flood threat has passed. Safe to return to low-lying areas.',
     severity: 'info',
-    zone: 'Patna Riverside',
+    zone: 'Delhi Road',
     sentAt: '2025-01-14T18:00:00Z',
     recipients: 22100,
     channels: ['push'],
@@ -62,10 +62,11 @@ const mockAlertHistory = [
 
 const zones = [
   { value: 'all', label: 'All Zones' },
-  { value: 'varanasi-ghats', label: 'Varanasi Ghats' },
-  { value: 'varanasi-city', label: 'Varanasi City' },
-  { value: 'allahabad-sangam', label: 'Allahabad Sangam' },
-  { value: 'patna-riverside', label: 'Patna Riverside' },
+  { value: 'garh-road', label: 'Garh Road Area' },
+  { value: 'mandi-area', label: 'Mandi Area' },
+  { value: 'delhi-road', label: 'Delhi Road' },
+  { value: 'civil-lines', label: 'Civil Lines' },
+  { value: 'railway-area', label: 'Railway Area' },
 ];
 
 export default function AlertsPage() {
@@ -143,7 +144,7 @@ export default function AlertsPage() {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+              <div className="h-10 w-10 rounded-lg bg-violet-50 flex items-center justify-center text-violet-600">
                 <Megaphone className="h-5 w-5" />
               </div>
               <div>
@@ -159,7 +160,7 @@ export default function AlertsPage() {
                   <select
                     value={targetZone}
                     onChange={(e) => setTargetZone(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                   >
                     {zones.map(z => <option key={z.value} value={z.value}>{z.label}</option>)}
                   </select>
@@ -191,7 +192,7 @@ export default function AlertsPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Flash Flood Warning"
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
                 />
               </div>
 
@@ -201,7 +202,7 @@ export default function AlertsPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Describe the emergency and required actions..."
-                  className="w-full h-32 rounded-xl border border-slate-200 bg-white p-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+                  className="w-full h-32 rounded-xl border border-slate-200 bg-white p-4 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
                 />
               </div>
 
@@ -211,7 +212,7 @@ export default function AlertsPage() {
                   <button onClick={() => toggleChannel('sms')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sms') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>
                     <Smartphone className="h-4 w-4" /> SMS
                   </button>
-                  <button onClick={() => toggleChannel('push')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('push') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200'}`}>
+                  <button onClick={() => toggleChannel('push')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('push') ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-500 border-slate-200'}`}>
                     <Bell className="h-4 w-4" /> Push Notif
                   </button>
                   <button onClick={() => toggleChannel('sirens')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sirens') ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-500 border-slate-200'}`}>
@@ -223,7 +224,7 @@ export default function AlertsPage() {
               {!showConfirm ? (
                 <button
                   onClick={handleSend}
-                  className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg shadow-slate-900/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-600/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
                   <Send className="h-4 w-4" />
                   Review & Broadcast

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useLandingStore } from '@/lib/landing-store';
 
 /* ── tiny reusable sub-components ── */
 function Badge({ children }: { children: React.ReactNode }) {
@@ -39,7 +40,21 @@ type Role = 'citizen' | 'official' | 'researcher';
 
 /* ── HERO SECTION ── */
 export default function Hero() {
-    const [role, setRole] = useState<Role>('citizen');
+    const { currentRole: role, setRole } = useLandingStore();
+    const [paused, setPaused] = useState(false);
+
+    useEffect(() => {
+        if (paused) return;
+        
+        const roles: Role[] = ['citizen', 'official', 'researcher'];
+        const interval = setInterval(() => {
+            const currentIndex = roles.indexOf(role);
+            const nextIndex = (currentIndex + 1) % roles.length;
+            setRole(roles[nextIndex]);
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [role, paused, setRole]);
 
     const content = {
         citizen: {
@@ -110,8 +125,6 @@ export default function Hero() {
 
             {/* ── Content (Text) ── */}
             <div className="relative z-10 mx-auto max-w-[1280px] px-6 text-center mb-0 md:mb-8">
-                <div className="mb-6"><Badge>{activeContent.badge}</Badge></div>
-
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08] min-h-[160px] md:min-h-[auto]">
                     {activeContent.headline}
                 </h1>
@@ -119,22 +132,14 @@ export default function Hero() {
                 <p className="mt-6 text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-medium min-h-[60px] md:min-h-[auto]">
                     {activeContent.sub}
                 </p>
-
-                <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link
-                        href={activeContent.link}
-                        className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-xl bg-[#006DC4] hover:bg-[#005aaff] text-white font-bold text-base shadow-2xl shadow-[#006DC4]/30 hover:shadow-[#006DC4]/50 hover:scale-[1.03] transition-all duration-200"
-                    >
-                        {activeContent.cta}
-                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </Link>
-                </div>
             </div>
 
             {/* ── THREE ORBS (Positioned container) ── */}
-            <div className="relative z-20 w-full max-w-[800px] h-[320px] mx-auto mt-12 md:mt-16 perspective-[1000px]">
+            <div 
+                className="relative z-20 w-full max-w-[800px] h-[320px] mx-auto mt-4 md:mt-8 perspective-[1000px]"
+                onMouseEnter={() => setPaused(true)}
+                onMouseLeave={() => setPaused(false)}
+            >
                 {orbsData.map((orb) => {
                     const slot = getSlot(orb.role);
                     const isCenter = slot === 'center';

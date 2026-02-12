@@ -18,7 +18,10 @@ import {
   Search,
   ThumbsUp,
   ThumbsDown,
-  Bot
+  Bot,
+  Waves,
+  Construction,
+  AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -120,7 +123,7 @@ export default function ReportsPage() {
     <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
 
       {/* ── Header ── */}
-      <div className="bg-white border-b border-slate-200 sticky top-[57px] z-20">
+      <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
         <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Report Validation</h1>
@@ -184,8 +187,8 @@ export default function ReportsPage() {
                 <div className="flex flex-col lg:flex-row gap-6">
                   <div className="flex-1">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-4xl shrink-0">
-                        {report.type === 'flood' ? '🌊' : report.type === 'blocked_drain' ? '🚧' : '📍'}
+                      <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                        {report.type === 'flood' ? <Waves className="h-6 w-6 text-blue-600" /> : report.type === 'blocked_drain' ? <Construction className="h-6 w-6 text-orange-600" /> : <AlertCircle className="h-6 w-6 text-slate-600" />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">

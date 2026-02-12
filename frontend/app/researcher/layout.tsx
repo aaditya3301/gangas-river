@@ -12,7 +12,7 @@ import {
   Menu,
   X,
   ChevronLeft,
-  Beaker
+  GraduationCap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -59,9 +59,7 @@ export default function ResearcherLayout({
           {/* Logo */}
           <div className="flex h-14 items-center justify-between px-4 border-b border-slate-200">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <Beaker className="h-4 w-4 text-white" />
-              </div>
+              <GraduationCap className="h-6 w-6 text-emerald-600" />
               <span className="font-semibold text-slate-900">Researchers</span>
             </Link>
             <button

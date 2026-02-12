@@ -10,7 +10,9 @@ import {
   Users,
   Menu,
   X,
-  Waves
+  Shield,
+  LogOut,
+  Award
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -18,6 +20,7 @@ import { Button } from '@/components/ui/button';
 
 const navItems = [
   { href: '/official', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/official/ngo', label: 'NGO Portal', icon: Award },
   { href: '/official/zones', label: 'Zones', icon: Map },
   { href: '/official/evacuation', label: 'Evacuations', icon: Route },
   { href: '/official/alerts', label: 'Alerts', icon: Bell },
@@ -40,9 +43,7 @@ export default function OfficialLayout({
           {/* Logo */}
           <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-violet-600 flex items-center justify-center">
-                <Waves className="h-4 w-4 text-white" />
-              </div>
+              <Shield className="h-6 w-6 text-violet-600" />
               <span className="font-semibold text-slate-900">Officials</span>
             </Link>
           </div>
@@ -68,14 +69,19 @@ export default function OfficialLayout({
 
           {/* User */}
           <div className="border-t border-slate-200 p-3">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center text-sm font-medium text-white">
-                A
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center text-sm font-medium text-white">
+                  A
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900">Admin</p>
+                  <p className="text-xs text-slate-500">official@gov.in</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900">Admin</p>
-                <p className="text-xs text-slate-500">official@gov.in</p>
-              </div>
+              <Link href="/" className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+                <LogOut className="h-4 w-4 text-slate-400" />
+              </Link>
             </div>
           </div>
         </div>
@@ -88,9 +94,7 @@ export default function OfficialLayout({
           <aside className="fixed left-0 top-0 h-full w-56 bg-white">
             <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-violet-600 flex items-center justify-center">
-                  <Waves className="h-4 w-4 text-white" />
-                </div>
+                <Shield className="h-6 w-6 text-violet-600" />
                 <span className="font-semibold text-slate-900">Officials</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>

@@ -188,19 +188,6 @@ export default function PlatformOverview() {
                 </div>
 
                 {/* Bottom Features (Horizontal) */}
-                <div className="mt-20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-10 border-t border-slate-100">
-                    {features.map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full bg-[#006DC4]/10 flex items-center justify-center shrink-0">
-                                <svg className="h-3.5 w-3.5 text-[#006DC4]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20 6L9 17l-5-5" />
-                                </svg>
-                            </div>
-                            <span className="text-sm font-bold text-slate-600">{feature}</span>
-                        </div>
-                    ))}
-                </div>
-
             </div>
         </section>
     );

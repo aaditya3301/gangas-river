@@ -1,6 +1,5 @@
 import Navbar from '@/components/landing/Navbar';
 import Hero from '@/components/landing/Hero';
-import TrustLogos from '@/components/landing/TrustLogos';
 import PlatformOverview from '@/components/landing/PlatformOverview';
 import FloodPrediction from '@/components/landing/FloodPrediction';
 import Zoning from '@/components/landing/Zoning';
@@ -14,7 +13,6 @@ export default function HomePage() {
     <main>
       <Navbar />
       <Hero />
-      <TrustLogos />
       <PlatformOverview />
       <FloodPrediction />
       <Zoning />

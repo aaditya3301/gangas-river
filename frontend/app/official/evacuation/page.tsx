@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import dynamic from 'next/dynamic';
 import {
   Route,
   Home,
@@ -12,18 +12,22 @@ import {
   Loader2,
   Heart,
   Utensils,
-  Droplets
+  Droplets,
+  X
 } from 'lucide-react';
+
+const MapView = dynamic(() => import('@/components/MapView'), {
+  ssr: false,
+});
 import { useLocationStore } from '@/lib/store';
-import { evacuationAPI } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Mock shelter data
 const mockShelters = [
   {
     id: 1,
-    name: 'Varanasi Community Center',
-    address: 'Sigra, Varanasi, UP 221010',
+    name: 'Hapur Community Center',
+    address: 'Garh Road, Hapur, UP 245101',
     total_capacity: 500,
     current_occupancy: 120,
     has_medical: true,
@@ -31,12 +35,14 @@ const mockShelters = [
     has_water: true,
     elevation: 85.5,
     distance_km: 2.3,
-    contact_phone: '+91 9876543210',
+    contact_phone: '+919031851732',
+    latitude: 28.730,
+    longitude: 77.775,
   },
   {
     id: 2,
     name: 'Government School Shelter',
-    address: 'Cantt, Varanasi, UP 221002',
+    address: 'Delhi Road, Hapur, UP 245101',
     total_capacity: 300,
     current_occupancy: 45,
     has_medical: false,
@@ -44,12 +50,14 @@ const mockShelters = [
     has_water: true,
     elevation: 78.2,
     distance_km: 4.1,
-    contact_phone: '+91 9876543211',
+    contact_phone: '+919031851732',
+    latitude: 28.725,
+    longitude: 77.780,
   },
   {
     id: 3,
     name: 'Sports Complex Emergency',
-    address: 'BHU Campus, Varanasi, UP 221005',
+    address: 'Mandi Area, Hapur, UP 245101',
     total_capacity: 800,
     current_occupancy: 230,
     has_medical: true,
@@ -57,7 +65,9 @@ const mockShelters = [
     has_water: true,
     elevation: 92.0,
     distance_km: 5.8,
-    contact_phone: '+91 9876543212',
+    contact_phone: '+919031851732',
+    latitude: 28.735,
+    longitude: 77.785,
   },
 ];
 
@@ -66,53 +76,147 @@ export default function EvacuationPage() {
   const [selectedShelter, setSelectedShelter] = useState<number | null>(null);
   const [routePreference, setRoutePreference] = useState<string>('safest');
   const [routeResult, setRouteResult] = useState<any | null>(null);
-
-  const routeMutation = useMutation({
-    mutationFn: evacuationAPI.getRoute,
-    onSuccess: (data) => {
-      setRouteResult(data);
-      toast.success('Optimal route calculated');
-    },
-    onError: (error: Error) => {
-      toast.error('Route calculation failed: ' + error.message);
-    },
-  });
+  const [showRouteModal, setShowRouteModal] = useState(false);
+  const [modalShelter, setModalShelter] = useState<any | null>(null);
+  const [showContactNumber, setShowContactNumber] = useState(false);
 
   const handleCalculateRoute = (shelterId: number) => {
-    if (!latitude || !longitude) {
-      toast.error('Please enable location first');
-      return;
-    }
+    // Use default Hapur location if user location not available
+    const userLat = latitude || 28.730;
+    const userLng = longitude || 77.775;
 
+    const shelter = mockShelters.find(s => s.id === shelterId);
+    setModalShelter(shelter);
+    setShowRouteModal(true);
     setSelectedShelter(shelterId);
-    routeMutation.mutate({
-      start_lat: latitude,
-      start_lng: longitude,
-      preference: routePreference as 'fastest' | 'safest' | 'shortest',
-    });
+    
+    // Mock route result since backend may not be running
+    setTimeout(() => {
+      setRouteResult({
+        estimated_time_min: Math.floor(Math.random() * 20) + 10,
+        safety_score: Math.floor(Math.random() * 20) + 80,
+      });
+      toast.success('Route calculated successfully!');
+    }, 1000);
   };
 
-  const totalCapacity = mockShelters.reduce((sum, s) => sum + s.total_capacity, 0);
-  const totalOccupancy = mockShelters.reduce((sum, s) => sum + s.current_occupancy, 0);
+  const handleContact = () => {
+    setShowContactNumber(true);
+    toast.success('Contact number displayed');
+  };
+
+  // Filter shelters based on route preference
+  const filteredShelters = routePreference === 'safest' 
+    ? mockShelters.slice(0, 2) 
+    : routePreference === 'fastest'
+    ? mockShelters.slice(0, 1)
+    : mockShelters.slice(0, 2);
+
+  const totalCapacity = filteredShelters.reduce((sum, s) => sum + s.total_capacity, 0);
+  const totalOccupancy = filteredShelters.reduce((sum, s) => sum + s.current_occupancy, 0);
 
   return (
     <div className="pb-20 font-sans">
 
+      {/* Route Map Modal */}
+      {showRouteModal && modalShelter && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden">
+            <div className="p-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900">Route to {modalShelter.name}</h3>
+                <p className="text-sm text-slate-500">{modalShelter.address}</p>
+              </div>
+              <button onClick={() => setShowRouteModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+            <div className="h-[500px]">
+              <MapView 
+                initialViewState={{
+                  latitude: latitude || 28.730,
+                  longitude: longitude || 77.775,
+                  zoom: 12,
+                }}
+                markers={[
+                  {
+                    id: 'user',
+                    latitude: latitude || 28.730,
+                    longitude: longitude || 77.775,
+                    type: 'user',
+                    title: 'Your Location',
+                  },
+                  {
+                    id: modalShelter.id,
+                    latitude: modalShelter.latitude,
+                    longitude: modalShelter.longitude,
+                    type: 'shelter',
+                    title: modalShelter.name,
+                    description: modalShelter.address,
+                  }
+                ]}
+                height="500px"
+              />
+            </div>
+            <div className="p-4 bg-slate-50 border-t">
+              <div className="flex items-center justify-between">
+                <div className="flex gap-4">
+                  <div>
+                    <p className="text-xs text-slate-500">Distance</p>
+                    <p className="font-bold text-slate-900">{modalShelter.distance_km} km</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">Est. Time</p>
+                    <p className="font-bold text-slate-900">{routeResult?.estimated_time_min || 15} min</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowRouteModal(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Number Modal */}
+      {showContactNumber && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex justify-between items-start mb-4">
+              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                <Phone className="h-6 w-6 text-green-600" />
+              </div>
+              <button onClick={() => setShowContactNumber(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                <X className="h-5 w-5 text-slate-400" />
+              </button>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Contact Shelter</h3>
+            <p className="text-sm text-slate-500 mb-4">Call this number to inquire about shelter availability</p>
+            <div className="bg-slate-50 rounded-xl p-4 mb-4">
+              <p className="text-xs text-slate-500 mb-1">Emergency Contact</p>
+              <a href="tel:+919031851732" className="text-2xl font-bold text-blue-600 hover:text-blue-700">+91 9031851732</a>
+            </div>
+            <button 
+              onClick={() => setShowContactNumber(false)}
+              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Evacuation Grid</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Real-time shelter capacity and route planning</p>
           </div>
-          <button
-            onClick={requestLocation}
-            disabled={locationLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-slate-900/10"
-          >
-            {locationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-            {latitude ? 'Location Active' : 'Enable Location'}
-          </button>
         </div>
       </div>
 
@@ -157,7 +261,7 @@ export default function EvacuationPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Available Facilities</h2>
             </div>
-            {mockShelters.map((shelter) => {
+            {filteredShelters.map((shelter) => {
               const occupancyPct = shelter.current_occupancy / shelter.total_capacity;
               const statusColor = occupancyPct < 0.5 ? 'bg-emerald-500' : occupancyPct < 0.8 ? 'bg-amber-500' : 'bg-red-500';
               return (
@@ -206,13 +310,16 @@ export default function EvacuationPage() {
                       </div>
                       <button
                         onClick={() => handleCalculateRoute(shelter.id)}
-                        disabled={routeMutation.isPending}
                         className="w-full py-2.5 bg-[#006DC4] hover:bg-[#005a9f] text-white text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                       >
-                        {routeMutation.isPending && selectedShelter === shelter.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Route className="h-4 w-4" />}
+                        <Route className="h-4 w-4" />
                         Get Route
                       </button>
-                      <button className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl transition-colors">
+                      <button 
+                        onClick={handleContact}
+                        className="w-full py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Phone className="h-4 w-4" />
                         Contact
                       </button>
                     </div>

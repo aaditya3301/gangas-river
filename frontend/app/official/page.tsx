@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import {
   AlertTriangle, FileText, MapPin, Activity, Waves, Home, Map,
   Phone, Bell, Users, TrendingUp, Clock, Shield, Award,
-  ChevronRight, PhoneCall, MessageSquare, CheckCircle2,
+  ChevronRight, MessageSquare, CheckCircle2,
   Upload, Star, Trophy, BarChart3, Droplets, Navigation, Loader2, Megaphone, Siren
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,20 +28,81 @@ const MapView = dynamic(() => import('@/components/MapView'), {
 
 export default function OfficialDashboard() {
   const [emergencyActive, setEmergencyActive] = useState(false);
-  const [confirmingEmergency, setConfirmingEmergency] = useState(false);
+
+  // Hapur flood zones (dummy data)
+  const hapurFloodZones = [
+    {
+      id: 'zone-a-1',
+      zone: 'A' as const,
+      name: 'Garh Road Area',
+      coordinates: [
+        [77.765, 28.735],
+        [77.772, 28.735],
+        [77.772, 28.728],
+        [77.765, 28.728],
+        [77.765, 28.735],
+      ],
+    },
+    {
+      id: 'zone-a-2',
+      zone: 'A' as const,
+      name: 'Mandi Area',
+      coordinates: [
+        [77.778, 28.725],
+        [77.785, 28.725],
+        [77.785, 28.718],
+        [77.778, 28.718],
+        [77.778, 28.725],
+      ],
+    },
+    {
+      id: 'zone-b-1',
+      zone: 'B' as const,
+      name: 'Railway Colony',
+      coordinates: [
+        [77.760, 28.740],
+        [77.768, 28.740],
+        [77.768, 28.733],
+        [77.760, 28.733],
+        [77.760, 28.740],
+      ],
+    },
+    {
+      id: 'zone-b-2',
+      zone: 'B' as const,
+      name: 'Civil Lines',
+      coordinates: [
+        [77.772, 28.720],
+        [77.780, 28.720],
+        [77.780, 28.713],
+        [77.772, 28.713],
+        [77.772, 28.720],
+      ],
+    },
+    {
+      id: 'zone-b-3',
+      zone: 'B' as const,
+      name: 'Delhi Road Sector',
+      coordinates: [
+        [77.785, 28.730],
+        [77.792, 28.730],
+        [77.792, 28.723],
+        [77.785, 28.723],
+        [77.785, 28.730],
+      ],
+    },
+  ];
 
   const emergencyMutation = useMutation({
     mutationFn: () => emergencyAPI.activate({ severity: 'critical' }),
     onSuccess: (data: any) => {
       setEmergencyActive(true);
-      setConfirmingEmergency(false);
       toast.success(`🚨 Alert Broadcast Sent!`, {
-        description: `${data.successful}/${data.total} citizens notified via WhatsApp/SMS.`
+        description: `${data.successful}/${data.total} citizens notified via automated calls.`
       });
       setTimeout(() => setEmergencyActive(false), 8000);
     },
     onError: (error: any) => {
-      setConfirmingEmergency(false);
       toast.error('Broadcast Failed', {
         description: error.message
       });
@@ -63,55 +124,25 @@ export default function OfficialDashboard() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-wide">System Operational • Varanasi HO</p>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-wide">System Operational • Hapur HO</p>
             </div>
           </div>
 
           <button
-            onClick={() => setConfirmingEmergency(true)}
+            onClick={() => emergencyMutation.mutate()}
+            disabled={emergencyMutation.isPending || emergencyActive}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${emergencyActive
                 ? 'bg-red-500 text-white animate-pulse'
                 : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/10'
               }`}
           >
-            {emergencyActive ? <Siren className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
-            {emergencyActive ? 'BROADCASTING...' : 'Broadcast Alert'}
+            {emergencyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : emergencyActive ? <Siren className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
+            {emergencyMutation.isPending ? 'SENDING...' : emergencyActive ? 'BROADCASTING...' : 'Broadcast Alert'}
           </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
-
-        {/* ── Confirm Modal ── */}
-        {confirmingEmergency && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl scale-100 animate-in zoom-in-95">
-              <div className="h-12 w-12 rounded-full bg-red-100 flex items-center justify-center mb-4 mx-auto">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-center text-lg font-bold text-slate-900 mb-2">Confirm Emergency Broadcast</h3>
-              <p className="text-center text-sm text-slate-500 mb-6">
-                This will send a <span className="font-bold text-red-600">CRITICAL ALERT</span> to all connected citizens in Varanasi region. This action cannot be undone.
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setConfirmingEmergency(false)}
-                  className="py-2.5 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => emergencyMutation.mutate()}
-                  disabled={emergencyMutation.isPending}
-                  className="py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 flex items-center justify-center gap-2"
-                >
-                  {emergencyMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Status Grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -168,9 +199,17 @@ export default function OfficialDashboard() {
             <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm relative group">
               <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                LIVE FEEDS
+                LIVE FEEDS - HAPUR
               </div>
-              <MapView />
+              <MapView 
+                initialViewState={{
+                  latitude: 28.730,
+                  longitude: 77.775,
+                  zoom: 13,
+                }}
+                floodZones={hapurFloodZones}
+                showUserLocation={false}
+              />
             </div>
 
             {/* Recent Reports List */}
@@ -206,17 +245,19 @@ export default function OfficialDashboard() {
           <div className="space-y-6">
 
             {/* ── Action Center ── */}
-            <div className="bg-[#006DC4] rounded-2xl p-6 text-white shadow-xl shadow-blue-500/20">
-              <h3 className="font-bold text-lg mb-4">Quick Actions</h3>
-              <div className="space-y-3">
-                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
-                  <Megaphone className="h-4 w-4 mr-3" /> Broadcast Advisory
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b bg-slate-50">
+                <h3 className="font-semibold text-slate-900">Quick Actions</h3>
+              </div>
+              <div className="p-4 space-y-2">
+                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
+                  <Megaphone className="h-4 w-4 mr-3 text-slate-500" /> Broadcast Advisory
                 </button>
-                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
-                  <Users className="h-4 w-4 mr-3" /> Deploy Response Team
+                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
+                  <Users className="h-4 w-4 mr-3 text-slate-500" /> Deploy Response Team
                 </button>
-                <button className="w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold flex items-center px-4 transition-colors">
-                  <FileText className="h-4 w-4 mr-3" /> Generate Status Report
+                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
+                  <FileText className="h-4 w-4 mr-3 text-slate-500" /> Generate Status Report
                 </button>
               </div>
             </div>
