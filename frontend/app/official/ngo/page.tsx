@@ -77,70 +77,8 @@ export default function NGOPage() {
   });
 
   const handleDownloadGuidelines = () => {
-    const guidelinesContent = `
-NGO GUIDELINES FOR FLOOD RELIEF OPERATIONS
-AquaGuardians - Hapur HO
-Generated: ${new Date().toLocaleString()}
-
-═══════════════════════════════════════════════════════════
-
-1. REGISTRATION & VERIFICATION
-   • All NGOs must register with the Command Center
-   • Provide valid registration certificate and contact details
-   • Verification process takes 24-48 hours
-
-2. REPORTING REQUIREMENTS
-   • Submit activity reports within 24 hours of operations
-   • Include: Location, People helped, Resources used
-   • Photos and documentation recommended
-   • Accurate data essential for leaderboard points
-
-3. SAFETY PROTOCOLS
-   • Follow all safety guidelines issued by authorities
-   • Coordinate with local administration
-   • Maintain communication with Command Center
-   • Emergency contact: 1077
-
-4. RESOURCE ALLOCATION
-   • Request resources through official channels
-   • Maintain inventory of distributed items
-   • Report surplus/shortage immediately
-   • No unauthorized distribution
-
-5. POINTS SYSTEM
-   • People rescued/evacuated: 50 points each
-   • Food packets distributed: 5 points per 100
-   • Medical aid provided: 30 points per case
-   • Shelter arranged: 40 points per family
-   • Timely reporting: 20 bonus points
-
-6. CODE OF CONDUCT
-   • No discrimination based on caste, religion, gender
-   • Transparent operations and record-keeping
-   • Respect privacy and dignity of affected people
-   • No political/religious propaganda during relief
-
-7. GRIEVANCE REDRESSAL
-   • Report issues to: ngo@aquaguardians.gov.in
-   • Helpline: +91-1234-567890
-   • Weekly review meetings every Saturday
-
-═══════════════════════════════════════════════════════════
-
-For more information, visit: www.aquaguardians.gov.in/ngo
-Last Updated: February 12, 2026
-    `;
-
-    const blob = new Blob([guidelinesContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NGO-Guidelines-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('Guidelines downloaded successfully!');
+    window.open('/Hapur_Community_Based_Flood_Adaptation_Guidelines_2026.pdf', '_blank');
+    toast.success('Opening NGO Guidelines Documentation...');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -286,7 +224,7 @@ Last Updated: February 12, 2026
               className="w-full bg-violet-600 hover:bg-violet-700 text-white"
             >
               <Download className="h-4 w-4 mr-2" />
-              Download Full Guidelines
+              Download Full Documentation
             </Button>
 
             <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">

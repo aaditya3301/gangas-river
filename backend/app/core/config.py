@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     CORS_ORIGINS: str = "http://localhost:3000"
     
+    # CORS Configuration
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
+    EMERGENCY_CONTACTS: str = "108,112"
+
     # LiDAR Data Path
     LIDAR_DATA_PATH: str = "../data/raw"
     

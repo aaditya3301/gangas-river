@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { RiverTheme } from "@/components/RiverTheme";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,6 +25,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <QueryProvider>
           {children}
+          <RiverTheme />
           <Toaster position="top-center" />
         </QueryProvider>
       </body>
