@@ -61,13 +61,13 @@ export default function InsightsPage() {
   const totalEvents = yearlyFloodData.reduce((s, d) => s + d.events, 0);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-50/50 pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Research Insights</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">Research Insights</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Hydrological pattern analysis & archival data</p>
           </div>
           <div className="flex gap-2">
@@ -84,7 +84,7 @@ export default function InsightsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-6">
 
         {/* ── KPI Cards ── */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">

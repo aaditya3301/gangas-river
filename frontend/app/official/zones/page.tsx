@@ -105,11 +105,11 @@ export default function ZonesPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-50/50 pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Zone Management</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Land classification & construction policies</p>
@@ -117,10 +117,10 @@ export default function ZonesPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
 
         {/* ── Classification Tool ── */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
+        <div className="bg-white rounded-lg md:rounded-2xl border border-slate-100 shadow-sm p-4 md:p-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -mr-16 -mt-16 pointer-events-none" />
 
           <div className="flex items-center gap-3 mb-6 relative z-10">
@@ -155,7 +155,7 @@ export default function ZonesPage() {
                 <button
                   onClick={requestLocation}
                   disabled={locationLoading}
-                  className="flex-1 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {locationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
                   Get Location
@@ -163,7 +163,7 @@ export default function ZonesPage() {
                 <button
                   onClick={handleClassifyGPS}
                   disabled={!latitude || classifyMutation.isPending}
-                  className="flex-1 py-3 bg-[#006DC4] hover:bg-[#005a9f] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                  className="flex-1 h-11 bg-[#006DC4] hover:bg-[#005a9f] text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
                 >
                   {classifyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   Analyze Place

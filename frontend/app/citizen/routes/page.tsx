@@ -64,18 +64,18 @@ export default function RoutesPage() {
   };
 
   return (
-    <div className="space-y-6 relative">
+    <div className="space-y-4 md:space-y-6 relative">
       {/* Decorative River Element */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-100/40 to-transparent rounded-bl-full -z-10 pointer-events-none" />
       
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-blue-950">{t("safeRoutesTitle")}</h1>
-        <p className="text-gray-500">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-blue-950">{t("safeRoutesTitle")}</h1>
+        <p className="text-sm md:text-base text-gray-500">
           {t("safeRoutesDesc")}
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Search & Map Controls */}
         <Card className="col-span-full border-blue-100 shadow-md">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b border-blue-50">
@@ -100,7 +100,7 @@ export default function RoutesPage() {
               <Button 
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[140px] shadow-lg shadow-blue-500/20"
+                className="bg-blue-600 hover:bg-blue-700 text-white h-10 md:h-11 min-w-[140px] shadow-lg shadow-blue-500/20"
               >
                 {isSearching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Droplets className="h-4 w-4 mr-2 fill-blue-200" />}
                 {t("findRouteButton")}
@@ -110,7 +110,7 @@ export default function RoutesPage() {
         </Card>
 
         {/* Interactive Map */}
-        <Card className="col-span-full lg:col-span-2 h-[400px] flex flex-col relative overflow-hidden bg-slate-50 border-2 border-blue-100 shadow-inner group">
+        <Card className="col-span-full lg:col-span-2 h-[300px] md:h-[400px] flex flex-col relative overflow-hidden bg-slate-50 border-2 border-blue-100 shadow-inner group">
             
             {/* Map Background Pattern (Simulated) */}
             <div className="absolute inset-0 opacity-10" 
@@ -203,7 +203,7 @@ export default function RoutesPage() {
         </Card>
 
         {/* Shelter List */}
-        <Card className="col-span-full lg:col-span-1 h-[400px] flex flex-col bg-white border-blue-100/50 shadow-md">
+        <Card className="col-span-full lg:col-span-1 h-[300px] md:h-[400px] flex flex-col bg-white border-blue-100/50 shadow-md">
           <CardHeader className="pb-3 border-b border-gray-100">
             <CardTitle className="text-lg font-semibold flex items-center gap-2 text-slate-800">
               <Home className="h-5 w-5 text-green-600" />

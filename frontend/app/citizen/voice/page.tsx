@@ -149,11 +149,11 @@ export default function VoiceAssistantPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-120px)] w-full max-w-4xl mx-auto space-y-4">
+    <div className="flex flex-col h-[calc(100dvh-160px)] md:h-[calc(100vh-120px)] w-full max-w-4xl mx-auto space-y-3 md:space-y-4">
       <div className="flex bg-white p-4 rounded-xl shadow-sm border justify-between items-center">
         <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">{t("voiceTitle")}</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">{t("voiceTitle")}</h1>
+            <p className="text-xs md:text-sm text-gray-500">
             {t("voiceDesc")}
             </p>
         </div>

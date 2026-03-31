@@ -116,12 +116,12 @@ export default function EvacuationPage() {
   const totalOccupancy = filteredShelters.reduce((sum, s) => sum + s.current_occupancy, 0);
 
   return (
-    <div className="pb-20 font-sans">
+    <div className="pb-6 md:pb-10 font-sans">
 
       {/* Route Map Modal */}
       {showRouteModal && modalShelter && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-xl md:rounded-2xl max-w-4xl w-full max-h-[92vh] md:max-h-[88vh] shadow-2xl overflow-hidden flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-slate-900">Route to {modalShelter.name}</h3>
@@ -131,7 +131,7 @@ export default function EvacuationPage() {
                 <X className="h-5 w-5 text-slate-400" />
               </button>
             </div>
-            <div className="h-[500px]">
+            <div className="h-[300px] md:h-[500px] overflow-hidden">
               <MapView 
                 initialViewState={{
                   latitude: latitude || 28.730,
@@ -155,7 +155,7 @@ export default function EvacuationPage() {
                     description: modalShelter.address,
                   }
                 ]}
-                height="500px"
+                height="100%"
               />
             </div>
             <div className="p-4 bg-slate-50 border-t">
@@ -185,7 +185,7 @@ export default function EvacuationPage() {
       {/* Contact Number Modal */}
       {showContactNumber && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+          <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 max-w-sm w-full shadow-2xl">
             <div className="flex justify-between items-start mb-4">
               <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
                 <Phone className="h-6 w-6 text-green-600" />
@@ -212,7 +212,7 @@ export default function EvacuationPage() {
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Evacuation Grid</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Real-time shelter capacity and route planning</p>
@@ -220,7 +220,7 @@ export default function EvacuationPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
 
         {/* ── Stats Overview ── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -51,6 +51,10 @@
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -116,12 +120,32 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+html {
+  overscroll-behavior: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    padding-top: var(--sat);
+    padding-right: var(--sar);
+    padding-bottom: var(--sab);
+    padding-left: var(--sal);
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
     background-image: 
       radial-gradient(at 0% 0%, hsla(210,100%,98%,1) 0, transparent 50%), 
       radial-gradient(at 50% 50%, hsla(200,100%,99%,1) 0, transparent 50%),

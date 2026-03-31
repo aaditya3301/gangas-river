@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/providers";
@@ -13,6 +14,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AquaGuardians | AI-Powered River Protection",
   description: "AI-powered flood monitoring, prediction, and community engagement platform for the Ganga River corridor",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

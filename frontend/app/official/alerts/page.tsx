@@ -122,11 +122,11 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="pb-20 font-sans">
+    <div className="pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Broadcast Alerts</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Send emergency notifications to citizens</p>
@@ -138,11 +138,11 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
 
         {/* ── Send Alert Form ── */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
+          <div className="bg-white rounded-lg md:rounded-2xl border border-slate-100 shadow-sm p-4 md:p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="h-10 w-10 rounded-lg bg-violet-50 flex items-center justify-center text-violet-600">
                 <Megaphone className="h-5 w-5" />
@@ -172,7 +172,7 @@ export default function AlertsPage() {
                       <button
                         key={sev}
                         onClick={() => setSeverity(sev)}
-                        className={`flex-1 py-2 rounded-lg text-xs font-bold capitalize transition-all ${severity === sev
+                        className={`flex-1 h-10 rounded-lg text-xs font-bold capitalize transition-all ${severity === sev
                           ? sev === 'critical' ? 'bg-red-500 text-white shadow-md' :
                             sev === 'warning' ? 'bg-amber-500 text-white shadow-md' : 'bg-blue-500 text-white shadow-md'
                           : 'text-slate-500 hover:bg-slate-200'
@@ -209,13 +209,13 @@ export default function AlertsPage() {
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase">Delivery Channels</label>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={() => toggleChannel('sms')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sms') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>
+                  <button onClick={() => toggleChannel('sms')} className={`flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-bold border transition-all ${channels.includes('sms') ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}>
                     <Smartphone className="h-4 w-4" /> SMS
                   </button>
-                  <button onClick={() => toggleChannel('push')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('push') ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-500 border-slate-200'}`}>
+                  <button onClick={() => toggleChannel('push')} className={`flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-bold border transition-all ${channels.includes('push') ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-500 border-slate-200'}`}>
                     <Bell className="h-4 w-4" /> Push Notif
                   </button>
-                  <button onClick={() => toggleChannel('sirens')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${channels.includes('sirens') ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-500 border-slate-200'}`}>
+                  <button onClick={() => toggleChannel('sirens')} className={`flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-bold border transition-all ${channels.includes('sirens') ? 'bg-red-600 text-white border-red-600' : 'bg-white text-slate-500 border-slate-200'}`}>
                     <Siren className="h-4 w-4" /> Public Sirens
                   </button>
                 </div>
@@ -224,7 +224,7 @@ export default function AlertsPage() {
               {!showConfirm ? (
                 <button
                   onClick={handleSend}
-                  className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-600/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  className="w-full h-11 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-xl shadow-lg shadow-violet-600/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                 >
                   <Send className="h-4 w-4" />
                   Review & Broadcast
@@ -242,14 +242,14 @@ export default function AlertsPage() {
                     <button
                       onClick={confirmSend}
                       disabled={sendAlertMutation.isPending}
-                      className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 h-10 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
                     >
                       {sendAlertMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
                       CONFIRM SEND
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}
-                      className="px-4 py-2.5 bg-white border border-red-200 text-red-700 font-bold rounded-lg hover:bg-red-50 transition-colors"
+                      className="px-4 h-10 bg-white border border-red-200 text-red-700 font-bold rounded-lg hover:bg-red-50 transition-colors"
                     >
                       Cancel
                     </button>

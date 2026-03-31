@@ -131,13 +131,13 @@ export default function ApiDocsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-50/50 pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">API Reference</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">API Reference</h1>
             <p className="text-slate-500 text-xs font-medium mt-1">Integrate flood intelligence into your apps</p>
           </div>
           <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors">
@@ -147,7 +147,7 @@ export default function ApiDocsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
 
         {/* ── Auth Card ── */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

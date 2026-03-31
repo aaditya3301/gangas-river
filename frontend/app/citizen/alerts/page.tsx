@@ -8,19 +8,19 @@ export default function AlertsPage() {
   const [activeTab, setActiveTab] = useState('all');
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="bg-slate-50 pb-20 md:pb-8">
 
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3">
           <Link href="/citizen" className="p-2 -ml-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-bold text-slate-900">Notifications</h1>
+          <h1 className="text-lg md:text-xl font-bold text-slate-900">Notifications</h1>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-6">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 md:py-6">
 
         {/* Settings Toggle */}
         <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex items-center justify-between mb-8">
@@ -39,12 +39,12 @@ export default function AlertsPage() {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-4 md:mb-6 overflow-x-auto">
           {['all', 'critical', 'info'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold capitalize transition-colors ${activeTab === tab
+              className={`px-4 h-10 rounded-full text-xs font-bold capitalize transition-colors whitespace-nowrap ${activeTab === tab
                   ? 'bg-slate-900 text-white'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}

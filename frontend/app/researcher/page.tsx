@@ -100,13 +100,13 @@ Kriging Elevation: 95.3% accuracy
 
 export default function ResearcherDashboard() {
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-20 font-sans">
+    <div className="min-h-screen bg-slate-50/50 pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <header className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
               Research <span className="text-[#006DC4]">Portal</span>
             </h1>
             <p className="text-slate-500 text-xs font-medium mt-1">
@@ -133,7 +133,7 @@ export default function ResearcherDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
 
         {/* ── Stats Strip ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">

@@ -54,62 +54,62 @@ export default function CitizenDashboard() {
   const [alerts, setAlerts] = useState(smsAlerts);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Welcome Section */}
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
           {t("greeting")}
         </h1>
-        <p className="text-gray-500">
+        <p className="text-sm md:text-base text-gray-500">
           {t("updateMessage")}
         </p>
       </div>
 
       {/* Status Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="p-3 md:p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("floodRisk")}</CardTitle>
             <ShieldCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{t("low")}</div>
+          <CardContent className="p-3 pt-0 md:p-4 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold text-green-600">{t("low")}</div>
             <p className="text-xs text-gray-500">{t("normalLevels")}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="p-3 md:p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("activeAlerts")}</CardTitle>
             <Bell className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">2</div>
+          <CardContent className="p-3 pt-0 md:p-4 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold text-orange-600">2</div>
             <p className="text-xs text-gray-500">{t("recentNotifications")}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="p-3 md:p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("safeZones")}</CardTitle>
             <MapPin className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">5</div>
+          <CardContent className="p-3 pt-0 md:p-4 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold text-blue-600">5</div>
             <p className="text-xs text-gray-500">{t("sheltersOpen")}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="p-3 md:p-4 flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("emergency")}</CardTitle>
             <Phone className="h-4 w-4 text-red-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">SOS</div>
+          <CardContent className="p-3 pt-0 md:p-4 md:pt-0">
+            <div className="text-lg md:text-2xl font-bold text-red-600">SOS</div>
             <p className="text-xs text-gray-500">{t("oneTapConnect")}</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-3 md:gap-4 grid-cols-1 lg:grid-cols-7">
         {/* SMS Alerts Section */}
         <Card className="col-span-4 lg:col-span-4 transition-all hover:shadow-md">
           <CardHeader>
@@ -149,8 +149,8 @@ export default function CitizenDashboard() {
               ))}
             </div>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
+          <CardFooter className="p-3 md:p-6 pt-0">
+            <Button variant="outline" className="w-full h-10 md:h-11">
               {t("viewAllAlerts")} <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardFooter>
@@ -166,25 +166,25 @@ export default function CitizenDashboard() {
             </CardHeader>
             <CardContent className="grid gap-4">
                 <Link href="/citizen/predict"> 
-                    <Button variant="secondary" className="w-full justify-start h-12">
+                  <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <CloudRain className="mr-2 h-5 w-5 text-blue-500" />
                         {t("checkFloodPrediction")}
                     </Button>
                 </Link>
                 <Link href="/citizen/routes">
-                    <Button variant="secondary" className="w-full justify-start h-12">
+                  <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <MapPin className="mr-2 h-5 w-5 text-green-500" />
                         {t("findSafeRoute")}
                     </Button>
                 </Link>
                 <Link href="/citizen/report">
-                    <Button variant="secondary" className="w-full justify-start h-12">
+                  <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <AlertTriangle className="mr-2 h-5 w-5 text-orange-500" />
                         {t("reportAnIncident")}
                     </Button>
                 </Link>
                 <Link href="/citizen/voice">
-                    <Button variant="secondary" className="w-full justify-start h-12">
+                  <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <Mic className="mr-2 h-5 w-5 text-purple-500" />
                         {t("voiceAssistant")}
                     </Button>

@@ -10,7 +10,7 @@ import Footer from '@/components/landing/Footer';
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="overflow-x-hidden">
       <Navbar />
       <Hero />
       <PlatformOverview />

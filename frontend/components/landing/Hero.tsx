@@ -102,7 +102,7 @@ export default function Hero() {
     };
 
     return (
-        <section className="relative min-h-[100dvh] bg-[#080c18] overflow-hidden flex flex-col items-center justify-start pt-28 pb-32">
+        <section className="relative min-h-[88svh] md:min-h-[100dvh] bg-[#080c18] overflow-hidden flex flex-col items-center justify-start pt-24 md:pt-28 pb-14 md:pb-28">
             {/* ── Background layers ── */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Dynamic gradient based on role */}
@@ -112,7 +112,7 @@ export default function Hero() {
 
                 {/* Ambient glow behind active orb */}
                 <div
-                    className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[100px] transition-all duration-700"
+                    className="absolute left-1/2 top-[52%] md:top-[40%] -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] md:w-[500px] md:h-[500px] rounded-full blur-[80px] md:blur-[100px] transition-all duration-700"
                     style={{
                         background: role === 'citizen' ? 'radial-gradient(circle, rgba(0,109,196,0.2) 0%, transparent 70%)'
                             : role === 'official' ? 'radial-gradient(circle, rgba(148,163,184,0.15) 0%, transparent 70%)'
@@ -124,19 +124,21 @@ export default function Hero() {
             </div>
 
             {/* ── Content (Text) ── */}
-            <div className="relative z-10 mx-auto max-w-[1280px] px-6 text-center mb-0 md:mb-8">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08] min-h-[160px] md:min-h-[auto]">
+            <div className="relative z-10 mx-auto max-w-[960px] px-4 md:px-6 text-center mb-0 md:mb-6">
+                <Badge>{activeContent.badge}</Badge>
+
+                <h1 className="mt-5 text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.08] min-h-[120px] sm:min-h-[140px] md:min-h-auto">
                     {activeContent.headline}
                 </h1>
 
-                <p className="mt-6 text-lg md:text-xl text-white/50 max-w-2xl mx-auto leading-relaxed font-medium min-h-[60px] md:min-h-[auto]">
+                <p className="mt-3 md:mt-6 text-base md:text-xl text-white/60 max-w-2xl mx-auto leading-relaxed font-medium min-h-[72px] md:min-h-auto">
                     {activeContent.sub}
                 </p>
             </div>
 
             {/* ── THREE ORBS (Positioned container) ── */}
             <div 
-                className="relative z-20 w-full max-w-[800px] h-[320px] mx-auto mt-4 md:mt-8 perspective-[1000px]"
+                className="relative z-20 w-full max-w-[760px] h-[220px] sm:h-[250px] md:h-[320px] mx-auto mt-4 md:mt-8 perspective-[1000px]"
                 onMouseEnter={() => setPaused(true)}
                 onMouseLeave={() => setPaused(false)}
             >
@@ -144,22 +146,18 @@ export default function Hero() {
                     const slot = getSlot(orb.role);
                     const isCenter = slot === 'center';
 
-                    // Positioning logic
-                    let positionStyles = {};
-                    if (slot === 'center') {
-                        positionStyles = { transform: 'translateX(-50%) scale(1)', left: '50%', zIndex: 30 };
-                    } else if (slot === 'left') {
-                        positionStyles = { transform: 'translateX(-150%) scale(0.75)', left: '50%', zIndex: 20 };
-                    } else {
-                        positionStyles = { transform: 'translateX(50%) scale(0.75)', left: '50%', zIndex: 20 };
-                    }
+                    const slotClass =
+                        slot === 'center'
+                            ? 'left-1/2 -translate-x-1/2 scale-100 z-30'
+                            : slot === 'left'
+                                ? 'left-1/2 -translate-x-[122%] md:-translate-x-[150%] scale-90 md:scale-75 z-20'
+                                : 'left-1/2 translate-x-[22%] md:translate-x-[50%] scale-90 md:scale-75 z-20';
 
                     return (
                         <button
                             key={orb.role}
                             onClick={() => setRole(orb.role as Role)}
-                            className="absolute top-0 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none group"
-                            style={positionStyles}
+                            className={`absolute top-2 md:top-0 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] outline-none group ${slotClass}`}
                         >
                             {/* Floating Wrapper (only active on center to prevent double motion issues) */}
                             <div className={isCenter ? 'animate-[float_6s_ease-in-out_infinite]' : ''}>
@@ -173,8 +171,8 @@ export default function Hero() {
                                 {/* Orb Container */}
                                 <div
                                     className={`relative rounded-full overflow-hidden shadow-2xl border-4 transition-all duration-500 bg-gray-900 ${isCenter
-                                        ? 'w-48 h-48 md:w-64 md:h-64 border-white/20'
-                                        : 'w-48 h-48 md:w-64 md:h-64 border-white/5 grayscale-[0.5] hover:grayscale-0 cursor-pointer opacity-60 hover:opacity-100'
+                                        ? 'w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 border-white/20'
+                                        : 'w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 border-white/5 grayscale-[0.5] hover:grayscale-0 cursor-pointer opacity-60 hover:opacity-100'
                                         }`}
                                 >
                                     <img
@@ -189,7 +187,7 @@ export default function Hero() {
                                 </div>
 
                                 {/* Label */}
-                                <div className={`mt-6 text-center transition-all duration-300 ${isCenter ? 'opacity-100' : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'}`}>
+                                <div className={`mt-4 md:mt-6 text-center transition-all duration-300 ${isCenter ? 'opacity-100' : 'opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0'}`}>
                                     <span className="text-white font-bold uppercase tracking-[0.2em] text-xs md:text-sm text-shadow-sm">
                                         {orb.title}
                                     </span>
@@ -199,6 +197,37 @@ export default function Hero() {
                         </button>
                     );
                 })}
+            </div>
+
+            <div className="relative z-20 mt-3 md:mt-6 flex flex-col items-center gap-4 px-4">
+                <div className="inline-flex items-center rounded-full border border-white/15 bg-white/5 p-1 backdrop-blur-md">
+                    {orbsData.map((orb) => {
+                        const isActive = orb.role === role;
+                        return (
+                            <button
+                                key={`pill-${orb.role}`}
+                                onClick={() => setRole(orb.role as Role)}
+                                className={`rounded-full px-3 py-1.5 text-[11px] sm:text-xs font-semibold transition-colors ${
+                                    isActive
+                                        ? 'bg-white text-slate-900'
+                                        : 'text-white/75 hover:text-white'
+                                }`}
+                            >
+                                {orb.title}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <Link
+                    href={activeContent.link}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#006DC4] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#006DC4]/30 transition-transform hover:scale-[1.02] hover:bg-[#005a9f]"
+                >
+                    {activeContent.cta}
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </Link>
             </div>
 
             {/* ── Terrain SVG Bottom ── */}

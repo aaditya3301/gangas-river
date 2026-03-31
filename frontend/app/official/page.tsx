@@ -110,13 +110,13 @@ export default function OfficialDashboard() {
   });
 
   return (
-    <div className="pb-20 font-sans">
+    <div className="pb-6 md:pb-10 font-sans">
 
       {/* ── Header ── */}
       <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
               Command <span className="text-[#006DC4]">Center</span>
             </h1>
             <div className="flex items-center gap-2 mt-1">
@@ -142,7 +142,7 @@ export default function OfficialDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
 
         {/* ── Status Grid ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -201,7 +201,7 @@ export default function OfficialDashboard() {
                 <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                 LIVE FEEDS - HAPUR
               </div>
-              <MapView 
+              <MapView
                 initialViewState={{
                   latitude: 28.730,
                   longitude: 77.775,
@@ -209,6 +209,7 @@ export default function OfficialDashboard() {
                 }}
                 floodZones={hapurFloodZones}
                 showUserLocation={false}
+                height="clamp(300px, 45vh, 500px)"
               />
             </div>
 

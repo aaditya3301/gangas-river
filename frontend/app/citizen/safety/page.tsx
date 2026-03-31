@@ -5,19 +5,19 @@ import { Shield, Navigation, Home, Phone, ArrowLeft } from 'lucide-react';
 
 export default function AmISafePage() {
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="bg-slate-50 pb-20 md:pb-8">
 
       {/* Header */}
       <div className="bg-white border-b border-slate-100 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-4">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-3 md:py-4 flex items-center gap-3">
           <Link href="/citizen" className="p-2 -ml-2 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-xl font-bold text-slate-900">Safety Check</h1>
+          <h1 className="text-lg md:text-xl font-bold text-slate-900">Safety Check</h1>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-6">
 
         {/* Risk Status Card */}
         <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm overflow-hidden">
@@ -25,7 +25,7 @@ export default function AmISafePage() {
             <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mb-4 animate-[bounce_2s_infinite]">
               <Shield className="h-10 w-10 text-emerald-600" />
             </div>
-            <h2 className="text-3xl font-black text-emerald-900">You are Safe</h2>
+            <h2 className="text-2xl md:text-3xl font-black text-emerald-900">You are Safe</h2>
             <p className="text-emerald-800/80 mt-2 font-medium">No active flood threats in your immediate zone.</p>
             <p className="text-sm text-slate-400 mt-4">Last updated: Just now</p>
           </div>
@@ -59,7 +59,7 @@ export default function AmISafePage() {
 
         {/* Nearby Shelters List */}
         <div>
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Nearby Safe Zones</h3>
+          <h3 className="text-xs md:text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 md:mb-4">Nearby Safe Zones</h3>
           <div className="space-y-3">
             {[1, 2].map((i) => (
               <div key={i} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function AmISafePage() {
                     <p className="text-xs text-slate-500">1.2km away • Capacity: 85%</p>
                   </div>
                 </div>
-                <button className="h-10 w-10 rounded-full border border-slate-100 flex items-center justify-center hover:bg-slate-50 text-blue-600">
+                <button className="h-11 w-11 rounded-full border border-slate-100 flex items-center justify-center hover:bg-slate-50 text-blue-600">
                   <Navigation className="h-5 w-5" />
                 </button>
               </div>
@@ -91,7 +91,7 @@ export default function AmISafePage() {
               <p className="text-xs text-red-700">24/7 Disaster Response Team</p>
             </div>
           </div>
-          <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold">
+          <button className="bg-red-600 hover:bg-red-700 text-white h-10 px-4 rounded-lg text-sm font-bold">
             Call 108
           </button>
         </div>

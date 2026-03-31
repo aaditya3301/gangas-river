@@ -36,7 +36,7 @@ export default function OfficialLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Sidebar - Desktop */}
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-56 border-r border-slate-200 bg-white md:block">
         <div className="flex h-full flex-col">
@@ -91,7 +91,7 @@ export default function OfficialLayout({
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="fixed left-0 top-0 h-full w-56 bg-white">
+          <aside className="fixed left-0 top-0 h-full w-64 bg-white">
             <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
               <div className="flex items-center gap-2">
                 <Shield className="h-6 w-6 text-violet-600" />

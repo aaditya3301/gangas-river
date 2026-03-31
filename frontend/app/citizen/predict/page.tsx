@@ -94,12 +94,12 @@ export default function FloodPredictionPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-start">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">{t("floodPredictionTitle")}</h1>
-                <p className="text-gray-500">{t("floodPredictionDesc")}</p>
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight">{t("floodPredictionTitle")}</h1>
+                <p className="text-sm md:text-base text-gray-500">{t("floodPredictionDesc")}</p>
             </div>
             {isLive && (
                 <Badge variant="outline" className="animate-pulse border-green-500 text-green-600 flex gap-2">

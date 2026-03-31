@@ -39,7 +39,7 @@ export default function ResearcherLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -51,7 +51,7 @@ export default function ResearcherLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-slate-200 transform transition-transform lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform lg:translate-x-0",
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -102,7 +102,7 @@ export default function ResearcherLayout({
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-56">
+      <div className="lg:pl-64">
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 lg:hidden">
           <button

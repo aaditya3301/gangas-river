@@ -131,7 +131,7 @@ export default function MapView({
   onMapClick,
   showUserLocation = true,
   interactive = true,
-  height = '400px',
+  height = 'clamp(300px, 45vh, 500px)',
   className = '',
 }: MapViewProps) {
   const [isClient, setIsClient] = useState(false);
@@ -143,7 +143,7 @@ export default function MapView({
   if (!isClient) {
     return (
       <div 
-        className={`relative rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center ${className}`} 
+        className={`relative w-full rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center ${className}`} 
         style={{ height }}
       >
         <p className="text-gray-500">Loading map...</p>
@@ -152,7 +152,7 @@ export default function MapView({
   }
 
   return (
-    <div className={`relative rounded-lg overflow-hidden ${className}`} style={{ height }}>
+    <div className={`relative w-full rounded-lg overflow-hidden ${className}`} style={{ height }}>
       <MapContainer
         center={[initialViewState.latitude!, initialViewState.longitude!]}
         zoom={initialViewState.zoom!}
