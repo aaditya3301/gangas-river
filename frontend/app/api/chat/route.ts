@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
+export const dynamic = 'force-dynamic';
+
+// Attempt to initialize Groq safely during build
 const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
+    apiKey: process.env.GROQ_API_KEY || "dummy_key_for_build",
 });
 
 export async function POST(req: NextRequest) {

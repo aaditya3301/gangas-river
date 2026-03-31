@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { QueryProvider } from "@/lib/providers";
@@ -13,6 +13,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "AquaGuardians | AI-Powered River Protection",
   description: "AI-powered flood monitoring, prediction, and community engagement platform for the Ganga River corridor",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AquaGuardians",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#006DC4",
 };
 
 export default function RootLayout({
