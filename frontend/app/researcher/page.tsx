@@ -1,242 +1,166 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Database,
-  Code,
-  Brain,
-  TrendingUp,
-  Download,
-  FileJson,
   ArrowRight,
-  Activity,
-  HardDrive,
+  BarChart3,
+  BookOpen,
+  Code,
   Cpu,
-  Clock,
-  Zap,
-  ChevronRight,
-  Search
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+  Database,
+  FlaskConical,
+  Globe,
+} from "lucide-react";
 
-const quickLinks = [
+import { Card } from "@/components/ui/card";
+import { researcherAPI } from "@/lib/api";
+
+interface ResearcherStats {
+  total_datasets: number;
+  total_models: number;
+  active_models: number;
+  api_endpoints: number;
+  total_reports: number;
+  platform_version: string;
+  data_coverage: string;
+  temporal_coverage: string;
+}
+
+const QUICK_LINKS = [
   {
-    href: '/researcher/data',
+    href: "/researcher/data",
     icon: Database,
-    title: 'Data Sandbox',
-    description: 'Download LiDAR datasets, river data, and flood records',
-    color: 'bg-blue-50',
-    iconColor: 'text-[#006DC4]',
-    stats: '1.7 GB available',
+    label: "Data Catalog",
+    description: "Curated datasets for rainfall, hydrology, flood events, terrain, and exposure.",
+    style: "text-blue-600 bg-blue-50",
   },
   {
-    href: '/researcher/api',
+    href: "/researcher/models",
+    icon: Cpu,
+    label: "Model Lab",
+    description: "Model registry with architecture metadata and live prediction testing.",
+    style: "text-amber-600 bg-amber-50",
+  },
+  {
+    href: "/researcher/api",
     icon: Code,
-    title: 'API Documentation',
-    description: 'REST API endpoints with authentication guides',
-    color: 'bg-violet-50',
-    iconColor: 'text-violet-600',
-    stats: '15 endpoints',
+    label: "API Explorer",
+    description: "Interactive endpoint catalog with request/response schemas and try-it runner.",
+    style: "text-emerald-600 bg-emerald-50",
   },
   {
-    href: '/researcher/models',
-    icon: Brain,
-    title: 'Model Lab',
-    description: 'Test flood prediction models with custom parameters',
-    color: 'bg-amber-50',
-    iconColor: 'text-amber-600',
-    stats: '3 models',
-  },
-  {
-    href: '/researcher/insights',
-    icon: TrendingUp,
-    title: 'Research Insights',
-    description: 'Visualizations and analysis of flood patterns',
-    color: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
-    stats: 'Live data',
+    href: "/researcher/insights",
+    icon: BarChart3,
+    label: "Insights",
+    description: "Charts for trends, category distribution, verification quality, and hotspots.",
+    style: "text-violet-600 bg-violet-50",
   },
 ];
 
-const datasets = [
-  { name: 'SRTM Digital Elevation Model', size: '856 MB', format: 'GeoTIFF', downloads: 234 },
-  { name: 'OpenStreetMap River Network', size: '45 MB', format: 'GeoJSON', downloads: 189 },
-  { name: 'NOAA Flood Event Database', size: '12 MB', format: 'CSV', downloads: 456 },
+const GETTING_STARTED = [
+  "Browse Data Catalog and shortlist relevant datasets for your study.",
+  "Review Model Lab details and run sample predictions for baseline checks.",
+  "Use API Explorer to inspect payloads and test integrations quickly.",
+  "Open Insights to compare trends, categories, and verification quality.",
+  "Use Swagger docs for complete OpenAPI schema when building pipelines.",
 ];
-
-const handleExportReport = () => {
-  const reportContent = `
-AquaGuardians Research Portal - Activity Report
-Generated: ${new Date().toLocaleString()}
-
-=== SYSTEM STATISTICS ===
-Total Datasets: 8
-Total Storage: 3.8 GB
-API Requests (24h): 4,200
-Active Models: 4
-
-=== RECENT ACTIVITY ===
-- SRTM DEM downloaded
-- LSTM model executed
-- API endpoints accessed
-
-=== MODEL PERFORMANCE ===
-LSTM Flood Predictor: 92.5% accuracy
-Random Forest Classifier: 88.7% accuracy
-XGBoost Risk Model: 94.2% accuracy
-Kriging Elevation: 95.3% accuracy
-  `;
-  
-  const blob = new Blob([reportContent], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `aquaguardians-report-${Date.now()}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
 
 export default function ResearcherDashboard() {
-  return (
-    <div className="min-h-screen bg-slate-50/50 pb-6 md:pb-10 font-sans">
+  const { data } = useQuery<ResearcherStats>({
+    queryKey: ["researcher-stats"],
+    queryFn: () => researcherAPI.getResearcherStats(),
+  });
 
-      {/* ── Header ── */}
-      <header className="bg-white border-b border-slate-200 sticky top-14 lg:top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
-              Research <span className="text-[#006DC4]">Portal</span>
-            </h1>
-            <p className="text-slate-500 text-xs font-medium mt-1">
-              Access real-time hydrological data & predictive models
+  return (
+    <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 space-y-4 md:space-y-6">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold">Research Dashboard</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          Unified workspace for datasets, models, APIs, and analytics on Ganga basin flood intelligence.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="p-3">
+          <p className="text-xs text-slate-500">Datasets</p>
+          <p className="text-2xl font-bold mt-1">{data?.total_datasets ?? "-"}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs text-slate-500">Models</p>
+          <p className="text-2xl font-bold mt-1">{data?.total_models ?? "-"}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs text-slate-500">API Endpoints</p>
+          <p className="text-2xl font-bold mt-1">{data?.api_endpoints ?? "-"}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs text-slate-500">Community Reports</p>
+          <p className="text-2xl font-bold mt-1">{data?.total_reports ?? "-"}</p>
+        </Card>
+      </div>
+
+      <Card className="p-4 bg-emerald-50 border-emerald-100">
+        <div className="flex items-start gap-3">
+          <FlaskConical className="w-5 h-5 text-emerald-700 mt-0.5" />
+          <div className="text-sm text-emerald-900">
+            <p className="font-semibold">Platform Coverage</p>
+            <p className="mt-1">
+              Region: {data?.data_coverage ?? "Ganga Basin"} - Temporal: {data?.temporal_coverage ?? "1967-2026"} - Version: {data?.platform_version ?? "1.0.0"}
             </p>
           </div>
-          <div className="flex gap-3">
-            <div className="hidden md:flex items-center bg-slate-100 rounded-xl px-3 py-2 border border-slate-200">
-              <Search className="h-4 w-4 text-slate-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Search datasets..."
-                className="bg-transparent border-none text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none w-48"
-              />
-            </div>
-            <Button 
-              onClick={handleExportReport}
-              className="bg-[#006DC4] hover:bg-[#005a9f] text-white rounded-xl shadow-lg shadow-blue-500/20"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export Report
-            </Button>
-          </div>
         </div>
-      </header>
+      </Card>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
-
-        {/* ── Stats Strip ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {[
-            { label: 'Data Registry', value: '1.7 TB', icon: HardDrive, color: 'text-blue-600' },
-            { label: 'API Requests', value: '4.2k', icon: Activity, color: 'text-violet-600' },
-            { label: 'Avg Latency', value: '65ms', icon: Clock, color: 'text-emerald-600' },
-            { label: 'Active Models', value: '3', icon: Cpu, color: 'text-amber-600' },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex items-center gap-4">
-              <div className={`p-3 rounded-xl bg-slate-50 ${stat.color}`}>
-                <stat.icon className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-2xl font-black text-slate-900">{stat.value}</div>
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── Quick Links Grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {quickLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="group bg-white rounded-2xl p-6 border border-slate-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.1)] hover:border-blue-100 transition-all">
-              <div className="flex items-start justify-between mb-4">
-                <div className={`h-12 w-12 rounded-xl ${link.color} flex items-center justify-center ${link.iconColor} group-hover:scale-110 transition-transform`}>
-                  <link.icon className="h-6 w-6" />
+      <div>
+        <h2 className="text-base md:text-lg font-semibold mb-3">Quick Access</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {QUICK_LINKS.map((item) => (
+            <Link key={item.href} href={item.href}>
+              <Card className="p-4 hover:shadow-sm transition-shadow h-full">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded ${item.style}`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-sm md:text-base">{item.label}</h3>
+                      <ArrowRight className="w-4 h-4 text-slate-400" />
+                    </div>
+                    <p className="text-xs md:text-sm text-slate-500 mt-1">{item.description}</p>
+                  </div>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-                  <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-[#006DC4]" />
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-[#006DC4] transition-colors">{link.title}</h3>
-              <p className="text-sm text-slate-500 mb-4 h-10">{link.description}</p>
-              <div className="inline-flex items-center px-2.5 py-1 rounded-md bg-slate-50 text-xs font-bold text-slate-600 border border-slate-100">
-                {link.stats}
-              </div>
+              </Card>
             </Link>
           ))}
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* ── Recent Datasets ── */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                <Database className="h-4 w-4 text-blue-500" />
-                Recent Datasets
-              </h3>
-              <Link href="/researcher/data" className="text-xs font-bold text-blue-600 hover:underline">View All</Link>
-            </div>
-            <div className="divide-y divide-slate-50">
-              {datasets.map((ds, i) => (
-                <div key={i} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400">
-                      <FileJson className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-slate-900">{ds.name}</div>
-                      <div className="text-xs text-slate-500 flex gap-2 mt-0.5">
-                        <span className="font-semibold text-slate-700">{ds.size}</span>
-                        <span>•</span>
-                        <span>{ds.format}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-slate-200">
-                    <Download className="h-3 w-3 mr-2" />
-                    {ds.downloads}
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ── API Snippet ── */}
-          <div className="bg-slate-900 rounded-2xl p-6 text-slate-300 shadow-xl overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-32 bg-blue-500/10 rounded-full blur-3xl" />
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-4 text-white">
-                <Code className="h-5 w-5 text-emerald-400" />
-                <h3 className="font-bold">Quick Start</h3>
-              </div>
-              <div className="bg-slate-950/50 rounded-xl p-4 font-mono text-xs border border-white/5 mb-4">
-                <span className="text-purple-400">import</span> aquaguardians <span className="text-purple-400">as</span> ag<br /><br />
-                client = ag.Client(key=<span className="text-emerald-400">"..."</span>)<br />
-                prediction = client.predict(<br />
-                &nbsp;&nbsp;lat=<span className="text-orange-400">25.31</span>,<br />
-                &nbsp;&nbsp;lng=<span className="text-orange-400">83.01</span><br />
-                )
-              </div>
-              <Button className="w-full bg-white/10 hover:bg-white/20 text-white border-none">
-                Read Full Documentation
-              </Button>
-            </div>
-          </div>
-
-        </div>
-
       </div>
+
+      <Card className="p-4">
+        <h2 className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <BookOpen className="w-4 h-4" /> Getting Started
+        </h2>
+        <div className="space-y-2 text-sm text-slate-600">
+          {GETTING_STARTED.map((item, index) => (
+            <div key={item} className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">
+                {index + 1}
+              </span>
+              <p>{item}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-4 flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-sm">Open API Specification</p>
+          <p className="text-xs text-slate-500 mt-1">Use interactive OpenAPI docs for schema-level validation and payload examples.</p>
+        </div>
+        <a href="http://localhost:8000/docs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-blue-700 font-medium hover:underline">
+          <Globe className="w-4 h-4" /> Swagger Docs
+        </a>
+      </Card>
     </div>
   );
 }

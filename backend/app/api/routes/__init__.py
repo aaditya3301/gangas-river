@@ -1,5 +1,5 @@
 # API routes package
-from app.api.routes import auth, safety, reports, predict, zones, evacuation, health, chatbot, emergency
+from app.api.routes import auth, safety, reports, predict, zones, evacuation, health, chatbot, emergency, data, models, api_docs, insights
 
 __all__ = [
     "auth",
@@ -11,4 +11,8 @@ __all__ = [
     "health",
     "chatbot",
     "emergency",
+    "data",
+    "models",
+    "api_docs",
+    "insights",
 ]

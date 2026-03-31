@@ -178,4 +178,83 @@ export const healthAPI = {
   },
 };
 
+// ============ Researcher API ============
+export const researcherAPI = {
+  getDatasets: async (params?: { category?: string }) => {
+    const response = await api.get('/api/data/datasets', { params });
+    return response.data;
+  },
+
+  getDatasetDetail: async (datasetId: string) => {
+    const response = await api.get(`/api/data/datasets/${datasetId}`);
+    return response.data;
+  },
+
+  getModelRegistry: async () => {
+    const response = await api.get('/api/models/registry');
+    return response.data;
+  },
+
+  getModelDetail: async (modelId: string) => {
+    const response = await api.get(`/api/models/registry/${modelId}`);
+    return response.data;
+  },
+
+  runPrediction: async (data: {
+    latitude: number;
+    longitude: number;
+    rainfall_mm?: number;
+    model_id?: string;
+  }) => {
+    const response = await api.post('/api/models/predict', data);
+    return response.data;
+  },
+
+  getResearcherStats: async () => {
+    const response = await api.get('/api/data/researcher-stats');
+    return response.data;
+  },
+};
+
+// ============ API Docs API ============
+export const apiDocsAPI = {
+  getCatalog: async () => {
+    const response = await api.get('/api/api-docs/catalog');
+    return response.data;
+  },
+};
+
+// ============ Insights API ============
+export const insightsAPI = {
+  getReportTrends: async () => {
+    const response = await api.get('/api/insights/report-trends');
+    return response.data;
+  },
+
+  getCategoryDistribution: async () => {
+    const response = await api.get('/api/insights/category-distribution');
+    return response.data;
+  },
+
+  getVerificationStats: async () => {
+    const response = await api.get('/api/insights/verification-stats');
+    return response.data;
+  },
+
+  getStatusBreakdown: async () => {
+    const response = await api.get('/api/insights/status-breakdown');
+    return response.data;
+  },
+
+  getCuratedInsights: async () => {
+    const response = await api.get('/api/insights/curated-insights');
+    return response.data;
+  },
+
+  getRegionalSummary: async () => {
+    const response = await api.get('/api/insights/regional-summary');
+    return response.data;
+  },
+};
+
 export default api;

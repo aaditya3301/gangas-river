@@ -2,9 +2,11 @@
 Core configuration for AquaGuardians API
 Loads environment variables and provides app settings
 """
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 from typing import List
-import os
 
 
 class Settings(BaseSettings):
@@ -12,6 +14,42 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://localhost/aquaguardians"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        """Normalize pasted DB URLs into an asyncpg-compatible SQLAlchemy URL."""
+        if not isinstance(value, str):
+            return value
+
+        url = value.strip()
+        if url.lower().startswith("psql "):
+            url = url[5:].strip()
+
+        if (url.startswith("'") and url.endswith("'")) or (url.startswith('"') and url.endswith('"')):
+            url = url[1:-1].strip()
+
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://"):]
+
+        if url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+
+        parts = urlsplit(url)
+        if parts.query:
+            params: list[tuple[str, str]] = []
+            for key, val in parse_qsl(parts.query, keep_blank_values=True):
+                lower_key = key.lower()
+                if lower_key == "channel_binding":
+                    continue
+                if lower_key == "sslmode":
+                    params.append(("ssl", val.lower()))
+                    continue
+                params.append((key, val))
+
+            url = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(params), parts.fragment))
+
+        return url
     
     # Redis (optional)
     REDIS_URL: str | None = None
