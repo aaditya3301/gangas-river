@@ -65,11 +65,10 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str | None = None
     TWILIO_PHONE_NUMBER: str | None = None
     TWILIO_WHATSAPP_NUMBER: str | None = None  # e.g. whatsapp:+14155238886
+    FAST2SMS_API_KEY: str | None = None
+    BACKEND_PUBLIC_URL: str | None = None
     SENTINEL_HUB_CLIENT_ID: str | None = None
     SENTINEL_HUB_CLIENT_SECRET: str | None = None
-    
-    # Emergency Contacts (comma-separated phone numbers with country code)
-    EMERGENCY_CONTACTS: str = ""
     
     # App Settings
     DEBUG: bool = False

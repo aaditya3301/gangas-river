@@ -8,10 +8,62 @@ import httpx
 OSRM_BASE = "http://router.project-osrm.org"
 
 SHELTERS = [
-    {"id": 1, "name": "Prayagraj Community Shelter", "lat": 25.4358, "lng": 81.8463, "capacity": 500, "has_medical": True},
-    {"id": 2, "name": "Varanasi Relief Camp", "lat": 25.3176, "lng": 82.9739, "capacity": 300, "has_medical": True},
-    {"id": 3, "name": "Kanpur Flood Shelter", "lat": 26.4499, "lng": 80.3319, "capacity": 400, "has_medical": False},
-    {"id": 4, "name": "Patna Emergency Center", "lat": 25.6093, "lng": 85.1376, "capacity": 600, "has_medical": True},
+    {
+        "id": 1,
+        "name": "Prayagraj Community Shelter",
+        "lat": 25.4358,
+        "lng": 81.8463,
+        "address": "Civil Lines, Prayagraj",
+        "total_capacity": 500,
+        "current_occupancy": 155,
+        "has_medical": True,
+        "has_food": True,
+        "has_water": True,
+        "contact_phone": "+919000000001",
+        "elevation": 98.4,
+    },
+    {
+        "id": 2,
+        "name": "Varanasi Relief Camp",
+        "lat": 25.3176,
+        "lng": 82.9739,
+        "address": "Cantt Area, Varanasi",
+        "total_capacity": 300,
+        "current_occupancy": 220,
+        "has_medical": True,
+        "has_food": True,
+        "has_water": True,
+        "contact_phone": "+919000000002",
+        "elevation": 91.2,
+    },
+    {
+        "id": 3,
+        "name": "Kanpur Flood Shelter",
+        "lat": 26.4499,
+        "lng": 80.3319,
+        "address": "Kalyanpur, Kanpur",
+        "total_capacity": 400,
+        "current_occupancy": 98,
+        "has_medical": False,
+        "has_food": True,
+        "has_water": True,
+        "contact_phone": "+919000000003",
+        "elevation": 106.3,
+    },
+    {
+        "id": 4,
+        "name": "Patna Emergency Center",
+        "lat": 25.6093,
+        "lng": 85.1376,
+        "address": "Kankarbagh, Patna",
+        "total_capacity": 600,
+        "current_occupancy": 360,
+        "has_medical": True,
+        "has_food": True,
+        "has_water": True,
+        "contact_phone": "+919000000004",
+        "elevation": 87.0,
+    },
 ]
 
 
@@ -35,7 +87,12 @@ async def get_nearby_shelters(lat: float, lng: float, radius_km: float = 50) -> 
     for shelter in SHELTERS:
         dist = haversine_km(lat, lng, shelter["lat"], shelter["lng"])
         if dist <= radius_km:
-            nearby.append({**shelter, "distance_km": round(dist, 2)})
+            enriched = {
+                **shelter,
+                "capacity": shelter.get("total_capacity", 0),
+                "distance_km": round(dist, 2),
+            }
+            nearby.append(enriched)
 
     nearby.sort(key=lambda item: item["distance_km"])
     return nearby
