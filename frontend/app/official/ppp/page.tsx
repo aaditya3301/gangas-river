@@ -194,6 +194,19 @@ export default function OfficialPPPPage() {
     return compareResult.avoided_annual_loss_crore;
   }, [compareResult]);
 
+  const modelStatusText = useMemo(() => {
+    if (!modelInfo) return "Model: runtime status unavailable";
+    if (modelInfo.model_detected) {
+      return `Model: ${modelInfo.model_name} connected`;
+    }
+    return "Model: built-in formula engine active";
+  }, [modelInfo]);
+
+  const modeLabel = useMemo(() => {
+    if (!modelInfo) return "Unknown";
+    return modelInfo.inference_mode === "formula-engine" ? "Formula Engine" : "Trained Model Wrapper";
+  }, [modelInfo]);
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
@@ -205,10 +218,10 @@ export default function OfficialPPPPage() {
         </p>
         {modelInfo && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={modelInfo.model_detected ? "text-emerald-700" : "text-amber-700"}>
-              Model: {modelInfo.model_name} {modelInfo.model_detected ? "detected" : "not found"}
+            <Badge variant="outline" className={modelInfo.model_detected ? "text-emerald-700" : "text-slate-700"}>
+              {modelStatusText}
             </Badge>
-            <Badge variant="outline">Mode: {modelInfo.inference_mode}</Badge>
+            <Badge variant="outline">Mode: {modeLabel}</Badge>
             <p className="text-xs text-slate-500">Engine: {modelInfo.engine}</p>
           </div>
         )}

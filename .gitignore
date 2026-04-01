@@ -21,6 +21,8 @@ ENV/
 
 # Large Data Files (LiDAR datasets)
 data/
+!frontend/app/data/
+!frontend/app/data/**
 *.tif
 *.tfw
 *.aux.xml
@@ -29,6 +31,8 @@ data/
 
 # Models (can be large)
 models/
+!frontend/app/models/
+!frontend/app/models/**
 *.pkl
 *.h5
 *.pt
