@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Bell,
   CheckCircle,
-  ChevronRight,
   CloudRain,
   Clock,
   Droplets,
   FileText,
-  Mic,
   Navigation,
   Phone,
   Radio,
@@ -23,7 +21,6 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import api from "@/lib/api";
 
@@ -127,28 +124,28 @@ const MOCK_WEATHER: WeatherSnapshot = {
 
 const SEVERITY_STYLES: Record<string, { bg: string; text: string; dot: string; badge: string }> = {
   emergency: {
-    bg: "bg-red-50 border-red-200",
-    text: "text-red-700",
+    bg: "bg-white border-slate-200",
+    text: "text-slate-800",
     dot: "bg-red-500",
-    badge: "bg-red-100 text-red-700",
+    badge: "bg-slate-100 text-slate-700",
   },
   critical: {
-    bg: "bg-red-50 border-red-200",
-    text: "text-red-700",
+    bg: "bg-white border-slate-200",
+    text: "text-slate-800",
     dot: "bg-red-500",
-    badge: "bg-red-100 text-red-700",
+    badge: "bg-slate-100 text-slate-700",
   },
   warning: {
-    bg: "bg-amber-50 border-amber-200",
-    text: "text-amber-700",
+    bg: "bg-white border-slate-200",
+    text: "text-slate-800",
     dot: "bg-amber-500",
-    badge: "bg-amber-100 text-amber-700",
+    badge: "bg-slate-100 text-slate-700",
   },
   info: {
-    bg: "bg-blue-50 border-blue-200",
-    text: "text-blue-700",
+    bg: "bg-white border-slate-200",
+    text: "text-slate-800",
     dot: "bg-blue-500",
-    badge: "bg-blue-100 text-blue-700",
+    badge: "bg-slate-100 text-slate-700",
   },
 };
 
@@ -160,10 +157,10 @@ const STATUS_CONFIG: Record<string, { icon: typeof Clock; color: string; label: 
 };
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
-  flood: { label: "Flood", color: "bg-blue-100 text-blue-700" },
+  flood: { label: "Flood", color: "bg-slate-100 text-slate-700" },
   pollution: { label: "Pollution", color: "bg-slate-100 text-slate-700" },
-  infrastructure: { label: "Infrastructure", color: "bg-amber-100 text-amber-700" },
-  erosion: { label: "Erosion", color: "bg-orange-100 text-orange-700" },
+  infrastructure: { label: "Infrastructure", color: "bg-slate-100 text-slate-700" },
+  erosion: { label: "Erosion", color: "bg-slate-100 text-slate-700" },
   other: { label: "Other", color: "bg-slate-100 text-slate-700" },
 };
 
@@ -205,14 +202,14 @@ function SafetyTipCard() {
   }, []);
 
   return (
-    <Card className="border-emerald-200 bg-emerald-50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Safety Tip</p>
-      <p className="mt-1 text-sm text-emerald-800">{SAFETY_TIPS[tipIndex]}</p>
+    <Card className="border-slate-200 bg-white p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Safety Tip</p>
+      <p className="mt-1 text-sm text-slate-700">{SAFETY_TIPS[tipIndex]}</p>
       <div className="mt-2 flex justify-center gap-1">
         {SAFETY_TIPS.map((_, idx) => (
           <span
             key={idx}
-            className={`h-1.5 w-1.5 rounded-full ${idx === tipIndex ? "bg-emerald-600" : "bg-emerald-200"}`}
+            className={`h-1.5 w-1.5 rounded-full ${idx === tipIndex ? "bg-slate-500" : "bg-slate-200"}`}
           />
         ))}
       </div>
@@ -242,25 +239,8 @@ export default function CitizenDashboardPage() {
   const stats = dashboard.stats || MOCK_DASHBOARD.stats;
   const userName = dashboard.user_name || "Citizen";
 
-  const criticalAlert = useMemo(
-    () => alerts.find((alert) => alert.severity === "critical" || alert.severity === "emergency"),
-    [alerts]
-  );
-
   return (
     <div className="pb-24 md:pb-6">
-      {criticalAlert && (
-        <div className="flex items-center gap-3 bg-red-600 px-4 py-3 text-white">
-          <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
-          <p className="flex-1 text-sm font-medium">{criticalAlert.message}</p>
-          <Link href="/citizen/alerts">
-            <Button size="sm" variant="secondary" className="h-7 text-xs">
-              View
-            </Button>
-          </Link>
-        </div>
-      )}
-
       <div className="space-y-5 p-4 md:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -272,7 +252,7 @@ export default function CitizenDashboardPage() {
 
           <div className="text-right">
             <div className="flex items-center justify-end gap-1">
-              <CloudRain className="h-6 w-6 text-blue-600" />
+              <CloudRain className="h-6 w-6 text-slate-500" />
               <span className="text-2xl font-bold">{weather.temperature}deg</span>
             </div>
             <p className="text-xs text-slate-500">{weather.condition}</p>
@@ -289,11 +269,11 @@ export default function CitizenDashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           <Link href="/citizen/safety">
-            <Card className="h-full cursor-pointer border-l-4 border-l-blue-500 p-3 transition-shadow hover:shadow-md md:p-4">
-              <div className="mb-2 inline-flex rounded-lg bg-blue-50 p-1.5">
-                <Shield className="h-5 w-5 text-blue-600" />
+            <Card className="h-full cursor-pointer border border-slate-200 p-3 transition-colors hover:bg-slate-50 hover:shadow-sm md:p-4">
+              <div className="mb-2 inline-flex rounded-lg bg-slate-100 p-1.5">
+                <Shield className="h-5 w-5 text-slate-600" />
               </div>
               <p className="text-sm font-semibold">Am I Safe?</p>
               <p className="mt-0.5 text-xs text-slate-400">Check flood risk</p>
@@ -301,9 +281,9 @@ export default function CitizenDashboardPage() {
           </Link>
 
           <Link href="/citizen/report">
-            <Card className="h-full cursor-pointer border-l-4 border-l-amber-500 p-3 transition-shadow hover:shadow-md md:p-4">
-              <div className="mb-2 inline-flex rounded-lg bg-amber-50 p-1.5">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
+            <Card className="h-full cursor-pointer border border-slate-200 p-3 transition-colors hover:bg-slate-50 hover:shadow-sm md:p-4">
+              <div className="mb-2 inline-flex rounded-lg bg-slate-100 p-1.5">
+                <AlertTriangle className="h-5 w-5 text-slate-600" />
               </div>
               <p className="text-sm font-semibold">Report Incident</p>
               <p className="mt-0.5 text-xs text-slate-400">Submit a report</p>
@@ -311,22 +291,12 @@ export default function CitizenDashboardPage() {
           </Link>
 
           <Link href="/citizen/evacuation">
-            <Card className="h-full cursor-pointer border-l-4 border-l-green-500 p-3 transition-shadow hover:shadow-md md:p-4">
-              <div className="mb-2 inline-flex rounded-lg bg-green-50 p-1.5">
-                <Navigation className="h-5 w-5 text-green-600" />
+            <Card className="h-full cursor-pointer border border-slate-200 p-3 transition-colors hover:bg-slate-50 hover:shadow-sm md:p-4">
+              <div className="mb-2 inline-flex rounded-lg bg-slate-100 p-1.5">
+                <Navigation className="h-5 w-5 text-slate-600" />
               </div>
               <p className="text-sm font-semibold">Safe Routes</p>
               <p className="mt-0.5 text-xs text-slate-400">Find evacuation path</p>
-            </Card>
-          </Link>
-
-          <Link href="/citizen/assistant">
-            <Card className="h-full cursor-pointer border-l-4 border-l-violet-500 p-3 transition-shadow hover:shadow-md md:p-4">
-              <div className="mb-2 inline-flex rounded-lg bg-violet-50 p-1.5">
-                <Mic className="h-5 w-5 text-violet-600" />
-              </div>
-              <p className="text-sm font-semibold">Voice Assistant</p>
-              <p className="mt-0.5 text-xs text-slate-400">Talk with AI</p>
             </Card>
           </Link>
         </div>
@@ -334,34 +304,34 @@ export default function CitizenDashboardPage() {
         <div className="grid grid-cols-3 gap-3">
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1.5">
-              <Waves className="h-4 w-4 text-blue-500" />
-              <span className="text-xl font-bold text-blue-600">{stats.active_flood_reports || 0}</span>
+              <Waves className="h-4 w-4 text-slate-500" />
+              <span className="text-xl font-bold text-slate-900">{stats.active_flood_reports || 0}</span>
             </div>
             <p className="mt-1 text-xs text-slate-500">Active Flood Reports</p>
           </Card>
 
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1.5">
-              <Bell className="h-4 w-4 text-amber-500" />
-              <span className="text-xl font-bold text-amber-600">{stats.active_alerts || 0}</span>
+              <Bell className="h-4 w-4 text-slate-500" />
+              <span className="text-xl font-bold text-slate-900">{stats.active_alerts || 0}</span>
             </div>
             <p className="mt-1 text-xs text-slate-500">Active Alerts</p>
           </Card>
 
           <Card className="p-3 text-center">
             <div className="flex items-center justify-center gap-1.5">
-              <FileText className="h-4 w-4 text-green-500" />
-              <span className="text-xl font-bold text-green-600">{stats.reports_24h || 0}</span>
+              <FileText className="h-4 w-4 text-slate-500" />
+              <span className="text-xl font-bold text-slate-900">{stats.reports_24h || 0}</span>
             </div>
             <p className="mt-1 text-xs text-slate-500">Reports (24h)</p>
           </Card>
         </div>
 
-        <Card className="flex items-center gap-3 border-blue-200 bg-blue-50 p-3">
-          <CloudRain className="h-5 w-5 shrink-0 text-blue-600" />
+        <Card className="flex items-center gap-3 border-slate-200 bg-white p-3">
+          <CloudRain className="h-5 w-5 shrink-0 text-slate-500" />
           <div>
-            <p className="text-sm font-medium text-blue-800">{weather.rainfall_forecast}</p>
-            <p className="mt-0.5 text-xs text-blue-600">Stay alert and check safe routes in advance.</p>
+            <p className="text-sm font-medium text-slate-800">{weather.rainfall_forecast}</p>
+            <p className="mt-0.5 text-xs text-slate-500">Stay alert and check safe routes in advance.</p>
           </div>
         </Card>
 
@@ -371,9 +341,6 @@ export default function CitizenDashboardPage() {
               <Radio className="h-4 w-4 text-slate-400" />
               Recent Alerts
             </h2>
-            <Link href="/citizen/alerts" className="flex items-center gap-0.5 text-xs text-blue-600">
-              View all <ChevronRight className="h-3 w-3" />
-            </Link>
           </div>
 
           {alerts.length === 0 ? (
@@ -406,9 +373,6 @@ export default function CitizenDashboardPage() {
                 <FileText className="h-4 w-4 text-slate-400" />
                 My Reports
               </h2>
-              <Link href="/citizen/report" className="flex items-center gap-0.5 text-xs text-blue-600">
-                View all <ChevronRight className="h-3 w-3" />
-              </Link>
             </div>
 
             <div className="space-y-2">
@@ -445,20 +409,15 @@ export default function CitizenDashboardPage() {
           </div>
         )}
 
-        <Card className="border-red-200 bg-red-50 p-4">
+        <Card className="border-slate-200 bg-white p-4">
           <div className="flex items-center gap-4">
-            <div className="rounded-full bg-red-100 p-3">
-              <Phone className="h-6 w-6 text-red-600" />
+            <div className="rounded-full bg-slate-100 p-3">
+              <Phone className="h-6 w-6 text-slate-700" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-red-800">Emergency SOS</p>
-              <p className="mt-0.5 text-xs text-red-600">One-tap call to disaster helpline: 011-24363260</p>
+              <p className="font-semibold text-slate-900">Emergency SOS</p>
+              <p className="mt-0.5 text-xs text-slate-500">Disaster helpline: <a href="tel:01124363260" className="underline">011-24363260</a></p>
             </div>
-            <a href="tel:01124363260">
-              <Button size="sm" className="bg-red-600 text-white hover:bg-red-700">
-                Call Now
-              </Button>
-            </a>
           </div>
         </Card>
 

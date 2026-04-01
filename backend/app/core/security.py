@@ -17,7 +17,7 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Bearer token extraction
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 optional_security = HTTPBearer(auto_error=False)
 
 
@@ -32,6 +32,11 @@ class Token(BaseModel):
     """Token response model"""
     access_token: str
     token_type: str = "bearer"
+
+
+def _get_bypass_user() -> TokenData:
+    """Synthetic admin user used when auth bypass is enabled for demos/dev."""
+    return TokenData(user_id=1, email="open-access@local", role="admin")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -103,7 +108,7 @@ def decode_token(token: str) -> TokenData:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials | None = Depends(security)
 ) -> TokenData:
     """
     Dependency to get current authenticated user from JWT token
@@ -113,6 +118,16 @@ async def get_current_user(
         async def protected_route(current_user: TokenData = Depends(get_current_user)):
             return {"user": current_user.email}
     """
+    if settings.AUTH_BYPASS_ENABLED:
+        return _get_bypass_user()
+
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     token = credentials.credentials
     return decode_token(token)
 
@@ -121,6 +136,9 @@ async def get_current_user_optional(
     credentials: HTTPAuthorizationCredentials | None = Depends(optional_security)
 ) -> TokenData | None:
     """Optional auth dependency that returns None when no bearer token is provided."""
+    if settings.AUTH_BYPASS_ENABLED:
+        return _get_bypass_user()
+
     if credentials is None:
         return None
     return decode_token(credentials.credentials)

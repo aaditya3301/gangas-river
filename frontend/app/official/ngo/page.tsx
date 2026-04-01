@@ -174,9 +174,7 @@ export default function NGOPortalPage() {
               {leaderboard.map((ngo, i) => (
                 <tr key={ngo.user_id} className="border-b last:border-0 hover:bg-gray-50">
                   <td className="py-3">
-                    <span className="text-lg">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-                    </span>
+                    <span className="text-sm font-semibold text-slate-500">#{i + 1}</span>
                   </td>
                   <td className="py-3">
                     <div className="flex items-center gap-2">
@@ -184,7 +182,7 @@ export default function NGOPortalPage() {
                       <CheckCircle className="h-3.5 w-3.5 text-green-500" />
                     </div>
                   </td>
-                  <td className="py-3 text-right font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</td>
+                  <td className="py-3 text-right font-semibold text-amber-600">{ngo.points.toLocaleString()} pts</td>
                   <td className="py-3 text-right text-gray-500">{ngo.tasks} reports</td>
                   <td className="py-3 text-right text-xs text-gray-400">{timeAgo(ngo.last_active)}</td>
                 </tr>
@@ -196,16 +194,14 @@ export default function NGOPortalPage() {
         <div className="space-y-2 md:hidden">
           {leaderboard.map((ngo, i) => (
             <div key={ngo.user_id} className="flex items-center gap-3 rounded-lg border p-2">
-              <span className="w-8 text-center text-lg">
-                {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-              </span>
+              <span className="w-8 text-center text-xs font-semibold text-slate-500">#{i + 1}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{ngo.name}</p>
                 <p className="text-xs text-gray-400">
                   {ngo.tasks} reports • {timeAgo(ngo.last_active)}
                 </p>
               </div>
-              <span className="text-sm font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</span>
+              <span className="text-sm font-semibold text-amber-600">{ngo.points.toLocaleString()} pts</span>
             </div>
           ))}
         </div>
@@ -224,8 +220,13 @@ export default function NGOPortalPage() {
               </div>
             ))}
           </div>
-          <Button variant="outline" className="mt-4 w-full gap-2">
-            <BookOpen className="h-4 w-4" /> Download Full Documentation
+          <Button asChild variant="outline" className="mt-4 w-full gap-2">
+            <a
+              href="/Hapur_Community_Based_Flood_Adaptation_Guidelines_2026.pdf"
+              download="NGO_Documentation_Guidelines_2026.pdf"
+            >
+              <BookOpen className="h-4 w-4" /> Download Full Documentation
+            </a>
           </Button>
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-xs text-amber-700">

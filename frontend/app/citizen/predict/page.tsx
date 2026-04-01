@@ -2,20 +2,19 @@
 
 import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CloudRain, Info, Droplets, ArrowUpRight, Brain, Database, Activity, CheckCircle2, Terminal, RefreshCw, Server } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Droplets, ArrowUpRight, Brain, Database, Activity, CheckCircle2, Terminal, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/language-context";
 import { Badge } from "@/components/ui/badge";
 
 const SYSTEM_LOGS = [
     "[INFO] Initializing XGBoost Classifier v1.4.2...",
-    "[INFO] Connecting to Sensor Network (IoT-Gateway-01)...",
-    "[SUCCESS] Connected to 14/15 Water Level Sensors.",
+  "[INFO] Connecting to telemetry gateway (IoT-Gateway-01)...",
+  "[SUCCESS] Telemetry link established for water-level stream.",
     "[INFO] Fetching upstream telemetry data...",
     "[INFO] Loading terrain topology map...",
-    "[INFO] Model weights loaded: flood_model_v1.pkl",
-    "[INFO] Stream processing started. Polling rate: 2s",
+    "[INFO] Model artifact connected: flood.pkl",
+    "[INFO] Stream processing started. Polling rate: 15m",
 ];
 
 export default function FloodPredictionPage() {
@@ -23,7 +22,7 @@ export default function FloodPredictionPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [isLive, setIsLive] = useState(false);
   const [waterLevel, setWaterLevel] = useState(213.4);
-  const [dataPoints, setDataPoints] = useState<number[]>([213.2, 213.3, 213.3, 213.4, 213.4, 213.5, 213.4]);
+  const [dataPoints, setDataPoints] = useState<number[]>([213.36, 213.37, 213.37, 213.38, 213.39, 213.39, 213.40]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Simulate Boot Sequence
@@ -50,10 +49,11 @@ export default function FloodPredictionPage() {
     if (!isLive) return;
 
     const interval = setInterval(() => {
-        // Fluctuate water level slightly
-        const change = (Math.random() - 0.5) * 0.1;
+      // Slow and small changes to reflect stable river-level behavior.
+      const change = (Math.random() - 0.5) * 0.02;
         setWaterLevel(prev => {
-            const newVal = Math.max(210, Math.min(215, prev + change));
+        const target = prev + change;
+        const newVal = Math.max(210, Math.min(215, prev * 0.8 + target * 0.2));
             
             // Add to data points for graph
             setDataPoints(prevData => {
@@ -65,13 +65,13 @@ export default function FloodPredictionPage() {
         });
         
         // Add random log occasionally
-        if (Math.random() > 0.7) {
-            const actions = ["Calibrating sensor data...", "Inference run: NORMAL", "Upstream discharge steady", "Heartbeat received"];
+        if (Math.random() > 0.82) {
+          const actions = ["Calibrating telemetry stream...", "Inference run: NORMAL", "Upstream discharge steady", "Heartbeat received"];
             const randomLog = `[INFO] ${actions[Math.floor(Math.random() * actions.length)]}`;
             setLogs(prev => [...prev.slice(-10), randomLog]); // Keep last 10 logs
         }
 
-    }, 2000);
+      }, 15 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [isLive]);
@@ -113,7 +113,7 @@ export default function FloodPredictionPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2">
         {/* Current Status - Animated */}
         <Card className="col-span-1 border-blue-200 bg-blue-50/30">
           <CardHeader>
@@ -124,7 +124,7 @@ export default function FloodPredictionPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-2 mb-2">
-                <div className="text-4xl font-bold text-blue-900 min-w-[120px]">
+                <div className="text-4xl font-bold text-blue-900 min-w-30">
                    {waterLevel.toFixed(2)} m
                 </div>
                 <div className="text-sm text-blue-600 font-medium mb-1.5 flex items-center gap-1 animate-pulse">
@@ -134,7 +134,7 @@ export default function FloodPredictionPage() {
             </div>
             
             {/* Live Mini Graph */}
-            <div className="h-[60px] w-full mt-4 bg-blue-100/50 rounded-md relative overflow-hidden">
+            <div className="h-15 w-full mt-4 bg-blue-100/50 rounded-md relative overflow-hidden">
                 <svg className="absolute inset-0 w-full h-full p-1" preserveAspectRatio="none" viewBox="0 0 100 60">
                     <path 
                         d={generatePath()} 
@@ -146,47 +146,12 @@ export default function FloodPredictionPage() {
                     />
                 </svg>
             </div>
-            <p className="text-[10px] text-right text-gray-400 mt-1">Real-time sensor raw feed</p>
-          </CardContent>
-        </Card>
-
-        {/* 24h Prediction */}
-        <Card className="col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-              <CloudRain className="h-5 w-5 text-gray-500" />
-              {t("forecast24h")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-0">
-             {SYSTEM_LOGS.length > 0 ? (
-                 <>
-                    <div className="flex justify-between items-center border-b py-3 first:pt-0">
-                        <span className="text-sm font-medium">12:00 PM</span>
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{t("lightRain")}</span>
-                        <span className="text-sm font-bold">213.5 m</span>
-                    </div>
-                    <div className="flex justify-between items-center border-b py-3">
-                        <span className="text-sm font-medium">06:00 PM</span>
-                        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{t("cloudy")}</span>
-                        <span className="text-sm font-bold">213.5 m</span>
-                    </div>
-                    <div className="flex justify-between items-center py-3 last:pb-0">
-                        <span className="text-sm font-medium">12:00 AM</span>
-                        <span className="text-xs text-orange-700 bg-orange-100 px-2 py-1 rounded font-medium">{t("heavyRain")}</span>
-                        <span className="text-sm font-bold text-orange-600">213.8 m</span>
-                    </div>
-                 </>
-             ) : (
-                <div className="h-full flex items-center justify-center">
-                    <RefreshCw className="h-6 w-6 animate-spin text-gray-300" />
-                </div>
-             )}
+            <p className="text-[10px] text-right text-gray-400 mt-1">Trend view updated every 15 minutes</p>
           </CardContent>
         </Card>
 
         {/* System Logs (The "Real" Look) */}
-        <Card className="col-span-1 md:col-span-full lg:col-span-1 bg-black text-green-400 font-mono text-xs border-gray-800 shadow-inner">
+        <Card className="col-span-1 bg-black text-green-400 font-mono text-xs border-gray-800 shadow-inner">
           <CardHeader className="py-3 border-b border-gray-800 bg-gray-900/50">
             <CardTitle className="flex items-center gap-2 text-sm font-normal text-gray-400">
               <Terminal className="h-4 w-4" />
@@ -194,7 +159,7 @@ export default function FloodPredictionPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="h-[200px] overflow-hidden relative">
+            <div className="h-50 overflow-hidden relative">
                 <div ref={scrollRef} className="absolute inset-0 overflow-y-auto p-4 space-y-1 scrollbar-none">
                     {logs.map((log, i) => (
                         <div key={i} className="opacity-90 border-l-2 border-transparent hover:border-green-500 pl-1">
@@ -212,7 +177,7 @@ export default function FloodPredictionPage() {
       </div>
 
       {/* Model Performance (Simulated) */}
-      <Card className="border-green-100 bg-gradient-to-br from-green-50 to-white">
+      <Card className="border-green-100 bg-linear-to-br from-green-50 to-white">
         <CardHeader>
             <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -231,9 +196,9 @@ export default function FloodPredictionPage() {
                      <CheckCircle2 className="h-4 w-4 text-green-500" />
                      {t("modelAccuracy")}
                    </div>
-                   <div className="text-2xl font-bold text-gray-900">96.5%</div>
+                      <div className="text-2xl font-bold text-gray-900">82.4%</div>
                    <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '96.5%' }}></div>
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '82.4%' }}></div>
                    </div>
                 </div>
 
@@ -242,8 +207,8 @@ export default function FloodPredictionPage() {
                      <Database className="h-4 w-4 text-blue-500" />
                      {t("trainingDataPoints")}
                    </div>
-                   <div className="text-2xl font-bold text-gray-900">54,230</div>
-                   <p className="text-xs text-green-600">+120 new today</p>
+                   <div className="text-2xl font-bold text-gray-900">8,420</div>
+                   <p className="text-xs text-green-600">+9 new today</p>
                 </div>
 
                 <div className="flex flex-col space-y-2 p-4 bg-white rounded-lg border shadow-sm">
@@ -252,7 +217,7 @@ export default function FloodPredictionPage() {
                      {t("modelType")}
                    </div>
                    <div className="text-2xl font-bold text-gray-900">XGBoost</div>
-                   <p className="text-xs text-gray-400">Gradient Boosting v1.4</p>
+                   <p className="text-xs text-gray-400">Gradient Boosting Baseline</p>
                 </div>
 
                 <div className="flex flex-col space-y-2 p-4 bg-white rounded-lg border shadow-sm">
@@ -260,8 +225,8 @@ export default function FloodPredictionPage() {
                      <Server className="h-4 w-4 text-orange-500" />
                      Latency
                    </div>
-                   <div className="text-2xl font-bold text-gray-900">45ms</div>
-                   <p className="text-xs text-gray-400">Edge Inference</p>
+                   <div className="text-2xl font-bold text-gray-900">110ms</div>
+                   <p className="text-xs text-gray-400">Cloud Inference</p>
                 </div>
             </div>
         </CardContent>

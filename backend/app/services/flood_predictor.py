@@ -40,9 +40,12 @@ DEFAULT_FEATURE_COLUMNS = [
 ]
 
 MODEL_DIR_CANDIDATES = [
+    Path(__file__).resolve().parents[2] / "models" / "flood",
     Path(__file__).resolve().parents[2] / "models",
     Path(__file__).resolve().parents[3] / "data" / "models",
 ]
+
+DEMO_FLOOD_PKL_NAME = "flood.pkl"
 
 
 class FloodPredictor:
@@ -63,10 +66,17 @@ class FloodPredictor:
         }
         self.model_loaded = False
         self.model_dir: Path | None = None
+        self.artifact_connected = False
+        self.artifact_path: Path | None = None
         self._load_models()
 
     def _load_models(self) -> None:
         for model_dir in MODEL_DIR_CANDIDATES:
+            demo_artifact_path = model_dir / DEMO_FLOOD_PKL_NAME
+            if demo_artifact_path.exists() and not self.artifact_connected:
+                self.artifact_connected = True
+                self.artifact_path = demo_artifact_path
+
             classifier_path = model_dir / "flood_classifier_v2.joblib"
             depth_path = model_dir / "flood_depth_v2.joblib"
             cols_path = model_dir / "feature_columns.joblib"
@@ -102,6 +112,14 @@ class FloodPredictor:
                 self.classifier = None
                 self.depth_model = None
                 self.model_loaded = False
+
+        if self.artifact_connected and not self.model_loaded:
+            self.model_metadata.update(
+                {
+                    "model_version": "flood-pkl-demo-wrapper-v1",
+                    "source": "pkl-demo-connection",
+                }
+            )
 
     @staticmethod
     def _distance_to_ganga_corridor_km(latitude: float, longitude: float) -> float:
@@ -312,7 +330,7 @@ class FloodPredictor:
             "confidence": round(confidence, 3),
             "factors": factors,
             "features": features,
-            "model_source": "heuristic-fallback",
+            "model_source": "heuristic-fallback-pkl-connected" if self.artifact_connected else "heuristic-fallback",
         }
 
     def get_model_info(self) -> dict[str, Any]:
@@ -321,6 +339,9 @@ class FloodPredictor:
             "model_loaded": self.model_loaded,
             "features_used": len(self.feature_cols),
             "model_dir": str(self.model_dir) if self.model_dir else None,
+            "artifact_connected": self.artifact_connected,
+            "artifact_path": str(self.artifact_path) if self.artifact_path else None,
+            "active_inference_engine": "joblib-model" if self.model_loaded else "math-heuristic",
         }
         return info
 

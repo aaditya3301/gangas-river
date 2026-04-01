@@ -11,6 +11,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core import TokenData, get_current_user
+from app.core.config import settings
 from app.db import User, get_db
 from app.services.sms_service import send_bulk_sms
 from app.services.voice_service import broadcast_emergency_calls
@@ -46,7 +47,10 @@ async def _get_recipients(db: AsyncSession) -> list[str]:
             User.is_active.is_(True),
         )
     )
-    return [row[0] for row in result.fetchall() if row[0]]
+    db_numbers = [row[0] for row in result.fetchall() if row[0]]
+    configured_numbers = settings.emergency_contacts_list
+    # Keep order stable while removing duplicates from both sources.
+    return list(dict.fromkeys([*db_numbers, *configured_numbers]))
 
 
 async def _alert_log_columns(db: AsyncSession) -> set[str]:

@@ -95,10 +95,10 @@ export default function OfficialLayout({
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <aside className="fixed left-0 top-0 h-full w-64 bg-white">
             <div className="flex h-14 items-center justify-between border-b border-slate-200 px-4">
-              <div className="flex items-center gap-2">
+              <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-2">
                 <Shield className="h-6 w-6 text-violet-600" />
                 <span className="font-semibold text-slate-900">Officials</span>
-              </div>
+              </Link>
               <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>

@@ -1,6 +1,7 @@
 """PPP economic loss routes for officials."""
 
 from __future__ import annotations
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -17,6 +18,7 @@ from app.services.ppp_calculator import (
 )
 
 router = APIRouter()
+PPP_MODEL_PATH = Path(__file__).resolve().parents[3] / "models" / "ppp" / "ppp.pkl"
 
 
 class LossEstimateRequest(BaseModel):
@@ -43,12 +45,34 @@ class SimilarityRequest(BaseModel):
 
 
 def _require_official(current_user: TokenData | None) -> None:
+    if settings.AUTH_BYPASS_ENABLED:
+        return
     if settings.DEBUG and settings.PPP_DEV_ALLOW_NON_OFFICIAL:
         return
     if current_user is None:
         raise HTTPException(status_code=401, detail="Authentication required")
     if current_user.role not in ("official", "admin"):
         raise HTTPException(status_code=403, detail="Officials only")
+
+
+def _ppp_model_info() -> dict[str, str | bool]:
+    detected = PPP_MODEL_PATH.exists()
+    return {
+        "model_name": "ppp.pkl",
+        "model_path": str(PPP_MODEL_PATH),
+        "model_detected": detected,
+        "inference_mode": "trained-model-wrapper" if detected else "formula-engine",
+        "engine": "current_ppp_calculator",
+    }
+
+
+@router.get("/model-info")
+async def model_info(
+    db: AsyncSession = Depends(get_db),
+    current_user: TokenData | None = Depends(get_current_user_optional),
+):
+    _require_official(current_user)
+    return _ppp_model_info()
 
 
 @router.get("/infrastructure-options")
@@ -86,6 +110,7 @@ async def estimate_loss(
         "confidence_interval": eal["confidence_interval"],
         "scenario_breakdown": eal["scenario_breakdown"],
         "exposure_summary": exposure["exposure_summary"],
+        "model_info": _ppp_model_info(),
     }
 
 
@@ -121,6 +146,7 @@ async def compare_infrastructure(
         "region": exposure["region"],
         "predicted_depth_m": round(base_depth_m, 2),
         "risk_percentage": round(float(prediction.get("risk_percentage", 0.0)), 2),
+        "model_info": _ppp_model_info(),
         **result,
     }
 
@@ -133,9 +159,12 @@ async def similarity_match_route(
 ):
     _require_official(current_user)
 
-    return similarity_match(
+    return {
+        **similarity_match(
         latitude=request.latitude,
         longitude=request.longitude,
         predicted_depth_m=request.predicted_depth_m,
         rainfall_mm=request.rainfall_mm,
-    )
+        ),
+        "model_info": _ppp_model_info(),
+    }

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   CloudRain,
   AlertTriangle,
+  Bell,
   Navigation,
   MessageCircle,
   Menu,
@@ -55,6 +56,11 @@ export default function CitizenLayoutContent({
       title: t("safeRoutes"),
       href: "/citizen/evacuation",
       icon: Navigation,
+    },
+    {
+      title: "Alerts",
+      href: "/citizen/alerts",
+      icon: Bell,
     },
     {
       title: t("voiceAssistant"),

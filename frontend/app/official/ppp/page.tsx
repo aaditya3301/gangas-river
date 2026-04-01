@@ -9,13 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { pppAPI } from "@/lib/api";
 
 type EstimateResponse = {
@@ -67,22 +60,42 @@ type SimilarityResponse = {
   }>;
 };
 
-type InfraOption = {
-  id: string;
-  name: string;
-  description: string;
+type PPPModelInfo = {
+  model_name: string;
+  model_path: string;
+  model_detected: boolean;
+  inference_mode: string;
+  engine: string;
 };
-
-const FALLBACK_OPTIONS: InfraOption[] = [
-  { id: "embankment", name: "Raised Embankment", description: "Reduce flood depth near riverbanks." },
-  { id: "drainage_improvement", name: "Drainage Improvement", description: "Reduce urban waterlogging impact." },
-  { id: "flood_wall", name: "Flood Wall", description: "Protect dense urban flood edges." },
-  { id: "early_warning_system", name: "Early Warning System", description: "Reduce vulnerability through preparedness." },
-];
 
 function parseNumber(value: string, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizeInfrastructureType(infraChange: string): string {
+  const raw = infraChange.trim().toLowerCase();
+  if (!raw) return "embankment";
+  if (raw.includes("drain")) return "drainage_improvement";
+  if (raw.includes("wall")) return "flood_wall";
+  if (raw.includes("warning") || raw.includes("sensor") || raw.includes("alert")) {
+    return "early_warning_system";
+  }
+  if (raw.includes("embank") || raw.includes("levee") || raw.includes("bund")) {
+    return "embankment";
+  }
+
+  // Keep valid IDs as-is if user enters exact backend value.
+  if (
+    raw === "embankment" ||
+    raw === "drainage_improvement" ||
+    raw === "flood_wall" ||
+    raw === "early_warning_system"
+  ) {
+    return raw;
+  }
+
+  return "embankment";
 }
 
 export default function OfficialPPPPage() {
@@ -91,7 +104,7 @@ export default function OfficialPPPPage() {
   const [radiusKm, setRadiusKm] = useState("10");
   const [rainfallMm, setRainfallMm] = useState("220");
 
-  const [infraType, setInfraType] = useState("embankment");
+  const infraChangeLabel = "Infra Change";
   const [costCrore, setCostCrore] = useState("75");
   const [lengthKm, setLengthKm] = useState("15");
   const [heightM, setHeightM] = useState("3");
@@ -101,16 +114,21 @@ export default function OfficialPPPPage() {
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
   const [similarityResult, setSimilarityResult] = useState<SimilarityResponse | null>(null);
 
-  const { data: infraOptions = FALLBACK_OPTIONS } = useQuery<InfraOption[]>({
-    queryKey: ["ppp-options"],
+  const { data: modelInfo } = useQuery<PPPModelInfo>({
+    queryKey: ["ppp-model-info"],
     queryFn: async () => {
       try {
-        return await pppAPI.getInfrastructureOptions();
+        return await pppAPI.getModelInfo();
       } catch {
-        return FALLBACK_OPTIONS;
+        return {
+          model_name: "ppp.pkl",
+          model_path: "backend/models/ppp/ppp.pkl",
+          model_detected: false,
+          inference_mode: "formula-engine",
+          engine: "current_ppp_calculator",
+        };
       }
     },
-    initialData: FALLBACK_OPTIONS,
   });
 
   const estimateLoss = useMutation({
@@ -143,7 +161,7 @@ export default function OfficialPPPPage() {
         longitude: parseNumber(longitude),
         radius_km: parseNumber(radiusKm, 10),
         rainfall_mm: parseNumber(rainfallMm, 0),
-        infrastructure_type: infraType,
+        infrastructure_type: normalizeInfrastructureType(infraChangeLabel),
         infrastructure_params: infrastructureParams,
       })) as CompareResponse;
     },
@@ -185,15 +203,36 @@ export default function OfficialPPPPage() {
         <p className="mt-1 text-sm text-slate-500">
           Estimate expected annual flood loss and compare infrastructure investment outcomes.
         </p>
+        {modelInfo && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className={modelInfo.model_detected ? "text-emerald-700" : "text-amber-700"}>
+              Model: {modelInfo.model_name} {modelInfo.model_detected ? "detected" : "not found"}
+            </Badge>
+            <Badge variant="outline">Mode: {modelInfo.inference_mode}</Badge>
+            <p className="text-xs text-slate-500">Engine: {modelInfo.engine}</p>
+          </div>
+        )}
       </div>
 
       <Card className="p-4 md:p-5">
         <h2 className="mb-3 font-semibold">Region Inputs</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <Input value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="Latitude" />
-          <Input value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="Longitude" />
-          <Input value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} placeholder="Radius (km)" />
-          <Input value={rainfallMm} onChange={(e) => setRainfallMm(e.target.value)} placeholder="Rainfall (mm)" />
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Latitude</label>
+            <Input value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="e.g. 25.4358" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Longitude</label>
+            <Input value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="e.g. 81.8463" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Analysis Radius (km)</label>
+            <Input value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} placeholder="e.g. 10" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Rainfall (mm)</label>
+            <Input value={rainfallMm} onChange={(e) => setRainfallMm(e.target.value)} placeholder="e.g. 220" />
+          </div>
         </div>
         <Button className="mt-4" onClick={() => estimateLoss.mutate()} disabled={estimateLoss.isPending}>
           <Calculator className="mr-2 h-4 w-4" />
@@ -230,22 +269,28 @@ export default function OfficialPPPPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-          <Select value={infraType} onValueChange={setInfraType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Infrastructure type" />
-            </SelectTrigger>
-            <SelectContent>
-              {infraOptions.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  {option.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input value={costCrore} onChange={(e) => setCostCrore(e.target.value)} placeholder="Cost (cr)" />
-          <Input value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} placeholder="Length (km)" />
-          <Input value={heightM} onChange={(e) => setHeightM(e.target.value)} placeholder="Height (m)" />
-          <Input value={depthReductionM} onChange={(e) => setDepthReductionM(e.target.value)} placeholder="Depth reduction (m)" />
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Infra Change</label>
+            <div className="h-9 rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 flex items-center">
+              {infraChangeLabel}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Estimated Cost (crore)</label>
+            <Input value={costCrore} onChange={(e) => setCostCrore(e.target.value)} placeholder="e.g. 75" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Project Length (km)</label>
+            <Input value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} placeholder="e.g. 15" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Structure Height (m)</label>
+            <Input value={heightM} onChange={(e) => setHeightM(e.target.value)} placeholder="e.g. 3" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600">Depth Reduction (m)</label>
+            <Input value={depthReductionM} onChange={(e) => setDepthReductionM(e.target.value)} placeholder="e.g. 1" />
+          </div>
         </div>
 
         <Button className="mt-4" onClick={() => compareInfra.mutate()} disabled={compareInfra.isPending}>

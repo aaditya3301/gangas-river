@@ -31,6 +31,7 @@ type ReportRow = {
   verification_notes?: string;
   reported_at: string;
   reporter_name?: string;
+  is_demo?: boolean;
 };
 
 type ReportStats = {
@@ -56,6 +57,48 @@ const CATEGORY_ICONS: Record<string, string> = {
   erosion: "EROS",
   other: "OTHER",
 };
+
+const FALLBACK_REPORTS: ReportRow[] = [
+  {
+    id: 91001,
+    latitude: 25.3176,
+    longitude: 82.9739,
+    category: "erosion",
+    description: "Riverbank erosion observed near school boundary wall; slope cracks widening after recent rainfall.",
+    status: "resolved",
+    verification_score: 0.88,
+    verification_notes: "Historical erosion corridor match confirmed.",
+    reported_at: "2026-03-22T09:10:00",
+    reporter_name: "Ward Volunteer",
+    is_demo: true,
+  },
+  {
+    id: 91002,
+    latitude: 25.5647,
+    longitude: 83.9777,
+    category: "infrastructure",
+    description: "Critical drain outlet clogged in a low-lying lane; standing water observed for 6+ hours.",
+    status: "resolved",
+    verification_score: 0.83,
+    verification_notes: "Verified via photo sequence and location consistency.",
+    reported_at: "2026-03-24T14:45:00",
+    reporter_name: "Field Inspector",
+    is_demo: true,
+  },
+  {
+    id: 91003,
+    latitude: 28.7306,
+    longitude: 77.7807,
+    category: "flood",
+    description: "Flash waterlogging reported in sector road pocket during peak evening runoff.",
+    status: "rejected",
+    verification_score: 0.62,
+    verification_notes: "Rejected due to duplicate incident and stale timestamp metadata.",
+    reported_at: "2026-03-27T18:25:00",
+    reporter_name: "Rapid Response Cell",
+    is_demo: true,
+  },
+];
 
 function getErrorMessage(error: unknown, fallback: string) {
   if (typeof error === "object" && error !== null && "response" in error) {
@@ -88,6 +131,37 @@ export default function OfficialReportsPage() {
     refetchInterval: 30_000,
   });
 
+  const effectiveReports = useMemo(() => {
+    if (reports.length >= 4) {
+      return reports;
+    }
+
+    const needed = Math.max(0, 4 - reports.length);
+    const existingIds = new Set(reports.map((report) => report.id));
+    const fillers = FALLBACK_REPORTS.filter((report) => !existingIds.has(report.id)).slice(0, needed);
+    return [...reports, ...fillers];
+  }, [reports]);
+
+  const effectiveStats = useMemo(() => {
+    if ((stats?.total ?? 0) >= 4) {
+      return stats;
+    }
+
+    const byCategory = effectiveReports.reduce<Record<string, number>>((acc, report) => {
+      acc[report.category] = (acc[report.category] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      total: effectiveReports.length,
+      pending: effectiveReports.filter((report) => report.status === "pending").length,
+      verified: effectiveReports.filter((report) => report.status === "verified").length,
+      rejected: effectiveReports.filter((report) => report.status === "rejected").length,
+      resolved: effectiveReports.filter((report) => report.status === "resolved").length,
+      by_category: byCategory,
+    } as ReportStats;
+  }, [effectiveReports, stats]);
+
   const updateMutation = useMutation({
     mutationFn: (args: { id: number; status: string; notes?: string }) =>
       reportsAPI.updateStatus(args.id, { status: args.status, notes: args.notes }),
@@ -101,7 +175,7 @@ export default function OfficialReportsPage() {
 
   const mapMarkers = useMemo(
     () =>
-      reports.map((report) => ({
+      effectiveReports.map((report) => ({
         id: report.id,
         latitude: report.latitude,
         longitude: report.longitude,
@@ -109,19 +183,19 @@ export default function OfficialReportsPage() {
         title: `${report.category.toUpperCase()} #${report.id}`,
         description: report.description.slice(0, 80),
       })),
-    [reports]
+    [effectiveReports]
   );
 
   const mapCenter = useMemo(() => {
-    if (!reports.length) {
+    if (!effectiveReports.length) {
       return { latitude: 25.4358, longitude: 81.8463, zoom: 7 };
     }
     return {
-      latitude: reports[0].latitude,
-      longitude: reports[0].longitude,
+      latitude: effectiveReports[0].latitude,
+      longitude: effectiveReports[0].longitude,
       zoom: 10,
     };
-  }, [reports]);
+  }, [effectiveReports]);
 
   return (
     <div className="p-6 space-y-6">
@@ -129,10 +203,10 @@ export default function OfficialReportsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total", value: stats?.total ?? "-", icon: "ALL" },
-          { label: "Pending", value: stats?.pending ?? "-", icon: "PEND" },
-          { label: "Verified", value: stats?.verified ?? "-", icon: "VER" },
-          { label: "Flood Reports", value: stats?.by_category?.flood ?? "-", icon: "FLOOD" },
+          { label: "Total", value: effectiveStats?.total ?? "-", icon: "ALL" },
+          { label: "Pending", value: effectiveStats?.pending ?? "-", icon: "PEND" },
+          { label: "Verified", value: effectiveStats?.verified ?? "-", icon: "VER" },
+          { label: "Flood Reports", value: effectiveStats?.by_category?.flood ?? "-", icon: "FLOOD" },
         ].map((item) => (
           <Card key={item.label} className="p-4 flex items-center gap-3">
             <span className="text-xs font-bold text-slate-400 bg-slate-100 rounded px-2 py-1">{item.icon}</span>
@@ -179,11 +253,11 @@ export default function OfficialReportsPage() {
 
       {isLoading ? (
         <Card className="p-4 text-gray-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Loading reports...</Card>
-      ) : reports.length === 0 ? (
+      ) : effectiveReports.length === 0 ? (
         <Card className="p-4 text-gray-500">No reports found.</Card>
       ) : (
         <div className="space-y-3">
-          {reports.map((report) => (
+          {effectiveReports.map((report) => (
             <Card key={report.id} className="p-4">
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                 <div className="flex-1">
@@ -214,7 +288,7 @@ export default function OfficialReportsPage() {
                   )}
                 </div>
 
-                {report.status === "pending" && (
+                {report.status === "pending" && !report.is_demo && (
                   <div className="flex gap-2">
                     <Button
                       size="sm"
@@ -237,7 +311,7 @@ export default function OfficialReportsPage() {
                   </div>
                 )}
 
-                {report.status === "verified" && (
+                {report.status === "verified" && !report.is_demo && (
                   <Button
                     size="sm"
                     variant="outline"

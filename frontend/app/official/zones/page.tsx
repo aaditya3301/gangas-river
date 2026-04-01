@@ -56,31 +56,91 @@ const zoneColors: Record<string, { bg: string; text: string; badge: string; labe
   zone_c: { bg: 'bg-emerald-50', text: 'text-emerald-700', badge: 'bg-emerald-500', label: 'Zone C (Low Risk)' },
 };
 
+type ZoneType = 'zone_a' | 'zone_b' | 'zone_c';
+
+type ClassifyResult = {
+  zone_type: ZoneType;
+  restrictions: string[];
+  elevation?: number;
+  rationale?: string[];
+};
+
+const fallbackRestrictions: Record<ZoneType, string[]> = {
+  zone_a: ['No permanent construction allowed', 'Mandatory evacuation during floods', 'Emergency shelters required'],
+  zone_b: ['Flood-proof foundations required', 'Emergency shelters mandatory', 'Building height restrictions apply'],
+  zone_c: ['Standard building codes apply', 'Regular flood monitoring required'],
+};
+
+function toZoneType(value: unknown): ZoneType {
+  if (value === 'zone_a' || value === 'zone_b' || value === 'zone_c') {
+    return value;
+  }
+  return 'zone_b';
+}
+
+function humanizeRestrictionKey(key: string): string {
+  return key
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function toRestrictionList(value: unknown, zoneType: ZoneType): string[] {
+  if (Array.isArray(value)) {
+    const items = value.map((entry) => String(entry).trim()).filter(Boolean);
+    return items.length > 0 ? items : fallbackRestrictions[zoneType];
+  }
+
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .map(([key, val]) => {
+        const v = String(val ?? '').trim();
+        if (!v) return '';
+        return `${humanizeRestrictionKey(key)}: ${v}`;
+      })
+      .filter(Boolean);
+    return entries.length > 0 ? entries : fallbackRestrictions[zoneType];
+  }
+
+  return fallbackRestrictions[zoneType];
+}
+
+function normalizeClassifyResponse(data: unknown): ClassifyResult {
+  const payload = (data && typeof data === 'object' && 'classification' in data)
+    ? (data as { classification?: unknown }).classification
+    : data;
+
+  const zoneType = toZoneType((payload as { zone_type?: unknown } | null)?.zone_type);
+  const restrictions = toRestrictionList((payload as { restrictions?: unknown } | null)?.restrictions, zoneType);
+
+  return {
+    zone_type: zoneType,
+    restrictions,
+    elevation: Number((payload as { elevation?: unknown } | null)?.elevation) || undefined,
+    rationale: Array.isArray((payload as { rationale?: unknown } | null)?.rationale)
+      ? ((payload as { rationale?: unknown[] }).rationale?.map((item) => String(item)) ?? [])
+      : undefined,
+  };
+}
+
 export default function ZonesPage() {
   const { latitude, longitude, isLoading: locationLoading, requestLocation } = useLocationStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [classifyResult, setClassifyResult] = useState<any | null>(null);
+  const [classifyResult, setClassifyResult] = useState<ClassifyResult | null>(null);
 
   const classifyMutation = useMutation({
     mutationFn: zonesAPI.classify,
     onSuccess: (data) => {
-      setClassifyResult(data);
+      setClassifyResult(normalizeClassifyResponse(data));
       toast.success('Location classified successfully!');
     },
     onError: (error: Error) => {
       // Use mock data if API fails
-      const mockZoneTypes = ['zone_a', 'zone_b', 'zone_c'];
+      const mockZoneTypes: ZoneType[] = ['zone_a', 'zone_b', 'zone_c'];
       const randomZone = mockZoneTypes[Math.floor(Math.random() * mockZoneTypes.length)];
-      
-      const mockRestrictions: Record<string, string[]> = {
-        zone_a: ['No permanent construction allowed', 'Mandatory evacuation during floods', 'Emergency shelters required'],
-        zone_b: ['Flood-proof foundations required', 'Emergency shelters mandatory', 'Building height restrictions apply'],
-        zone_c: ['Standard building codes apply', 'Regular flood monitoring required']
-      };
       
       const mockResult = {
         zone_type: randomZone,
-        restrictions: mockRestrictions[randomZone as keyof typeof mockRestrictions],
+        restrictions: fallbackRestrictions[randomZone],
         elevation: Math.random() * 100 + 50,
         flood_depths: {
           '1m_rise': Math.random() * 2,
@@ -89,7 +149,7 @@ export default function ZonesPage() {
         }
       };
       
-      setClassifyResult(mockResult);
+      setClassifyResult(normalizeClassifyResponse(mockResult));
       toast.success('Location analyzed successfully!');
     },
   });
@@ -274,9 +334,6 @@ export default function ZonesPage() {
                     <span>Updated {zone.last_updated}</span>
                   </div>
                 </div>
-                <button className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 transition-colors">
-                  Edit Polygons
-                </button>
               </div>
             </div>
           ))}

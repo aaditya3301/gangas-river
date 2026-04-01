@@ -310,6 +310,11 @@ export const pppAPI = {
     return response.data;
   },
 
+  getModelInfo: async () => {
+    const response = await api.get('/api/ppp/model-info');
+    return response.data;
+  },
+
   similarityMatch: async (data: {
     latitude: number;
     longitude: number;

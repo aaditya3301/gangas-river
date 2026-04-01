@@ -13,7 +13,6 @@ import {
   Megaphone,
   Navigation,
   Phone,
-  Radio,
   Siren,
   Trophy,
   UserCheck,
@@ -76,9 +75,9 @@ const MOCK: DashboardPayload = {
     pending_reports: 8,
     reports_24h: 23,
     verified_reports: 156,
-    active_flood_reports: 5,
-    total_users: 342,
-    alerts_this_week: 4,
+    active_flood_reports: 1,
+    total_users: 1,
+    alerts_this_week: 2,
   },
   recent_reports: [
     {
@@ -155,12 +154,15 @@ const EMERGENCY_CONTACTS = [
   { name: "Ambulance", number: "108", icon: Activity },
 ];
 
-const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
-  flood: { icon: "🌊", color: "bg-blue-100 text-blue-700" },
-  pollution: { icon: "🏭", color: "bg-gray-100 text-gray-700" },
-  infrastructure: { icon: "🏗️", color: "bg-amber-100 text-amber-700" },
-  erosion: { icon: "⛰️", color: "bg-orange-100 text-orange-700" },
-  other: { icon: "📋", color: "bg-gray-100 text-gray-700" },
+const CATEGORY_CONFIG: Record<
+  string,
+  { icon: (props: { className?: string }) => ReactNode; color: string; iconColor: string }
+> = {
+  flood: { icon: Waves, color: "bg-blue-100 text-blue-700", iconColor: "text-blue-600" },
+  pollution: { icon: Activity, color: "bg-gray-100 text-gray-700", iconColor: "text-gray-600" },
+  infrastructure: { icon: Shield, color: "bg-amber-100 text-amber-700", iconColor: "text-amber-600" },
+  erosion: { icon: MapPin, color: "bg-orange-100 text-orange-700", iconColor: "text-orange-600" },
+  other: { icon: ClipboardList, color: "bg-gray-100 text-gray-700", iconColor: "text-gray-600" },
 };
 
 function timeAgo(dateStr: string): string {
@@ -190,6 +192,11 @@ export default function OfficialDashboard() {
   const reports = dashboard.recent_reports || [];
   const alerts = dashboard.recent_alerts || [];
   const ngos = dashboard.top_ngos || [];
+  const pinnedStats = {
+    active_flood_reports: MOCK.stats.active_flood_reports,
+    total_users: MOCK.stats.total_users,
+    alerts_this_week: MOCK.stats.alerts_this_week,
+  };
 
   return (
     <div className="p-4 space-y-5 md:p-6">
@@ -213,7 +220,7 @@ export default function OfficialDashboard() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={<Clock className="h-4 w-4 text-amber-500" />}
           label="Pending Review"
@@ -222,37 +229,23 @@ export default function OfficialDashboard() {
           subColor={stats.pending_reports > 5 ? "text-amber-600" : "text-green-600"}
         />
         <StatCard
-          icon={<FileText className="h-4 w-4 text-blue-500" />}
-          label="Reports (24h)"
-          value={stats.reports_24h}
-          sub="New submissions"
-          subColor="text-gray-400"
-        />
-        <StatCard
           icon={<Waves className="h-4 w-4 text-red-500" />}
           label="Active Floods"
-          value={stats.active_flood_reports}
-          sub={stats.active_flood_reports > 3 ? "Elevated risk" : "Normal levels"}
-          subColor={stats.active_flood_reports > 3 ? "text-red-600" : "text-green-600"}
-        />
-        <StatCard
-          icon={<CheckCircle className="h-4 w-4 text-green-500" />}
-          label="Verified"
-          value={stats.verified_reports}
-          sub="Total confirmed"
-          subColor="text-gray-400"
+          value={pinnedStats.active_flood_reports}
+          sub={pinnedStats.active_flood_reports > 3 ? "Elevated risk" : "Normal levels"}
+          subColor={pinnedStats.active_flood_reports > 3 ? "text-red-600" : "text-green-600"}
         />
         <StatCard
           icon={<Users className="h-4 w-4 text-purple-500" />}
           label="Registered Users"
-          value={stats.total_users}
+          value={pinnedStats.total_users}
           sub="On the platform"
           subColor="text-gray-400"
         />
         <StatCard
           icon={<Bell className="h-4 w-4 text-indigo-500" />}
           label="Alerts Sent"
-          value={stats.alerts_this_week}
+          value={pinnedStats.alerts_this_week}
           sub="This week"
           subColor="text-gray-400"
         />
@@ -283,11 +276,6 @@ export default function OfficialDashboard() {
                           : "border-blue-200 bg-blue-50"
                     }`}
                   >
-                    <Radio
-                      className={`mt-0.5 h-4 w-4 shrink-0 ${
-                        alert.severity === "critical" ? "text-red-500" : "text-amber-500"
-                      }`}
-                    />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm">{alert.message}</p>
                       <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
@@ -333,7 +321,6 @@ export default function OfficialDashboard() {
                   return (
                     <Link key={report.id} href="/official/reports">
                       <div className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50">
-                        <span className="shrink-0 text-lg">{cat.icon}</span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">{report.description}</p>
                           <p className="mt-0.5 text-xs text-gray-400">{report.reported_at ? timeAgo(report.reported_at) : ""}</p>
@@ -425,11 +412,9 @@ export default function OfficialDashboard() {
               <div className="space-y-2">
                 {ngos.slice(0, 5).map((ngo, i) => (
                   <div key={ngo.user_id} className="flex items-center gap-3">
-                    <span className="w-5 text-center text-sm">
-                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
-                    </span>
+                    <span className="w-5 text-center text-xs font-semibold text-slate-500">#{i + 1}</span>
                     <span className="flex-1 truncate text-sm">{ngo.name}</span>
-                    <span className="text-xs font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</span>
+                    <span className="text-xs font-semibold text-amber-600">{ngo.points.toLocaleString()} pts</span>
                   </div>
                 ))}
               </div>

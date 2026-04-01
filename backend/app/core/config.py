@@ -2,6 +2,7 @@
 Core configuration for AquaGuardians API
 Loads environment variables and provides app settings
 """
+from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator
@@ -72,6 +73,7 @@ class Settings(BaseSettings):
     
     # App Settings
     DEBUG: bool = False
+    AUTH_BYPASS_ENABLED: bool = False
     PPP_DEV_ALLOW_NON_OFFICIAL: bool = False
     HYDROMETEO_PROVIDER_ENABLED: bool = True
     HYDROMETEO_TIMEOUT_SECONDS: float = 8.0
@@ -101,7 +103,7 @@ class Settings(BaseSettings):
         return [c.strip() for c in self.EMERGENCY_CONTACTS.split(",") if c.strip()]
     
     class Config:
-        env_file = ".env"
+        env_file = str(Path(__file__).resolve().parents[2] / ".env")
         env_file_encoding = "utf-8"
         extra = "ignore"
 
