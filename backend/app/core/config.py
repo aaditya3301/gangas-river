@@ -72,12 +72,14 @@ class Settings(BaseSettings):
     EMERGENCY_CONTACTS: str = ""
     
     # App Settings
-    DEBUG: bool = True
-    CORS_ORIGINS: str = "http://localhost:3000"
-    
-    # CORS Configuration
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"
-    EMERGENCY_CONTACTS: str = "108,112"
+    DEBUG: bool = False
+
+    # CORS configuration (comma-separated)
+    # Local defaults keep frontend dev on 3000 working out of the box.
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    # Emergency Contacts (comma-separated phone numbers with country code)
+    EMERGENCY_CONTACTS: str = ""
 
     # LiDAR Data Path
     LIDAR_DATA_PATH: str = "../data/raw"

@@ -18,6 +18,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Bearer token extraction
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 
 class TokenData(BaseModel):
@@ -114,6 +115,15 @@ async def get_current_user(
     """
     token = credentials.credentials
     return decode_token(token)
+
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security)
+) -> TokenData | None:
+    """Optional auth dependency that returns None when no bearer token is provided."""
+    if credentials is None:
+        return None
+    return decode_token(credentials.credentials)
 
 
 def require_role(allowed_roles: list[str]):

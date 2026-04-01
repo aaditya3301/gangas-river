@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const rawApiUrl =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:8000';
+
+const API_BASE_URL = rawApiUrl.replace(/\/+$/, '');
 
 // Create axios instance with default config
 export const api = axios.create({
@@ -26,10 +31,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear token and redirect to login
+      // Clear stale token. UI can decide how to handle unauthenticated state.
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
-        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -84,7 +88,7 @@ export const reportsAPI = {
     return response.data;
   },
 
-  getAll: async (params?: { category?: string; status?: string; limit?: number }) => {
+  getAll: async (params?: { category?: string; status?: string; limit?: number; offset?: number }) => {
     const response = await api.get('/api/reports/all', { params });
     return response.data;
   },
@@ -97,6 +101,27 @@ export const reportsAPI = {
   getStats: async () => {
     const response = await api.get('/api/reports/stats');
     return response.data;
+  },
+
+  updateStatus: async (reportId: number, data: { status: string; notes?: string }) => {
+    const response = await api.patch(`/api/reports/${reportId}/status`, data);
+    return response.data;
+  },
+};
+
+// ============ Chat API ============
+export const chatAPI = {
+  send: async (data: {
+    message: string;
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  }) => {
+    const response = await api.post('/api/chat/chat', data);
+    return response.data as {
+      response: string;
+      reply?: string;
+      context_used?: boolean;
+      error?: boolean;
+    };
   },
 };
 
@@ -138,19 +163,30 @@ export const zonesAPI = {
 
 // ============ Evacuation API ============
 export const evacuationAPI = {
-  getShelters: async (params?: { latitude?: number; longitude?: number; radius_km?: number }) => {
-    const response = await api.get('/api/evacuation/shelters', { params });
+  getShelters: async (latitude: number, longitude: number, radius_km = 50) => {
+    const response = await api.get('/api/evacuation/shelters', {
+      params: { latitude, longitude, radius_km },
+    });
     return response.data;
   },
 
   getRoute: async (data: {
     start_lat: number;
     start_lng: number;
-    end_lat?: number;
-    end_lng?: number;
+    end_lat: number;
+    end_lng: number;
     preference?: 'fastest' | 'safest' | 'shortest';
   }) => {
     const response = await api.post('/api/evacuation/route', data);
+    return response.data;
+  },
+
+  getRouteToShelter: async (latitude: number, longitude: number, preference: 'fastest' | 'safest' | 'shortest' = 'fastest') => {
+    const response = await api.post('/api/evacuation/route-to-shelter', {
+      latitude,
+      longitude,
+      preference,
+    });
     return response.data;
   },
 };

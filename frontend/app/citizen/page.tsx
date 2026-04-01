@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -51,7 +51,7 @@ export default function CitizenDashboard() {
     },
   ];
 
-  const [alerts, setAlerts] = useState(smsAlerts);
+  const alerts = smsAlerts;
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -171,7 +171,7 @@ export default function CitizenDashboard() {
                         {t("checkFloodPrediction")}
                     </Button>
                 </Link>
-                <Link href="/citizen/routes">
+                <Link href="/citizen/evacuation">
                   <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <MapPin className="mr-2 h-5 w-5 text-green-500" />
                         {t("findSafeRoute")}
@@ -183,7 +183,7 @@ export default function CitizenDashboard() {
                         {t("reportAnIncident")}
                     </Button>
                 </Link>
-                <Link href="/citizen/voice">
+                <Link href="/citizen/assistant">
                   <Button variant="secondary" className="w-full justify-start h-10 md:h-11">
                         <Mic className="mr-2 h-5 w-5 text-purple-500" />
                         {t("voiceAssistant")}

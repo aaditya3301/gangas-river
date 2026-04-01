@@ -69,7 +69,7 @@ app.include_router(predict.router, prefix="/api/predict", tags=["Flood Predictio
 app.include_router(zones.router, prefix="/api/zones", tags=["Policy Zones"])
 app.include_router(evacuation.router, prefix="/api/evacuation", tags=["Evacuation"])
 app.include_router(emergency.router, prefix="/api/emergency", tags=["Emergency Alerts"])
-app.include_router(chatbot.router, prefix="/api", tags=["Voice Assistant"])
+app.include_router(chatbot.router, prefix="/api/chat", tags=["Voice Assistant"])
 app.include_router(data.router, prefix="/api/data", tags=["Data Catalog"])
 app.include_router(models.router, prefix="/api/models", tags=["Model Lab"])
 app.include_router(api_docs.router, prefix="/api/api-docs", tags=["API Documentation"])

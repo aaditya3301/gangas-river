@@ -7,8 +7,8 @@ import {
   LayoutDashboard,
   CloudRain,
   AlertTriangle,
-  Map as MapIcon,
-  Mic,
+  Navigation,
+  MessageCircle,
   Menu,
   X,
   Languages,
@@ -53,13 +53,13 @@ export default function CitizenLayoutContent({
     },
     {
       title: t("safeRoutes"),
-      href: "/citizen/routes",
-      icon: MapIcon,
+      href: "/citizen/evacuation",
+      icon: Navigation,
     },
     {
       title: t("voiceAssistant"),
-      href: "/citizen/voice",
-      icon: Mic,
+      href: "/citizen/assistant",
+      icon: MessageCircle,
     },
   ];
 
@@ -187,7 +187,7 @@ export default function CitizenLayoutContent({
 
         <main className="bg-gray-50 p-4 md:p-6 lg:p-8 pb-24 md:pb-8 relative">
           {/* Decorative River Watermark - Blue Drop Theme */}
-          <div className="fixed bottom-0 right-0 w-[500px] h-[500px] z-0 opacity-[0.03] pointer-events-none text-blue-600 translate-x-1/4 translate-y-1/4">
+          <div className="fixed bottom-0 right-0 w-125 h-125 z-0 opacity-[0.03] pointer-events-none text-blue-600 translate-x-1/4 translate-y-1/4">
              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-current animate-pulse-slow">
                 <path d="M42.7,-72.8C56.1,-66.8,68.3,-58.5,77.4,-47.9C86.5,-37.3,92.5,-24.4,91.8,-11.7C91.1,1,83.7,13.5,75.8,25.2C67.9,36.9,59.5,47.9,49.5,57.1C39.5,66.3,27.9,73.7,15.6,76.9C3.3,80.1,-9.6,79.1,-21.9,75.4C-34.2,71.7,-45.8,65.3,-56.3,56.6C-66.8,47.9,-76.2,36.9,-81.4,24.4C-86.6,11.9,-87.6,-2.1,-84.6,-15.5C-81.6,-28.9,-74.6,-41.7,-64.3,-50.8C-54,-59.9,-40.4,-65.3,-27.6,-71.7C-14.8,-78.1,-2.8,-85.5,8.3,-83.8C19.4,-82.1,30.8,-71.3,42.7,-72.8Z" transform="translate(100 100)" />
              </svg>
@@ -215,7 +215,7 @@ export default function CitizenLayoutContent({
                   }`}
                 >
                   <item.icon className="h-5 w-5 mb-0.5" />
-                  <span className="truncate max-w-[56px]">{item.title}</span>
+                  <span className="truncate max-w-14">{item.title}</span>
                 </Link>
               );
             })}

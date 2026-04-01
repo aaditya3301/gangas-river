@@ -204,7 +204,7 @@ export default function InsightsPage() {
                 cy="50%"
                 innerRadius={45}
                 outerRadius={80}
-                label={({ name, count }) => `${name}: ${count}`}
+                label={({ name, value }) => `${name}: ${value ?? 0}`}
               >
                 {(statusData?.statuses ?? []).map((_, index) => (
                   <Cell key={`status-${index}`} fill={COLORS[index % COLORS.length]} />

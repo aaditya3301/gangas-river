@@ -71,21 +71,24 @@ class ReportCreate(BaseModel):
     longitude: float = Field(..., ge=-180, le=180)
     altitude: Optional[float] = None
     category: str = Field(..., pattern="^(flood|pollution|infrastructure|erosion|other)$")
-    description: Optional[str] = None
+    description: str = Field(..., min_length=10, max_length=2000)
     photo_url: Optional[str] = None
 
 
 class ReportResponse(BaseModel):
     """Schema for report response"""
     id: int
+    latitude: float
+    longitude: float
     category: str
     description: Optional[str]
+    photo_url: Optional[str] = None
     status: str
     verification_score: float
     verification_notes: Optional[str]
     reported_at: datetime
-    latitude: float
-    longitude: float
+    verified_at: Optional[datetime] = None
+    reporter_name: Optional[str] = None
     
     class Config:
         from_attributes = True
@@ -97,6 +100,12 @@ class ReportVerificationResult(BaseModel):
     confidence_score: float
     flags: list[str] = []
     notes: str
+
+
+class ReportStatusUpdate(BaseModel):
+    """Schema for official/admin report status updates."""
+    status: str = Field(..., pattern="^(verified|rejected|resolved)$")
+    notes: Optional[str] = None
 
 
 # ============== Flood Prediction Schemas ==============

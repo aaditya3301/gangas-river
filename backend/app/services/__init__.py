@@ -17,9 +17,10 @@ from app.services.zone_classifier import (
     batch_classify_area,
 )
 from app.services.evacuation_router import (
-    calculate_evacuation_route,
-    haversine_distance,
-    find_safe_route_avoiding_zones,
+    calculate_route,
+    find_route_to_nearest_shelter,
+    get_nearby_shelters,
+    haversine_km,
 )
 
 __all__ = [
@@ -39,7 +40,8 @@ __all__ = [
     "classify_location",
     "batch_classify_area",
     # Evacuation
-    "calculate_evacuation_route",
-    "haversine_distance",
-    "find_safe_route_avoiding_zones",
+    "calculate_route",
+    "find_route_to_nearest_shelter",
+    "get_nearby_shelters",
+    "haversine_km",
 ]

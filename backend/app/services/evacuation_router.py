@@ -1,148 +1,156 @@
-"""
-Evacuation Route Service
-LiDAR-aware route optimization
-"""
+"""Evacuation routing service using OSRM with fallback behavior."""
+
 import math
-from typing import Literal
+from typing import Any
+
+import httpx
+
+OSRM_BASE = "http://router.project-osrm.org"
+
+SHELTERS = [
+    {"id": 1, "name": "Prayagraj Community Shelter", "lat": 25.4358, "lng": 81.8463, "capacity": 500, "has_medical": True},
+    {"id": 2, "name": "Varanasi Relief Camp", "lat": 25.3176, "lng": 82.9739, "capacity": 300, "has_medical": True},
+    {"id": 3, "name": "Kanpur Flood Shelter", "lat": 26.4499, "lng": 80.3319, "capacity": 400, "has_medical": False},
+    {"id": 4, "name": "Patna Emergency Center", "lat": 25.6093, "lng": 85.1376, "capacity": 600, "has_medical": True},
+]
 
 
-async def calculate_evacuation_route(
-    start_lat: float,
-    start_lng: float,
-    end_lat: float,
-    end_lng: float,
-    preference: Literal["fastest", "safest", "shortest"] = "safest",
-) -> dict:
-    """
-    Calculate optimal evacuation route between two points
-    
-    Uses terrain analysis to avoid flood-prone areas
-    
-    Args:
-        start_lat: Origin latitude
-        start_lng: Origin longitude
-        end_lat: Destination (shelter) latitude
-        end_lng: Destination (shelter) longitude
-        preference: Route preference (fastest, safest, shortest)
-    
-    Returns:
-        Dict with route geometry, distance, and time
-    """
-    # Calculate direct distance
-    direct_distance = haversine_distance(start_lat, start_lng, end_lat, end_lng)
-    
-    # Generate route waypoints
-    # In production, this would use A* algorithm with elevation costs
-    num_waypoints = max(5, int(direct_distance / 0.5))  # Waypoint every 500m
-    
-    waypoints = []
-    for i in range(num_waypoints + 1):
-        t = i / num_waypoints
-        
-        # Linear interpolation for basic route
-        lat = start_lat + t * (end_lat - start_lat)
-        lng = start_lng + t * (end_lng - start_lng)
-        
-        # Add slight curve for "safest" routes (simulating flood avoidance)
-        if preference == "safest":
-            # Add offset to simulate avoiding low areas
-            offset = math.sin(t * math.pi) * 0.005  # Small lat offset
-            lat += offset
-        
-        waypoints.append([lng, lat])
-    
-    # Calculate actual distance along waypoints
-    route_distance = 0
-    for i in range(1, len(waypoints)):
-        route_distance += haversine_distance(
-            waypoints[i-1][1], waypoints[i-1][0],
-            waypoints[i][1], waypoints[i][0]
-        )
-    
-    # Estimate time based on preference
-    if preference == "fastest":
-        # Assume faster travel (vehicle)
-        speed_kmh = 30
-        distance_factor = 1.1  # 10% longer than direct
-    elif preference == "safest":
-        # Slower, more careful route
-        speed_kmh = 20
-        distance_factor = 1.3  # 30% longer than direct
-    else:  # shortest
-        speed_kmh = 25
-        distance_factor = 1.0
-    
-    actual_distance = direct_distance * distance_factor
-    time_hours = actual_distance / speed_kmh
-    time_minutes = time_hours * 60
-    
-    # Build GeoJSON LineString
-    route_geometry = {
-        "type": "LineString",
-        "coordinates": waypoints,
-    }
-    
-    return {
-        "geometry": route_geometry,
-        "distance_km": round(actual_distance, 2),
-        "time_minutes": round(time_minutes, 1),
-        "preference": preference,
-        "waypoints_count": len(waypoints),
-    }
-
-
-def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """
-    Calculate distance between two GPS coordinates in kilometers
-    
-    Uses Haversine formula for great-circle distance
-    """
-    R = 6371  # Earth's radius in km
-    
-    # Convert to radians
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-    delta_lat = math.radians(lat2 - lat1)
-    delta_lon = math.radians(lon2 - lon1)
-    
-    # Haversine formula
-    a = (math.sin(delta_lat / 2) ** 2 +
-         math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2)
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-    
-    return R * c
-
-
-async def find_safe_route_avoiding_zones(
-    start_lat: float,
-    start_lng: float,
-    end_lat: float,
-    end_lng: float,
-    flood_zones: list[dict],
-) -> dict:
-    """
-    Find route that avoids specified flood zones
-    
-    Uses modified A* algorithm with zone avoidance
-    
-    Args:
-        start_lat, start_lng: Origin
-        end_lat, end_lng: Destination
-        flood_zones: List of GeoJSON polygons to avoid
-    
-    Returns:
-        Safe route geometry
-    """
-    # For MVP, use basic route with warning
-    route = await calculate_evacuation_route(
-        start_lat, start_lng, end_lat, end_lng, "safest"
+def haversine_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Calculate distance between two points in kilometers."""
+    radius = 6371
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlng / 2) ** 2
     )
-    
-    # Add zone intersection check
-    intersects_danger = False
-    # In production: check if route intersects any flood zones
-    
-    route["avoids_flood_zones"] = not intersects_danger
-    route["warning"] = None if not intersects_danger else "Route may pass through flood-prone areas"
-    
-    return route
+    return radius * 2 * math.asin(math.sqrt(a))
+
+
+async def get_nearby_shelters(lat: float, lng: float, radius_km: float = 50) -> list[dict[str, Any]]:
+    """Return shelters within search radius sorted by distance."""
+    nearby = []
+    for shelter in SHELTERS:
+        dist = haversine_km(lat, lng, shelter["lat"], shelter["lng"])
+        if dist <= radius_km:
+            nearby.append({**shelter, "distance_km": round(dist, 2)})
+
+    nearby.sort(key=lambda item: item["distance_km"])
+    return nearby
+
+
+def _build_steps(route: dict[str, Any]) -> list[dict[str, Any]]:
+    steps: list[dict[str, Any]] = []
+    for leg in route.get("legs", []):
+        for step in leg.get("steps", []):
+            maneuver = step.get("maneuver", {})
+            steps.append(
+                {
+                    "instruction": maneuver.get("type", "continue"),
+                    "modifier": maneuver.get("modifier", ""),
+                    "road_name": step.get("name", ""),
+                    "distance_m": round(step.get("distance", 0)),
+                    "duration_s": round(step.get("duration", 0)),
+                }
+            )
+    return steps
+
+
+async def calculate_route(
+    start_lat: float,
+    start_lng: float,
+    end_lat: float,
+    end_lng: float,
+    preference: str = "fastest",
+) -> dict[str, Any]:
+    """Calculate road route via OSRM and return alternatives with geometry."""
+    coords = f"{start_lng},{start_lat};{end_lng},{end_lat}"
+    url = f"{OSRM_BASE}/route/v1/driving/{coords}"
+    params = {
+        "alternatives": "true",
+        "steps": "true",
+        "geometries": "geojson",
+        "overview": "full",
+        "annotations": "duration,distance",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url, params=params)
+
+        data = response.json() if response.status_code == 200 else {}
+        if data.get("code") != "Ok" or not data.get("routes"):
+            return _fallback_route(start_lat, start_lng, end_lat, end_lng)
+
+        routes: list[dict[str, Any]] = []
+        for index, route in enumerate(data["routes"]):
+            route_type = "fastest"
+            if index == 1:
+                route_type = "alternative_1"
+            elif index == 2:
+                route_type = "alternative_2"
+
+            routes.append(
+                {
+                    "type": route_type,
+                    "geometry": route["geometry"],
+                    "distance_km": round(route["distance"] / 1000, 2),
+                    "duration_min": round(route["duration"] / 60, 1),
+                    "steps": _build_steps(route),
+                }
+            )
+
+        routes.sort(key=lambda item: item["duration_min"])
+        if routes:
+            routes[0]["type"] = "fastest"
+        if len(routes) >= 2:
+            shortest = min(routes, key=lambda item: item["distance_km"])
+            shortest["type"] = "shortest"
+        if len(routes) >= 3:
+            middle_idx = min(1, len(routes) - 1)
+            routes[middle_idx]["type"] = "safest"
+
+        return {
+            "origin": {"lat": start_lat, "lng": start_lng},
+            "destination": {"lat": end_lat, "lng": end_lng},
+            "preference": preference,
+            "routes": routes,
+        }
+    except Exception:
+        return _fallback_route(start_lat, start_lng, end_lat, end_lng)
+
+
+def _fallback_route(lat1: float, lng1: float, lat2: float, lng2: float) -> dict[str, Any]:
+    """Fallback direct route when OSRM is unavailable."""
+    dist = haversine_km(lat1, lng1, lat2, lng2)
+    return {
+        "origin": {"lat": lat1, "lng": lng1},
+        "destination": {"lat": lat2, "lng": lng2},
+        "preference": "direct",
+        "routes": [
+            {
+                "type": "direct",
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [[lng1, lat1], [lng2, lat2]],
+                },
+                "distance_km": round(dist, 2),
+                "duration_min": round((dist / 35) * 60, 1),
+                "steps": [],
+            }
+        ],
+    }
+
+
+async def find_route_to_nearest_shelter(lat: float, lng: float, preference: str = "fastest") -> dict[str, Any]:
+    """Find route from origin to nearest available shelter."""
+    shelters = await get_nearby_shelters(lat, lng)
+    if not shelters:
+        return {"error": "No shelters found within 50km"}
+
+    nearest = shelters[0]
+    route_payload = await calculate_route(lat, lng, nearest["lat"], nearest["lng"], preference)
+    route_payload["shelter"] = nearest
+    return route_payload

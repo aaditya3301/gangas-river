@@ -182,7 +182,7 @@ export default function APIExplorerPage() {
                       <div className="border-t p-4 space-y-4 bg-slate-50/40">
                         <p className="text-sm text-slate-700">{endpoint.summary}</p>
 
-                        {endpoint.query_params && (
+                        {endpoint.query_params !== undefined && (
                           <div>
                             <h4 className="text-[11px] font-semibold uppercase text-slate-400 mb-1">Query Parameters</h4>
                             <div className="bg-white rounded border p-3 text-xs font-mono space-y-1">
@@ -195,7 +195,7 @@ export default function APIExplorerPage() {
                           </div>
                         )}
 
-                        {endpoint.request_body && (
+                        {endpoint.request_body !== null && endpoint.request_body !== undefined && (
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <h4 className="text-[11px] font-semibold uppercase text-slate-400">Request Body</h4>
@@ -213,7 +213,7 @@ export default function APIExplorerPage() {
                           </div>
                         )}
 
-                        {endpoint.response_example && (
+                        {endpoint.response_example !== null && endpoint.response_example !== undefined && (
                           <div>
                             <div className="flex justify-between items-center mb-1">
                               <h4 className="text-[11px] font-semibold uppercase text-slate-400">Response Example</h4>
@@ -231,7 +231,7 @@ export default function APIExplorerPage() {
                           </div>
                         )}
 
-                        {endpoint.status_codes && (
+                        {endpoint.status_codes !== undefined && (
                           <div>
                             <h4 className="text-[11px] font-semibold uppercase text-slate-400 mb-1">Status Codes</h4>
                             <div className="flex flex-wrap gap-2">
@@ -253,7 +253,7 @@ export default function APIExplorerPage() {
                           <Play className="w-3.5 h-3.5" /> {tryIt.isPending ? "Running..." : "Try It"}
                         </Button>
 
-                        {liveResponses[endpointId] && (
+                        {Object.prototype.hasOwnProperty.call(liveResponses, endpointId) && (
                           <div>
                             <h4 className="text-[11px] font-semibold uppercase text-emerald-600 mb-1">Live Response</h4>
                             <pre className="bg-slate-900 text-cyan-300 rounded p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
