@@ -50,6 +50,7 @@ class SafetyCheckRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
     altitude: Optional[float] = None  # GPS altitude if available
+    rainfall_mm: float = Field(0, ge=0)  # What-if rainfall scenario in millimeters
 
 
 class SafetyCheckResponse(BaseModel):
@@ -59,6 +60,10 @@ class SafetyCheckResponse(BaseModel):
     zone_type: Optional[str]  # zone_a, zone_b, zone_c
     elevation: float  # LiDAR elevation at location
     flood_depth_prediction: Optional[float]  # Predicted depth if flood occurs
+    confidence: Optional[float] = None
+    contributing_factors: list[str] = []
+    historical_comparison: Optional[dict] = None
+    model_source: Optional[str] = None
     message: str
     recommendations: list[str] = []
 

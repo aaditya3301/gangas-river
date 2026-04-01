@@ -1,0 +1,19 @@
+region:
+  name: ganga_basin
+  lat_min: 24.0
+  lat_max: 31.0
+  lon_min: 77.0
+  lon_max: 86.0
+
+paths:
+  raw_data: backend/data/raw/flood_events_merged.csv
+  processed_parquet: backend/data/processed/features.parquet
+  processed_csv: backend/data/processed/features.csv
+  model_dir: backend/models
+
+training:
+  target_class: flood_risk_label
+  target_depth: flood_depth_m
+  preferred_model: lightgbm
+  optuna_trials: 25
+  random_seed: 42

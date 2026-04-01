@@ -68,7 +68,7 @@ export const authAPI = {
 
 // ============ Safety API ============
 export const safetyAPI = {
-  check: async (data: { latitude: number; longitude: number; altitude?: number }) => {
+  check: async (data: { latitude: number; longitude: number; altitude?: number; rainfall_mm?: number }) => {
     const response = await api.post('/api/safety/check', data);
     return response.data;
   },
@@ -129,6 +129,11 @@ export const chatAPI = {
 export const predictAPI = {
   flood: async (data: { latitude: number; longitude: number; rainfall_mm?: number }) => {
     const response = await api.post('/api/predict/flood', data);
+    return response.data;
+  },
+
+  modelInfo: async () => {
+    const response = await api.get('/api/predict/model-info');
     return response.data;
   },
 

@@ -73,6 +73,10 @@ class Settings(BaseSettings):
     # App Settings
     DEBUG: bool = False
     PPP_DEV_ALLOW_NON_OFFICIAL: bool = False
+    HYDROMETEO_PROVIDER_ENABLED: bool = True
+    HYDROMETEO_TIMEOUT_SECONDS: float = 8.0
+    OPEN_METEO_WEATHER_URL: str = "https://api.open-meteo.com/v1/forecast"
+    OPEN_METEO_FLOOD_URL: str = "https://flood-api.open-meteo.com/v1/flood"
 
     # CORS configuration (comma-separated)
     # Local defaults keep frontend dev on 3000 working out of the box.

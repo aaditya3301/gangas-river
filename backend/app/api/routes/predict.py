@@ -13,6 +13,7 @@ from app.schemas import (
 from app.services.flood_predictor import (
     predict_flood_risk_at_point,
     generate_flood_heatmap,
+    get_flood_model_info,
 )
 
 router = APIRouter()
@@ -59,7 +60,7 @@ async def predict_flood_risk(
             location={"lat": lat, "lng": lng},
             risk_percentage=risk_pct,
             risk_level=risk_level,
-            predicted_depth_m=prediction.get("predicted_depth", 0),
+            predicted_depth_m=prediction.get("predicted_depth_m", prediction.get("predicted_depth", 0)),
             confidence=prediction.get("confidence", 0.8),
             contributing_factors=prediction.get("factors", []),
         )
@@ -68,6 +69,18 @@ async def predict_flood_risk(
         raise HTTPException(
             status_code=500,
             detail=f"Prediction failed: {str(e)}"
+        )
+
+
+@router.get("/model-info")
+async def get_prediction_model_info():
+    """Get active flood model metadata and runtime source information."""
+    try:
+        return get_flood_model_info()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to fetch model info: {str(e)}"
         )
 
 

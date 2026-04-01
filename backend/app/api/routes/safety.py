@@ -10,6 +10,7 @@ from app.db import get_db, FloodZone, PolicyZone
 from app.schemas import SafetyCheckRequest, SafetyCheckResponse
 from app.services.lidar_processor import get_elevation_at_point
 from app.services.flood_predictor import predict_flood_risk_at_point
+from app.services.ppp_calculator import similarity_match
 
 router = APIRouter()
 
@@ -57,12 +58,31 @@ async def check_safety(
     
     # Get flood prediction
     try:
-        prediction = await predict_flood_risk_at_point(lat, lng, elevation)
+        prediction = await predict_flood_risk_at_point(
+            latitude=lat,
+            longitude=lng,
+            elevation=elevation,
+            rainfall_mm=request.rainfall_mm,
+        )
         risk_percentage = prediction.get("risk_percentage", 0)
-        flood_depth = prediction.get("predicted_depth", 0)
+        flood_depth = prediction.get("predicted_depth_m", prediction.get("predicted_depth", 0))
+        confidence = prediction.get("confidence")
+        contributing_factors = prediction.get("factors", [])
+
+        matched = similarity_match(
+            latitude=lat,
+            longitude=lng,
+            predicted_depth_m=float(flood_depth or 0),
+            rainfall_mm=float(request.rainfall_mm or prediction.get("features", {}).get("rainfall_mm_1d", 0.0)),
+            top_k=1,
+        ).get("matched_events", [])
+        historical_comparison = matched[0] if matched else None
     except Exception:
         risk_percentage = 0
         flood_depth = 0
+        confidence = None
+        contributing_factors = []
+        historical_comparison = None
     
     # Determine risk level
     if risk_percentage > 80 or (flood_zone and flood_zone.risk_level.value == "critical"):
@@ -101,6 +121,10 @@ async def check_safety(
         zone_type=flood_zone.zone_type.value if flood_zone else None,
         elevation=elevation,
         flood_depth_prediction=flood_depth,
+        confidence=confidence,
+        contributing_factors=contributing_factors,
+        historical_comparison=historical_comparison,
+        model_source=prediction.get("model_source") if "prediction" in locals() else None,
         message=message,
         recommendations=recommendations,
     )
