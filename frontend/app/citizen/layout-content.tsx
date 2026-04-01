@@ -191,7 +191,7 @@ export default function CitizenLayoutContent({
           </div>
         </header>
 
-        <main className="bg-gray-50 p-4 md:p-6 lg:p-8 pb-24 md:pb-8 relative">
+        <main className="relative bg-gray-50 p-4 pb-8 md:p-6 md:pb-8 lg:p-8">
           {/* Decorative River Watermark - Blue Drop Theme */}
           <div className="fixed bottom-0 right-0 w-125 h-125 z-0 opacity-[0.03] pointer-events-none text-blue-600 translate-x-1/4 translate-y-1/4">
              <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full fill-current animate-pulse-slow">
@@ -204,29 +204,6 @@ export default function CitizenLayoutContent({
           </div>
         </main>
 
-        {/* Mobile Bottom Tabs */}
-        <nav
-          className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t md:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-        >
-          <div className="grid grid-cols-5 h-16">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex flex-col items-center justify-center text-xs ${
-                    isActive ? "text-blue-600" : "text-gray-400"
-                  }`}
-                >
-                  <item.icon className="h-5 w-5 mb-0.5" />
-                  <span className="truncate max-w-14">{item.title}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
       </div>
     </div>
   );

@@ -10,17 +10,17 @@ export default function CommunityVerification() {
     ];
 
     return (
-        <section className="relative bg-[#F8FAFC] py-24 lg:py-32 overflow-hidden">
-            <div className="mx-auto max-w-[1280px] px-6 lg:px-8">
+        <section className="relative overflow-hidden bg-[#F8FAFC] py-16 sm:py-20 lg:py-32">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+                <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-24">
                     {/* Left: UI Preview Card (Reversed) */}
-                    <div className="relative order-2 lg:order-1">
+                    <div className="relative order-1 mx-auto w-full max-w-xl lg:order-1 lg:max-w-none">
                         <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/50 rounded-full blur-3xl -z-10" />
 
-                        <div className="bg-white rounded-2xl shadow-[0_24px_60px_-12px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden min-h-[420px] flex flex-col p-6 gap-4">
+                        <div className="flex min-h-0 flex-col gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_24px_60px_-12px_rgba(0,0,0,0.1)] sm:min-h-105 sm:p-6">
                             {/* Header */}
-                            <div className="flex items-center justify-between pb-4 border-b border-slate-50">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-50 pb-4">
                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Incoming Reports</span>
                                 <div className="h-6 px-2 rounded bg-blue-50 text-[#006DC4] text-[10px] font-bold flex items-center">
                                     Live Feed ●
@@ -31,8 +31,8 @@ export default function CommunityVerification() {
                             <div className="space-y-3 relative">
                                 {/* Card 1: Verified */}
                                 <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex gap-4 transition-transform hover:scale-[1.02]">
-                                    <div className="h-12 w-12 rounded-lg bg-slate-100 flex-shrink-0 relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300" />
+                                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                                        <div className="absolute inset-0 bg-linear-to-br from-slate-200 to-slate-300" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
@@ -52,7 +52,7 @@ export default function CommunityVerification() {
 
                                 {/* Card 2: Pending */}
                                 <div className="p-4 rounded-xl border border-slate-100 bg-white shadow-sm flex gap-4 opacity-80">
-                                    <div className="h-12 w-12 rounded-lg bg-slate-100 flex-shrink-0" />
+                                    <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-100" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
                                             <h4 className="text-sm font-bold text-slate-800">Blocked drainage</h4>
@@ -70,7 +70,7 @@ export default function CommunityVerification() {
 
                                 {/* Card 3: Rejected */}
                                 <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 opacity-60 flex gap-4 grayscale">
-                                    <div className="h-12 w-12 rounded-lg bg-white flex-shrink-0" />
+                                    <div className="h-12 w-12 shrink-0 rounded-lg bg-white" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start">
                                             <h4 className="text-sm font-bold text-slate-600 line-through">Outdated photo</h4>
@@ -80,18 +80,18 @@ export default function CommunityVerification() {
                                 </div>
 
                                 {/* Vertical Connect Line */}
-                                <div className="absolute left-6 top-12 bottom-12 w-[2px] bg-slate-100 -z-10" />
+                                <div className="absolute top-12 bottom-12 left-6 -z-10 w-0.5 bg-slate-100" />
                             </div>
                         </div>
                     </div>
 
                     {/* Right: Content */}
-                    <div className="order-1 lg:order-2">
-                        <h2 className="text-4xl md:text-5xl font-black text-[#0F172A] tracking-tight leading-[1.15]">
+                    <div className="order-2 mx-auto w-full max-w-xl lg:order-2 lg:max-w-none">
+                        <h2 className="text-3xl font-black leading-[1.15] tracking-tight text-[#0F172A] sm:text-4xl md:text-5xl">
                             AI-Verified<br />
                             Community Reports
                         </h2>
-                        <p className="mt-6 text-lg text-[#475569] leading-relaxed max-w-lg">
+                        <p className="mt-5 max-w-lg text-base leading-relaxed text-[#475569] sm:mt-6 sm:text-lg">
                             Citizens are the first line of defense. Our multi-modal AI validates crowd-sourced images and reports in milliseconds, filtering noise so officials can act on truth.
                         </p>
 
@@ -108,10 +108,10 @@ export default function CommunityVerification() {
                             ))}
                         </div>
 
-                        <div className="mt-10">
+                        <div className="mt-8 sm:mt-10">
                             <Link
                                 href="/citizen"
-                                className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-base hover:border-[#006DC4] hover:text-[#006DC4] hover:bg-white transition-all duration-200"
+                                className="inline-flex w-full items-center justify-center rounded-xl border-2 border-slate-200 px-8 py-3.5 text-base font-bold text-slate-700 transition-all duration-200 hover:border-[#006DC4] hover:bg-white hover:text-[#006DC4] sm:w-auto"
                             >
                                 Join the Network
                             </Link>

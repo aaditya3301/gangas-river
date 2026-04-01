@@ -102,7 +102,7 @@ export default function Hero() {
     };
 
     return (
-        <section className="relative min-h-[88svh] md:min-h-[100dvh] bg-[#080c18] overflow-hidden flex flex-col items-center justify-start pt-24 md:pt-28 pb-14 md:pb-28">
+        <section className="relative min-h-svh bg-[#080c18] overflow-hidden flex flex-col items-center justify-start pt-24 md:pt-28 pb-14 md:pb-28">
             {/* ── Background layers ── */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 {/* Dynamic gradient based on role */}
