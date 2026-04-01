@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { BarChart3, Calculator, Landmark, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -60,14 +60,6 @@ type SimilarityResponse = {
   }>;
 };
 
-type PPPModelInfo = {
-  model_name: string;
-  model_path: string;
-  model_detected: boolean;
-  inference_mode: string;
-  engine: string;
-};
-
 function parseNumber(value: string, fallback = 0): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -113,23 +105,6 @@ export default function OfficialPPPPage() {
   const [estimateResult, setEstimateResult] = useState<EstimateResponse | null>(null);
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
   const [similarityResult, setSimilarityResult] = useState<SimilarityResponse | null>(null);
-
-  const { data: modelInfo } = useQuery<PPPModelInfo>({
-    queryKey: ["ppp-model-info"],
-    queryFn: async () => {
-      try {
-        return await pppAPI.getModelInfo();
-      } catch {
-        return {
-          model_name: "ppp.pkl",
-          model_path: "backend/models/ppp/ppp.pkl",
-          model_detected: false,
-          inference_mode: "formula-engine",
-          engine: "current_ppp_calculator",
-        };
-      }
-    },
-  });
 
   const estimateLoss = useMutation({
     mutationFn: async () => {
@@ -194,19 +169,6 @@ export default function OfficialPPPPage() {
     return compareResult.avoided_annual_loss_crore;
   }, [compareResult]);
 
-  const modelStatusText = useMemo(() => {
-    if (!modelInfo) return "Model: runtime status unavailable";
-    if (modelInfo.model_detected) {
-      return `Model: ${modelInfo.model_name} connected`;
-    }
-    return "Model: built-in formula engine active";
-  }, [modelInfo]);
-
-  const modeLabel = useMemo(() => {
-    if (!modelInfo) return "Unknown";
-    return modelInfo.inference_mode === "formula-engine" ? "Formula Engine" : "Trained Model Wrapper";
-  }, [modelInfo]);
-
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div>
@@ -216,15 +178,6 @@ export default function OfficialPPPPage() {
         <p className="mt-1 text-sm text-slate-500">
           Estimate expected annual flood loss and compare infrastructure investment outcomes.
         </p>
-        {modelInfo && (
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={modelInfo.model_detected ? "text-emerald-700" : "text-slate-700"}>
-              {modelStatusText}
-            </Badge>
-            <Badge variant="outline">Mode: {modeLabel}</Badge>
-            <p className="text-xs text-slate-500">Engine: {modelInfo.engine}</p>
-          </div>
-        )}
       </div>
 
       <Card className="p-4 md:p-5">
