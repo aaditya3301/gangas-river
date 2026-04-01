@@ -23,6 +23,8 @@ ENV/
 data/
 !frontend/app/data/
 !frontend/app/data/**
+!frontend/app/researcher/data/
+!frontend/app/researcher/data/**
 *.tif
 *.tfw
 *.aux.xml
@@ -33,6 +35,8 @@ data/
 models/
 !frontend/app/models/
 !frontend/app/models/**
+!frontend/app/researcher/models/
+!frontend/app/researcher/models/**
 *.pkl
 *.h5
 *.pt
