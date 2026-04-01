@@ -23,6 +23,7 @@ import {
   MapPin,
   Shield,
   Activity,
+  LineChart,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -377,6 +378,7 @@ export default function OfficialDashboard() {
                 { href: "/official/zones", icon: MapPin, label: "Check Zone Status", color: "text-blue-600" },
                 { href: "/official/reports", icon: FileText, label: "Review Reports", color: "text-amber-600" },
                 { href: "/official/ngo", icon: UserCheck, label: "Manage NGOs", color: "text-purple-600" },
+                { href: "/official/ppp", icon: LineChart, label: "PPP Loss Model", color: "text-indigo-600" },
               ].map((action) => (
                 <Link key={action.href} href={action.href}>
                   <div className="flex cursor-pointer items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-gray-50">

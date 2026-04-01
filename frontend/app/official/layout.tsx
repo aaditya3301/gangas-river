@@ -12,7 +12,8 @@ import {
   X,
   Shield,
   LogOut,
-  Award
+  Award,
+  LineChart
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { href: '/official', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/official/ngo', label: 'NGO Portal', icon: Award },
+  { href: '/official/ppp', label: 'PPP Model', icon: LineChart },
   { href: '/official/zones', label: 'Zones', icon: Map },
   { href: '/official/evacuation', label: 'Evacuations', icon: Route },
   { href: '/official/alerts', label: 'Alerts', icon: Bell },

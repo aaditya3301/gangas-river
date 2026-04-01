@@ -1,0 +1,307 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { BarChart3, Calculator, Landmark, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { pppAPI } from "@/lib/api";
+
+type EstimateResponse = {
+  region: string;
+  predicted_depth_m: number;
+  risk_percentage: number;
+  expected_annual_loss_crore: number;
+  confidence_interval: { low: number; high: number };
+  scenario_breakdown: Array<{
+    scenario: string;
+    return_period: number;
+    probability: number;
+    flood_depth_m: number;
+    total_loss_crore: number;
+    expected_loss_crore: number;
+  }>;
+  exposure_summary: {
+    area_sqkm: number;
+    total_asset_value_crore: number;
+    total_residential_value_crore: number;
+    total_agriculture_value_crore: number;
+    total_infrastructure_value_crore: number;
+  };
+};
+
+type CompareResponse = {
+  without_infrastructure: { expected_annual_loss_crore: number };
+  with_infrastructure: { expected_annual_loss_crore: number };
+  avoided_annual_loss_crore: number;
+  infrastructure_cost_crore: number;
+  benefit_cost_ratio: number | null;
+  payback_period_years: number | null;
+  ppp_recommendation: {
+    fixed_annuity_crore: number;
+    performance_bonus_crore: number;
+    total_annual_payment_crore: number;
+  };
+};
+
+type SimilarityResponse = {
+  matched_events: Array<{
+    year: number;
+    location: string;
+    similarity_score: number;
+    actual_damage_crore: number;
+    flood_depth_m: number;
+    rainfall_mm: number;
+    source: string;
+  }>;
+};
+
+type InfraOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+const FALLBACK_OPTIONS: InfraOption[] = [
+  { id: "embankment", name: "Raised Embankment", description: "Reduce flood depth near riverbanks." },
+  { id: "drainage_improvement", name: "Drainage Improvement", description: "Reduce urban waterlogging impact." },
+  { id: "flood_wall", name: "Flood Wall", description: "Protect dense urban flood edges." },
+  { id: "early_warning_system", name: "Early Warning System", description: "Reduce vulnerability through preparedness." },
+];
+
+function parseNumber(value: string, fallback = 0): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+export default function OfficialPPPPage() {
+  const [latitude, setLatitude] = useState("25.4358");
+  const [longitude, setLongitude] = useState("81.8463");
+  const [radiusKm, setRadiusKm] = useState("10");
+  const [rainfallMm, setRainfallMm] = useState("220");
+
+  const [infraType, setInfraType] = useState("embankment");
+  const [costCrore, setCostCrore] = useState("75");
+  const [lengthKm, setLengthKm] = useState("15");
+  const [heightM, setHeightM] = useState("3");
+  const [depthReductionM, setDepthReductionM] = useState("1");
+
+  const [estimateResult, setEstimateResult] = useState<EstimateResponse | null>(null);
+  const [compareResult, setCompareResult] = useState<CompareResponse | null>(null);
+  const [similarityResult, setSimilarityResult] = useState<SimilarityResponse | null>(null);
+
+  const { data: infraOptions = FALLBACK_OPTIONS } = useQuery<InfraOption[]>({
+    queryKey: ["ppp-options"],
+    queryFn: async () => {
+      try {
+        return await pppAPI.getInfrastructureOptions();
+      } catch {
+        return FALLBACK_OPTIONS;
+      }
+    },
+    initialData: FALLBACK_OPTIONS,
+  });
+
+  const estimateLoss = useMutation({
+    mutationFn: async () => {
+      return (await pppAPI.estimateLoss({
+        latitude: parseNumber(latitude),
+        longitude: parseNumber(longitude),
+        radius_km: parseNumber(radiusKm, 10),
+        rainfall_mm: parseNumber(rainfallMm, 0),
+      })) as EstimateResponse;
+    },
+    onSuccess: (data) => {
+      setEstimateResult(data);
+      toast.success("Loss estimation completed");
+    },
+    onError: () => toast.error("Failed to estimate loss"),
+  });
+
+  const compareInfra = useMutation({
+    mutationFn: async () => {
+      const infrastructureParams: Record<string, number> = {
+        cost_crore: parseNumber(costCrore, 0),
+        length_km: parseNumber(lengthKm, 0),
+        height_m: parseNumber(heightM, 0),
+        depth_reduction_m: parseNumber(depthReductionM, 0),
+      };
+
+      return (await pppAPI.compare({
+        latitude: parseNumber(latitude),
+        longitude: parseNumber(longitude),
+        radius_km: parseNumber(radiusKm, 10),
+        rainfall_mm: parseNumber(rainfallMm, 0),
+        infrastructure_type: infraType,
+        infrastructure_params: infrastructureParams,
+      })) as CompareResponse;
+    },
+    onSuccess: (data) => {
+      setCompareResult(data);
+      toast.success("PPP comparison completed");
+    },
+    onError: () => toast.error("Failed to compare infrastructure scenarios"),
+  });
+
+  const similarity = useMutation({
+    mutationFn: async () => {
+      const depth = estimateResult?.predicted_depth_m ?? 2.0;
+      return (await pppAPI.similarityMatch({
+        latitude: parseNumber(latitude),
+        longitude: parseNumber(longitude),
+        predicted_depth_m: depth,
+        rainfall_mm: parseNumber(rainfallMm, 0),
+      })) as SimilarityResponse;
+    },
+    onSuccess: (data) => {
+      setSimilarityResult(data);
+      toast.success("Historical match generated");
+    },
+    onError: () => toast.error("Failed to generate similarity match"),
+  });
+
+  const savedLoss = useMemo(() => {
+    if (!compareResult) return 0;
+    return compareResult.avoided_annual_loss_crore;
+  }, [compareResult]);
+
+  return (
+    <div className="space-y-6 p-4 md:p-6">
+      <div>
+        <h1 className="flex items-center gap-2 text-xl font-bold md:text-2xl">
+          <Landmark className="h-6 w-6 text-indigo-600" /> PPP Economic Loss Model
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Estimate expected annual flood loss and compare infrastructure investment outcomes.
+        </p>
+      </div>
+
+      <Card className="p-4 md:p-5">
+        <h2 className="mb-3 font-semibold">Region Inputs</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <Input value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="Latitude" />
+          <Input value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="Longitude" />
+          <Input value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} placeholder="Radius (km)" />
+          <Input value={rainfallMm} onChange={(e) => setRainfallMm(e.target.value)} placeholder="Rainfall (mm)" />
+        </div>
+        <Button className="mt-4" onClick={() => estimateLoss.mutate()} disabled={estimateLoss.isPending}>
+          <Calculator className="mr-2 h-4 w-4" />
+          {estimateLoss.isPending ? "Estimating..." : "Estimate Annual Loss"}
+        </Button>
+      </Card>
+
+      {estimateResult && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <Card className="p-4">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Expected Annual Loss</p>
+            <p className="mt-1 text-3xl font-bold text-red-600">{estimateResult.expected_annual_loss_crore} cr</p>
+            <p className="mt-1 text-xs text-slate-500">
+              CI: {estimateResult.confidence_interval.low} - {estimateResult.confidence_interval.high} cr
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Predicted Flood Depth</p>
+            <p className="mt-1 text-3xl font-bold text-slate-900">{estimateResult.predicted_depth_m} m</p>
+            <p className="mt-1 text-xs text-slate-500">Risk: {estimateResult.risk_percentage}%</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Total Exposed Assets</p>
+            <p className="mt-1 text-3xl font-bold text-slate-900">{estimateResult.exposure_summary.total_asset_value_crore} cr</p>
+            <p className="mt-1 text-xs text-slate-500">Area: {estimateResult.exposure_summary.area_sqkm} sq km</p>
+          </Card>
+        </div>
+      )}
+
+      <Card className="p-4 md:p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold">Infrastructure Comparison</h2>
+          <Badge variant="outline">With vs Without</Badge>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+          <Select value={infraType} onValueChange={setInfraType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Infrastructure type" />
+            </SelectTrigger>
+            <SelectContent>
+              {infraOptions.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Input value={costCrore} onChange={(e) => setCostCrore(e.target.value)} placeholder="Cost (cr)" />
+          <Input value={lengthKm} onChange={(e) => setLengthKm(e.target.value)} placeholder="Length (km)" />
+          <Input value={heightM} onChange={(e) => setHeightM(e.target.value)} placeholder="Height (m)" />
+          <Input value={depthReductionM} onChange={(e) => setDepthReductionM(e.target.value)} placeholder="Depth reduction (m)" />
+        </div>
+
+        <Button className="mt-4" onClick={() => compareInfra.mutate()} disabled={compareInfra.isPending}>
+          <BarChart3 className="mr-2 h-4 w-4" />
+          {compareInfra.isPending ? "Comparing..." : "Run PPP Comparison"}
+        </Button>
+
+        {compareResult && (
+          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Card className="p-4">
+              <p className="text-xs text-slate-500">Without Infrastructure</p>
+              <p className="text-2xl font-bold text-red-600">{compareResult.without_infrastructure.expected_annual_loss_crore} cr</p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-slate-500">With Infrastructure</p>
+              <p className="text-2xl font-bold text-emerald-600">{compareResult.with_infrastructure.expected_annual_loss_crore} cr</p>
+            </Card>
+            <Card className="p-4">
+              <p className="text-xs text-slate-500">Annual Avoided Loss</p>
+              <p className="text-2xl font-bold text-indigo-600">{savedLoss} cr</p>
+              <p className="mt-1 text-xs text-slate-500">
+                BCR: {compareResult.benefit_cost_ratio ?? "-"} | Payback: {compareResult.payback_period_years ?? "-"} yrs
+              </p>
+            </Card>
+          </div>
+        )}
+      </Card>
+
+      <Card className="p-4 md:p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-semibold">Historical Similarity Match</h2>
+          <Button variant="outline" onClick={() => similarity.mutate()} disabled={similarity.isPending}>
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            {similarity.isPending ? "Matching..." : "Find Similar Events"}
+          </Button>
+        </div>
+
+        {!similarityResult ? (
+          <p className="text-sm text-slate-500">Run matching to compare current forecast with historical events.</p>
+        ) : (
+          <div className="space-y-2">
+            {similarityResult.matched_events.map((event) => (
+              <div key={`${event.year}-${event.location}`} className="rounded-md border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="font-medium">{event.year} - {event.location}</p>
+                  <Badge variant="outline">Score: {event.similarity_score}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-slate-600">
+                  Depth: {event.flood_depth_m} m | Rainfall: {event.rainfall_mm} mm | Damage: {event.actual_damage_crore} cr
+                </p>
+                <p className="text-xs text-slate-500">Source: {event.source}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}

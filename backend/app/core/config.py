@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     
     # App Settings
     DEBUG: bool = False
+    PPP_DEV_ALLOW_NON_OFFICIAL: bool = False
 
     # CORS configuration (comma-separated)
     # Local defaults keep frontend dev on 3000 working out of the box.

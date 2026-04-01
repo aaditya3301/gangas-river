@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.session import init_db, close_db
-from app.api.routes import auth, safety, reports, predict, zones, evacuation, health, emergency, chatbot, data, models, api_docs, insights, citizen_dashboard, alerts, ngo, official_dashboard
+from app.api.routes import auth, safety, reports, predict, zones, evacuation, health, emergency, chatbot, data, models, api_docs, insights, citizen_dashboard, alerts, ngo, official_dashboard, ppp
 
 
 @asynccontextmanager
@@ -78,6 +78,7 @@ app.include_router(citizen_dashboard.router, prefix="/api/citizen", tags=["Citiz
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Alerts"])
 app.include_router(ngo.router, prefix="/api/ngo", tags=["NGO"])
 app.include_router(official_dashboard.router, prefix="/api/official", tags=["Official Dashboard"])
+app.include_router(ppp.router, prefix="/api/ppp", tags=["PPP Model"])
 
 
 

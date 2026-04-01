@@ -276,6 +276,46 @@ export const ngoAPI = {
   },
 };
 
+// ============ PPP API ============
+export const pppAPI = {
+  estimateLoss: async (data: {
+    latitude: number;
+    longitude: number;
+    radius_km?: number;
+    rainfall_mm?: number;
+  }) => {
+    const response = await api.post('/api/ppp/estimate-loss', data);
+    return response.data;
+  },
+
+  compare: async (data: {
+    latitude: number;
+    longitude: number;
+    radius_km?: number;
+    rainfall_mm?: number;
+    infrastructure_type: string;
+    infrastructure_params?: Record<string, number>;
+  }) => {
+    const response = await api.post('/api/ppp/compare', data);
+    return response.data;
+  },
+
+  getInfrastructureOptions: async () => {
+    const response = await api.get('/api/ppp/infrastructure-options');
+    return response.data;
+  },
+
+  similarityMatch: async (data: {
+    latitude: number;
+    longitude: number;
+    predicted_depth_m: number;
+    rainfall_mm?: number;
+  }) => {
+    const response = await api.post('/api/ppp/similarity-match', data);
+    return response.data;
+  },
+};
+
 // ============ Health API ============
 export const healthAPI = {
   check: async () => {
