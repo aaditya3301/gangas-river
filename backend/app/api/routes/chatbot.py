@@ -2,14 +2,19 @@
 
 import os
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends
-from groq import Groq
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import CommunityReport, get_db
+
+try:
+    from groq import Groq
+except ImportError:
+    Groq = None  # type: ignore[assignment]
 
 router = APIRouter()
 
@@ -108,7 +113,7 @@ def _build_system_prompt(live_context: str) -> str:
 async def chat_with_groq(request: ChatRequest, db: AsyncSession = Depends(get_db)):
     """Chat endpoint with optional history and live report context."""
     api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key:
+    if not api_key or Groq is None:
         fallback = "I can help with flood safety, safe routes, and reporting incidents, but AI service is not configured yet."
         return {"response": fallback, "reply": fallback, "context_used": False}
 
@@ -122,7 +127,7 @@ async def chat_with_groq(request: ChatRequest, db: AsyncSession = Depends(get_db
     messages.append({"role": "user", "content": request.message})
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(api_key=api_key)  # type: ignore[operator]
         chat_completion = client.chat.completions.create(
             model="llama3-8b-8192",
             messages=messages,
@@ -133,6 +138,8 @@ async def chat_with_groq(request: ChatRequest, db: AsyncSession = Depends(get_db
         )
 
         reply = chat_completion.choices[0].message.content
+        if not isinstance(reply, str):
+            reply = "I can help with flood safety guidance and routes."
         return {"response": reply, "reply": reply, "context_used": True}
     except Exception:
         fallback = "I am having trouble connecting to AI right now. Please try again shortly."

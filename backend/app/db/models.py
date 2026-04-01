@@ -109,6 +109,16 @@ class CommunityReport(Base):
     user: Mapped["User"] = relationship(back_populates="reports")
 
 
+class AlertLog(Base):
+    """Broadcast alert history shown on citizen dashboard."""
+    __tablename__ = "alert_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(20), default="info")
+    sent_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
 class FloodZone(Base):
     """Flood risk zones derived from LiDAR analysis"""
     __tablename__ = "flood_zones"
