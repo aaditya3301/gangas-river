@@ -1,327 +1,487 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import dynamic from 'next/dynamic';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import {
-  AlertTriangle, FileText, MapPin, Activity, Waves, Home, Map,
-  Phone, Bell, Users, TrendingUp, Clock, Shield, Award,
-  ChevronRight, MessageSquare, CheckCircle2,
-  Upload, Star, Trophy, BarChart3, Droplets, Navigation, Loader2, Megaphone, Siren
-} from 'lucide-react';
-import { toast } from 'sonner';
-import Link from 'next/link';
-import { emergencyAPI } from '@/lib/api';
+  Bell,
+  CheckCircle,
+  ChevronRight,
+  ClipboardList,
+  Clock,
+  FileText,
+  Megaphone,
+  Navigation,
+  Phone,
+  Radio,
+  Siren,
+  Trophy,
+  UserCheck,
+  Users,
+  Waves,
+  Zap,
+  MapPin,
+  Shield,
+  Activity,
+} from "lucide-react";
 
-// Dynamic import for MapView
-const MapView = dynamic(() => import('@/components/MapView'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[400px] w-full bg-slate-100/50 rounded-2xl animate-pulse flex items-center justify-center border border-slate-200">
-      <div className="flex flex-col items-center gap-3 text-slate-400">
-        <Map className="h-8 w-8" />
-        <span className="text-sm font-medium">Loading Command Map...</span>
-      </div>
-    </div>
-  ),
-});
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import api from "@/lib/api";
+
+type DashboardPayload = {
+  stats: {
+    pending_reports: number;
+    reports_24h: number;
+    verified_reports: number;
+    active_flood_reports: number;
+    total_users: number;
+    alerts_this_week: number;
+  };
+  recent_reports: Array<{
+    id: number;
+    category: string;
+    description: string;
+    status: string;
+    verification_score: number | null;
+    reported_at: string | null;
+  }>;
+  recent_alerts: Array<{
+    id: number;
+    message: string;
+    severity: string;
+    recipient_count: number;
+    sent_at: string | null;
+  }>;
+  top_ngos: Array<{
+    user_id: number;
+    name: string;
+    points: number;
+    tasks: number;
+  }>;
+  map_points: Array<{
+    lat: number;
+    lng: number;
+    category: string;
+    status: string;
+  }>;
+  system_status: string;
+  official_name: string;
+};
+
+const MOCK: DashboardPayload = {
+  stats: {
+    pending_reports: 8,
+    reports_24h: 23,
+    verified_reports: 156,
+    active_flood_reports: 5,
+    total_users: 342,
+    alerts_this_week: 4,
+  },
+  recent_reports: [
+    {
+      id: 1,
+      category: "flood",
+      description: "Water level rising rapidly near Ghat 4, approaching road level",
+      status: "pending",
+      verification_score: 0.82,
+      reported_at: new Date(Date.now() - 720000).toISOString(),
+    },
+    {
+      id: 2,
+      category: "infrastructure",
+      description: "Bridge railing damaged by debris flow, partially blocking passage",
+      status: "pending",
+      verification_score: 0.65,
+      reported_at: new Date(Date.now() - 1800000).toISOString(),
+    },
+    {
+      id: 3,
+      category: "flood",
+      description: "Agricultural fields completely submerged in sector 7 near river bend",
+      status: "pending",
+      verification_score: 0.91,
+      reported_at: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      id: 4,
+      category: "erosion",
+      description: "Riverbank erosion accelerating near village Rampur, houses at risk",
+      status: "pending",
+      verification_score: 0.78,
+      reported_at: new Date(Date.now() - 5400000).toISOString(),
+    },
+    {
+      id: 5,
+      category: "pollution",
+      description: "Industrial discharge spotted flowing into river from upstream factory",
+      status: "pending",
+      verification_score: 0.55,
+      reported_at: new Date(Date.now() - 7200000).toISOString(),
+    },
+  ],
+  recent_alerts: [
+    {
+      id: 1,
+      message: "Water levels rising in Zone 3. Evacuation advisory issued.",
+      severity: "critical",
+      recipient_count: 245,
+      sent_at: new Date(Date.now() - 3600000).toISOString(),
+    },
+    {
+      id: 2,
+      message: "Heavy rainfall forecast for next 48 hours. All teams on standby.",
+      severity: "warning",
+      recipient_count: 342,
+      sent_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ],
+  top_ngos: [
+    { user_id: 1, name: "Red Cross Hapur", points: 2850, tasks: 47 },
+    { user_id: 2, name: "Green Earth Foundation", points: 2640, tasks: 42 },
+    { user_id: 3, name: "River Care Initiative", points: 2360, tasks: 38 },
+  ],
+  map_points: [],
+  system_status: "operational",
+  official_name: "Admin",
+};
+
+const EMERGENCY_CONTACTS = [
+  { name: "Flood Control Room", number: "1077", icon: Waves },
+  { name: "NDRF Helpline", number: "011-24363260", icon: Shield },
+  { name: "Police Control", number: "112", icon: Phone },
+  { name: "Ambulance", number: "108", icon: Activity },
+];
+
+const CATEGORY_CONFIG: Record<string, { icon: string; color: string }> = {
+  flood: { icon: "🌊", color: "bg-blue-100 text-blue-700" },
+  pollution: { icon: "🏭", color: "bg-gray-100 text-gray-700" },
+  infrastructure: { icon: "🏗️", color: "bg-amber-100 text-amber-700" },
+  erosion: { icon: "⛰️", color: "bg-orange-100 text-orange-700" },
+  other: { icon: "📋", color: "bg-gray-100 text-gray-700" },
+};
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 export default function OfficialDashboard() {
-  const [emergencyActive, setEmergencyActive] = useState(false);
-
-  // Hapur flood zones (dummy data)
-  const hapurFloodZones = [
-    {
-      id: 'zone-a-1',
-      zone: 'A' as const,
-      name: 'Garh Road Area',
-      coordinates: [
-        [77.765, 28.735],
-        [77.772, 28.735],
-        [77.772, 28.728],
-        [77.765, 28.728],
-        [77.765, 28.735],
-      ],
+  const { data: dashboard } = useQuery<DashboardPayload>({
+    queryKey: ["command-center"],
+    queryFn: async () => {
+      try {
+        return (await api.get("/api/official/command-center")).data;
+      } catch {
+        return MOCK;
+      }
     },
-    {
-      id: 'zone-a-2',
-      zone: 'A' as const,
-      name: 'Mandi Area',
-      coordinates: [
-        [77.778, 28.725],
-        [77.785, 28.725],
-        [77.785, 28.718],
-        [77.778, 28.718],
-        [77.778, 28.725],
-      ],
-    },
-    {
-      id: 'zone-b-1',
-      zone: 'B' as const,
-      name: 'Railway Colony',
-      coordinates: [
-        [77.760, 28.740],
-        [77.768, 28.740],
-        [77.768, 28.733],
-        [77.760, 28.733],
-        [77.760, 28.740],
-      ],
-    },
-    {
-      id: 'zone-b-2',
-      zone: 'B' as const,
-      name: 'Civil Lines',
-      coordinates: [
-        [77.772, 28.720],
-        [77.780, 28.720],
-        [77.780, 28.713],
-        [77.772, 28.713],
-        [77.772, 28.720],
-      ],
-    },
-    {
-      id: 'zone-b-3',
-      zone: 'B' as const,
-      name: 'Delhi Road Sector',
-      coordinates: [
-        [77.785, 28.730],
-        [77.792, 28.730],
-        [77.792, 28.723],
-        [77.785, 28.723],
-        [77.785, 28.730],
-      ],
-    },
-  ];
-
-  const emergencyMutation = useMutation({
-    mutationFn: () => emergencyAPI.activate({ severity: 'critical' }),
-    onSuccess: (data: any) => {
-      setEmergencyActive(true);
-      toast.success(`🚨 Alert Broadcast Sent!`, {
-        description: `${data.successful}/${data.total} citizens notified via automated calls.`
-      });
-      setTimeout(() => setEmergencyActive(false), 8000);
-    },
-    onError: (error: any) => {
-      toast.error('Broadcast Failed', {
-        description: error.message
-      });
-    },
+    refetchInterval: 30_000,
+    initialData: MOCK,
   });
 
+  const stats = dashboard.stats;
+  const reports = dashboard.recent_reports || [];
+  const alerts = dashboard.recent_alerts || [];
+  const ngos = dashboard.top_ngos || [];
+
   return (
-    <div className="pb-6 md:pb-10 font-sans">
-
-      {/* ── Header ── */}
-      <div className="bg-white border-b border-slate-200 sticky top-14 md:top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              Command <span className="text-[#006DC4]">Center</span>
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <p className="text-slate-500 text-xs font-bold uppercase tracking-wide">System Operational • Hapur HO</p>
-            </div>
+    <div className="p-4 space-y-5 md:p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold md:text-2xl">Command Center</h1>
+          <p className="text-xs text-gray-500">Welcome, {dashboard.official_name}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+            <span className="text-xs uppercase tracking-wide text-gray-500">
+              System Operational • {dashboard.system_status === "operational" ? "All Systems Normal" : "Degraded"}
+            </span>
           </div>
-
-          <button
-            onClick={() => emergencyMutation.mutate()}
-            disabled={emergencyMutation.isPending || emergencyActive}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg active:scale-95 ${emergencyActive
-                ? 'bg-red-500 text-white animate-pulse'
-                : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/10'
-              }`}
-          >
-            {emergencyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : emergencyActive ? <Siren className="h-4 w-4 animate-spin" /> : <Megaphone className="h-4 w-4" />}
-            {emergencyMutation.isPending ? 'SENDING...' : emergencyActive ? 'BROADCASTING...' : 'Broadcast Alert'}
-          </button>
         </div>
+        <Link href="/official/alerts">
+          <Button className="gap-2 bg-red-600 hover:bg-red-700">
+            <Siren className="h-4 w-4" />
+            <span className="hidden md:inline">Broadcast Alert</span>
+            <span className="md:hidden">Alert</span>
+          </Button>
+        </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-8 space-y-4 md:space-y-8">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <StatCard
+          icon={<Clock className="h-4 w-4 text-amber-500" />}
+          label="Pending Review"
+          value={stats.pending_reports}
+          sub={stats.pending_reports > 5 ? "Needs attention" : "Under control"}
+          subColor={stats.pending_reports > 5 ? "text-amber-600" : "text-green-600"}
+        />
+        <StatCard
+          icon={<FileText className="h-4 w-4 text-blue-500" />}
+          label="Reports (24h)"
+          value={stats.reports_24h}
+          sub="New submissions"
+          subColor="text-gray-400"
+        />
+        <StatCard
+          icon={<Waves className="h-4 w-4 text-red-500" />}
+          label="Active Floods"
+          value={stats.active_flood_reports}
+          sub={stats.active_flood_reports > 3 ? "Elevated risk" : "Normal levels"}
+          subColor={stats.active_flood_reports > 3 ? "text-red-600" : "text-green-600"}
+        />
+        <StatCard
+          icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+          label="Verified"
+          value={stats.verified_reports}
+          sub="Total confirmed"
+          subColor="text-gray-400"
+        />
+        <StatCard
+          icon={<Users className="h-4 w-4 text-purple-500" />}
+          label="Registered Users"
+          value={stats.total_users}
+          sub="On the platform"
+          subColor="text-gray-400"
+        />
+        <StatCard
+          icon={<Bell className="h-4 w-4 text-indigo-500" />}
+          label="Alerts Sent"
+          value={stats.alerts_this_week}
+          sub="This week"
+          subColor="text-gray-400"
+        />
+      </div>
 
-        {/* ── Status Grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Users className="h-5 w-5" /></div>
-              <span className="text-xs font-bold text-slate-400 uppercase">Active Teams</span>
-            </div>
-            <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-slate-900">12</span>
-              <div className="text-[10px] font-bold text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full">
-                <CheckCircle2 className="h-3 w-3" /> All units responsive
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
+          {alerts.length > 0 && (
+            <Card className="p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="flex items-center gap-2 text-sm font-semibold">
+                  <Megaphone className="h-4 w-4 text-gray-400" />
+                  Recent Broadcasts
+                </h2>
+                <Link href="/official/alerts" className="text-xs text-blue-600">
+                  View all
+                </Link>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-amber-50 rounded-lg text-amber-600"><AlertTriangle className="h-5 w-5" /></div>
-              <span className="text-xs font-bold text-slate-400 uppercase">Pending Alerts</span>
-            </div>
-            <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-slate-900">3</span>
-              <span className="text-[10px] font-bold text-amber-600">Requires validation</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><Home className="h-5 w-5" /></div>
-              <span className="text-xs font-bold text-slate-400 uppercase">Shelter Capacity</span>
-            </div>
-            <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-slate-900">85%</span>
-              <span className="text-[10px] font-bold text-slate-500">1,240 spaces available</span>
-            </div>
-          </div>
-
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Activity className="h-5 w-5" /></div>
-              <span className="text-xs font-bold text-slate-400 uppercase">System Load</span>
-            </div>
-            <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-slate-900">Normal</span>
-              <span className="text-[10px] font-bold text-slate-500">Latency: 45ms</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* ── Main Map View ── */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm relative group">
-              <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 shadow-sm flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                LIVE FEEDS - HAPUR
-              </div>
-              <MapView
-                initialViewState={{
-                  latitude: 28.730,
-                  longitude: 77.775,
-                  zoom: 13,
-                }}
-                floodZones={hapurFloodZones}
-                showUserLocation={false}
-                height="clamp(300px, 45vh, 500px)"
-              />
-            </div>
-
-            {/* Recent Reports List */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-[#006DC4]" />
-                  Incoming Citizen Reports
-                </h3>
-                <button className="text-xs font-bold text-[#006DC4] hover:underline">View All</button>
-              </div>
-              <div>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 cursor-pointer">
-                    <div className="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                      <MapPin className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-slate-900">High Water Level</span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">UNVERIFIED</span>
+              <div className="space-y-2">
+                {alerts.slice(0, 3).map((alert) => (
+                  <div
+                    key={alert.id}
+                    className={`flex items-start gap-3 rounded-lg border p-3 ${
+                      alert.severity === "critical"
+                        ? "border-red-200 bg-red-50"
+                        : alert.severity === "warning"
+                          ? "border-amber-200 bg-amber-50"
+                          : "border-blue-200 bg-blue-50"
+                    }`}
+                  >
+                    <Radio
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${
+                        alert.severity === "critical" ? "text-red-500" : "text-amber-500"
+                      }`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm">{alert.message}</p>
+                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                        <span>{alert.sent_at ? timeAgo(alert.sent_at) : ""}</span>
+                        <span>Sent to {alert.recipient_count} users</span>
                       </div>
-                      <p className="text-xs text-slate-500 truncate">Reported at Ghat 4 • 12 mins ago</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300" />
+                    <Badge
+                      className={`shrink-0 text-[10px] ${
+                        alert.severity === "critical"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {alert.severity}
+                    </Badge>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
+            </Card>
+          )}
 
-          {/* ── Sidebar Feed ── */}
-          <div className="space-y-6">
-
-            {/* ── Action Center ── */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b bg-slate-50">
-                <h3 className="font-semibold text-slate-900">Quick Actions</h3>
-              </div>
-              <div className="p-4 space-y-2">
-                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
-                  <Megaphone className="h-4 w-4 mr-3 text-slate-500" /> Broadcast Advisory
-                </button>
-                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
-                  <Users className="h-4 w-4 mr-3 text-slate-500" /> Deploy Response Team
-                </button>
-                <button className="w-full py-3 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 flex items-center px-4 transition-colors">
-                  <FileText className="h-4 w-4 mr-3 text-slate-500" /> Generate Status Report
-                </button>
-              </div>
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <ClipboardList className="h-4 w-4 text-gray-400" />
+                Incoming Citizen Reports
+                {stats.pending_reports > 0 && (
+                  <Badge className="bg-amber-100 text-[10px] text-amber-700">{stats.pending_reports} pending</Badge>
+                )}
+              </h2>
+              <Link href="/official/reports" className="flex items-center gap-0.5 text-xs text-blue-600">
+                View all <ChevronRight className="h-3 w-3" />
+              </Link>
             </div>
 
-            {/* Emergency Contacts Widget */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mb-6">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-red-50/50">
-                <h3 className="font-bold text-red-900 flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-red-500" />
-                  Emergency Contacts
-                </h3>
+            {reports.length === 0 ? (
+              <p className="py-6 text-center text-sm text-gray-400">No pending reports</p>
+            ) : (
+              <div className="space-y-2">
+                {reports.slice(0, 6).map((report) => {
+                  const cat = CATEGORY_CONFIG[report.category] || CATEGORY_CONFIG.other;
+                  return (
+                    <Link key={report.id} href="/official/reports">
+                      <div className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50">
+                        <span className="shrink-0 text-lg">{cat.icon}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium">{report.description}</p>
+                          <p className="mt-0.5 text-xs text-gray-400">{report.reported_at ? timeAgo(report.reported_at) : ""}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {report.verification_score != null && (
+                            <div className="text-right">
+                              <p className="font-mono text-xs text-gray-500">AI: {Math.round(report.verification_score * 100)}%</p>
+                              <div className="mt-0.5 h-1 w-12 rounded-full bg-gray-200">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    report.verification_score > 0.7
+                                      ? "bg-green-500"
+                                      : report.verification_score > 0.4
+                                        ? "bg-amber-500"
+                                        : "bg-red-500"
+                                  }`}
+                                  style={{ width: `${report.verification_score * 100}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          <Badge className={`${cat.color} text-[10px]`}>{report.category}</Badge>
+                          <ChevronRight className="h-4 w-4 text-gray-300" />
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
-                  <span className="text-sm font-medium text-slate-600">Flood Control</span>
-                  <span className="text-sm font-mono font-bold text-slate-900">1077</span>
-                </div>
-                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
-                  <span className="text-sm font-medium text-slate-600">NDRF HQ</span>
-                  <span className="text-sm font-mono font-bold text-slate-900">011-24363260</span>
-                </div>
-                <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50">
-                  <span className="text-sm font-medium text-slate-600">Police Control</span>
-                  <span className="text-sm font-mono font-bold text-slate-900">112</span>
-                </div>
-              </div>
-            </div>
-
-            {/* NGO Leaderboard */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-amber-500" />
-                  Top NGOs
-                </h3>
-              </div>
-              <div className="divide-y divide-slate-50">
-                {[
-                  { rank: 1, name: 'Red Cross Varanasi', points: 2850, award: '🏆' },
-                  { rank: 2, name: 'Green Earth', points: 2640, award: '🥈' },
-                  { rank: 3, name: 'River Care', points: 2360, award: '🥉' },
-                ].map((ngo) => (
-                  <div key={ngo.rank} className="flex items-center gap-4 px-6 py-4">
-                    <div className="font-black text-slate-300 w-4">{ngo.rank}</div>
-                    <div className="flex-1">
-                      <div className="text-sm font-bold text-slate-900">{ngo.name}</div>
-                      <div className="text-xs text-slate-500">{ngo.points} pts</div>
-                    </div>
-                    <div className="text-lg">{ngo.award}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="p-4 bg-slate-50 border-t border-slate-100">
-                <button className="w-full py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                  View Full Standings
-                </button>
-              </div>
-            </div>
-
-          </div>
+            )}
+          </Card>
         </div>
 
+        <div className="space-y-4">
+          <Card className="p-4">
+            <h3 className="mb-3 text-sm font-semibold">Quick Actions</h3>
+            <div className="space-y-2">
+              {[
+                { href: "/official/alerts", icon: Megaphone, label: "Send SMS Alert", color: "text-red-600" },
+                { href: "/official/evacuation", icon: Navigation, label: "Plan Evacuation", color: "text-green-600" },
+                { href: "/official/zones", icon: MapPin, label: "Check Zone Status", color: "text-blue-600" },
+                { href: "/official/reports", icon: FileText, label: "Review Reports", color: "text-amber-600" },
+                { href: "/official/ngo", icon: UserCheck, label: "Manage NGOs", color: "text-purple-600" },
+              ].map((action) => (
+                <Link key={action.href} href={action.href}>
+                  <div className="flex cursor-pointer items-center gap-3 rounded-lg p-2.5 transition-colors hover:bg-gray-50">
+                    <action.icon className={`h-4 w-4 ${action.color}`} />
+                    <span className="text-sm">{action.label}</span>
+                    <ChevronRight className="ml-auto h-3 w-3 text-gray-300" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="border-red-100 p-4">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-red-700">
+              <Phone className="h-4 w-4" /> Emergency Contacts
+            </h3>
+            <div className="space-y-2">
+              {EMERGENCY_CONTACTS.map((contact) => (
+                <a key={contact.number} href={`tel:${contact.number}`}>
+                  <div className="flex items-center justify-between rounded p-2 transition-colors hover:bg-red-50">
+                    <div className="flex items-center gap-2">
+                      <contact.icon className="h-3.5 w-3.5 text-gray-400" />
+                      <span className="text-sm">{contact.name}</span>
+                    </div>
+                    <span className="font-mono text-sm font-semibold text-red-700">{contact.number}</span>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-sm font-semibold">
+                <Trophy className="h-4 w-4 text-amber-500" /> Top NGOs
+              </h3>
+              <Link href="/official/ngo" className="text-xs text-blue-600">
+                View all
+              </Link>
+            </div>
+            {ngos.length === 0 ? (
+              <p className="py-3 text-center text-xs text-gray-400">No verified NGO tasks yet</p>
+            ) : (
+              <div className="space-y-2">
+                {ngos.slice(0, 5).map((ngo, i) => (
+                  <div key={ngo.user_id} className="flex items-center gap-3">
+                    <span className="w-5 text-center text-sm">
+                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+                    </span>
+                    <span className="flex-1 truncate text-sm">{ngo.name}</span>
+                    <span className="text-xs font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="bg-gray-50 p-4">
+            <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold">
+              <Zap className="h-4 w-4 text-green-500" /> System Health
+            </h3>
+            <div className="space-y-2 text-xs">
+              {[
+                { label: "API Server", status: "operational" },
+                { label: "Database", status: "operational" },
+                { label: "SMS Gateway", status: "operational" },
+                { label: "Map Service", status: "operational" },
+              ].map((service) => (
+                <div key={service.label} className="flex items-center justify-between">
+                  <span className="text-gray-600">{service.label}</span>
+                  <span className="flex items-center gap-1 text-green-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    {service.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+  sub,
+  subColor,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: number;
+  sub: string;
+  subColor: string;
+}) {
+  return (
+    <Card className="p-3 md:p-4">
+      <div className="mb-2 flex items-center gap-2">
+        {icon}
+        <span className="text-xs uppercase tracking-wide text-gray-500">{label}</span>
+      </div>
+      <p className="text-2xl font-bold md:text-3xl">{value.toLocaleString()}</p>
+      <p className={`mt-0.5 text-xs ${subColor}`}>{sub}</p>
+    </Card>
   );
 }

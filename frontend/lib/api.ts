@@ -206,6 +206,76 @@ export const emergencyAPI = {
   },
 };
 
+// ============ Alerts API ============
+export const alertsAPI = {
+  sendSMS: async (data: { message: string; severity: 'info' | 'warning' | 'critical' | 'emergency'; region?: string }) => {
+    const response = await api.post('/api/alerts/send-sms', data);
+    return response.data;
+  },
+
+  history: async (severity?: 'info' | 'warning' | 'critical' | 'emergency') => {
+    const response = await api.get('/api/alerts/history', { params: { severity } });
+    return response.data;
+  },
+
+  recipientsCount: async () => {
+    const response = await api.get('/api/alerts/recipients-count');
+    return response.data as { count: number };
+  },
+
+  broadcastCall: async (data: { message: string; language: 'hi-IN' | 'en-IN'; region?: string }) => {
+    const response = await api.post('/api/alerts/broadcast-call', data);
+    return response.data;
+  },
+};
+
+// ============ NGO API ============
+export const ngoAPI = {
+  createTask: async (data: {
+    title: string;
+    description: string;
+    latitude: number;
+    longitude: number;
+    task_type: 'cleanup' | 'relief' | 'survey' | 'monitoring';
+  }) => {
+    const response = await api.post('/api/ngo/tasks', data);
+    return response.data;
+  },
+
+  getAllTasks: async (status?: string) => {
+    const response = await api.get('/api/ngo/tasks', { params: { status } });
+    return response.data;
+  },
+
+  getMyTasks: async () => {
+    const response = await api.get('/api/ngo/my-tasks');
+    return response.data;
+  },
+
+  startTask: async (taskId: number) => {
+    const response = await api.patch(`/api/ngo/tasks/${taskId}/start`);
+    return response.data;
+  },
+
+  completeTask: async (taskId: number, proof_photo_url: string) => {
+    const response = await api.patch(`/api/ngo/tasks/${taskId}/complete`, { proof_photo_url });
+    return response.data;
+  },
+
+  verifyTask: async (taskId: number, verification_score: number, points_awarded: number) => {
+    const response = await api.patch(`/api/ngo/tasks/${taskId}/verify`, {
+      verification_score,
+      points_awarded,
+    });
+    return response.data;
+  },
+
+  getLeaderboard: async () => {
+    const response = await api.get('/api/ngo/leaderboard');
+    return response.data;
+  },
+};
+
 // ============ Health API ============
 export const healthAPI = {
   check: async () => {

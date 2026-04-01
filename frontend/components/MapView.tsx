@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMapEvents, useMap } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -29,10 +29,19 @@ export interface FloodZone {
   name?: string;
 }
 
+export interface MapRoute {
+  id: string | number;
+  coordinates: number[][]; // [lng, lat]
+  color?: string;
+  weight?: number;
+  label?: string;
+}
+
 interface MapViewProps {
   initialViewState?: Partial<ViewState>;
   markers?: MapMarker[];
   floodZones?: FloodZone[];
+  routes?: MapRoute[];
   onMarkerClick?: (marker: MapMarker) => void;
   onMapClick?: (lat: number, lng: number) => void;
   showUserLocation?: boolean;
@@ -42,7 +51,7 @@ interface MapViewProps {
 }
 
 const getMarkerColor = (type: MapMarker['type'], severity?: MapMarker['severity']) => {
-  if (type === 'alert' || type === 'flood') {
+  if (type === 'alert' || type === 'flood' || (type === 'shelter' && severity)) {
     switch (severity) {
       case 'critical': return '#ef4444';
       case 'high': return '#f97316';
@@ -127,6 +136,7 @@ export default function MapView({
   },
   markers = [],
   floodZones = [],
+  routes = [],
   onMarkerClick,
   onMapClick,
   showUserLocation = true,
@@ -186,6 +196,21 @@ export default function MapView({
           );
         })}
 
+        {/* Route Polylines */}
+        {routes.map((route) => (
+          <Polyline
+            key={route.id}
+            positions={route.coordinates.map((coord) => [coord[1], coord[0]] as [number, number])}
+            pathOptions={{
+              color: route.color || '#2563eb',
+              weight: route.weight || 5,
+              opacity: 0.85,
+            }}
+          >
+            {route.label ? <Popup>{route.label}</Popup> : null}
+          </Polyline>
+        ))}
+
         {/* Markers */}
         {markers.map((marker) => (
           <Marker
@@ -197,7 +222,7 @@ export default function MapView({
             }}
           >
             <Popup>
-              <div className="min-w-[120px]">
+              <div className="min-w-30">
                 <h3 className="font-semibold text-gray-900 text-sm">
                   {marker.title || marker.type.charAt(0).toUpperCase() + marker.type.slice(1)}
                 </h3>
@@ -215,7 +240,7 @@ export default function MapView({
 
       {/* Map Legend */}
       {floodZones.length > 0 && (
-        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-[1000]">
+        <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg z-1000">
           <p className="text-xs font-semibold text-gray-700 mb-2">Flood Zones</p>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs">

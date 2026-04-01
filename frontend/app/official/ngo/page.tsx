@@ -1,368 +1,324 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import {
-  Award,
-  Trophy,
-  Download,
-  Upload,
-  FileText,
-  CheckCircle2,
-  Star,
-  TrendingUp,
-  Users,
-  Calendar,
-  MapPin,
-  Heart
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, CheckCircle, Heart, MapPin, Send, Trophy, Users } from "lucide-react";
+import { toast } from "sonner";
 
-const leaderboardData = [
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import api from "@/lib/api";
+
+type LeaderboardEntry = {
+  user_id: number;
+  name: string;
+  points: number;
+  tasks: number;
+  last_active: string | null;
+};
+
+type LeaderboardResponse = {
+  leaderboard: LeaderboardEntry[];
+};
+
+const MOCK_LEADERBOARD: LeaderboardEntry[] = [
   {
-    rank: 1,
-    name: 'Red Cross Hapur',
+    user_id: 1,
+    name: "Red Cross Hapur",
     points: 2850,
-    reports: 47,
-    lastActive: '2 hours ago',
-    award: '🏆',
-    verified: true,
+    tasks: 47,
+    last_active: new Date(Date.now() - 7200000).toISOString(),
   },
   {
-    rank: 2,
-    name: 'Green Earth Foundation',
+    user_id: 2,
+    name: "Green Earth Foundation",
     points: 2640,
-    reports: 42,
-    lastActive: '5 hours ago',
-    award: '🥈',
-    verified: true,
+    tasks: 42,
+    last_active: new Date(Date.now() - 18000000).toISOString(),
   },
   {
-    rank: 3,
-    name: 'River Care Initiative',
+    user_id: 3,
+    name: "River Care Initiative",
     points: 2360,
-    reports: 38,
-    lastActive: '1 day ago',
-    award: '🥉',
-    verified: true,
+    tasks: 38,
+    last_active: new Date(Date.now() - 86400000).toISOString(),
   },
   {
-    rank: 4,
-    name: 'Community First',
+    user_id: 4,
+    name: "Community First",
     points: 2180,
-    reports: 35,
-    lastActive: '1 day ago',
-    award: '',
-    verified: true,
+    tasks: 35,
+    last_active: new Date(Date.now() - 86400000).toISOString(),
   },
   {
-    rank: 5,
-    name: 'Hope Foundation',
+    user_id: 5,
+    name: "Hope Foundation",
     points: 1920,
-    reports: 31,
-    lastActive: '2 days ago',
-    award: '',
-    verified: false,
+    tasks: 31,
+    last_active: new Date(Date.now() - 172800000).toISOString(),
   },
 ];
 
-export default function NGOPage() {
-  const [formData, setFormData] = useState({
-    ngoName: '',
-    contactPerson: '',
-    location: '',
-    peopleHelped: '',
-    resourcesProvided: '',
-    activitiesDescription: '',
+const GUIDELINES = [
+  "Registration & verification process",
+  "Reporting requirements & deadlines",
+  "Safety protocols to follow",
+  "Points system explained",
+  "Resource allocation guidelines",
+  "Code of conduct & ethics",
+];
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return "-";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hrs = Math.floor(diff / 3600000);
+  if (hrs < 1) return "Just now";
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+export default function NGOPortalPage() {
+  const queryClient = useQueryClient();
+
+  const [form, setForm] = useState({
+    ngo_name: "",
+    contact_person: "",
+    location: "",
+    people_helped: "",
+    resources_provided: "",
+    activity_description: "",
   });
 
-  const handleDownloadGuidelines = () => {
-    window.open('/Hapur_Community_Based_Flood_Adaptation_Guidelines_2026.pdf', '_blank');
-    toast.success('Opening NGO Guidelines Documentation...');
-  };
+  const { data: lbData } = useQuery<LeaderboardResponse>({
+    queryKey: ["ngo-leaderboard-detailed"],
+    queryFn: async () => {
+      try {
+        return (await api.get("/api/ngo/leaderboard-detailed")).data;
+      } catch {
+        return { leaderboard: MOCK_LEADERBOARD };
+      }
+    },
+    initialData: { leaderboard: MOCK_LEADERBOARD },
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.ngoName || !formData.contactPerson || !formData.activitiesDescription) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+  const leaderboard = lbData?.leaderboard || [];
 
-    toast.success('Report submitted successfully!', {
-      description: 'Your submission will be reviewed and points will be awarded.',
-    });
+  const submitReport = useMutation({
+    mutationFn: async () => {
+      const res = await api.post("/api/ngo/activity-report", {
+        ...form,
+        people_helped: parseInt(form.people_helped, 10) || 0,
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Activity report submitted successfully!");
+      setForm({
+        ngo_name: "",
+        contact_person: "",
+        location: "",
+        people_helped: "",
+        resources_provided: "",
+        activity_description: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["ngo-leaderboard-detailed"] });
+    },
+    onError: (err: unknown) => {
+      if (typeof err === "object" && err !== null && "response" in err) {
+        const maybeDetail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+        toast.error(maybeDetail || "Failed to submit report");
+      } else {
+        toast.error("Failed to submit report");
+      }
+    },
+  });
 
-    // Reset form
-    setFormData({
-      ngoName: '',
-      contactPerson: '',
-      location: '',
-      peopleHelped: '',
-      resourcesProvided: '',
-      activitiesDescription: '',
-    });
+  const updateField = (field: string, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
-    <div className="pb-20">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-14 md:top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <Award className="h-6 w-6 text-violet-600" />
-                NGO Portal
-              </h1>
-              <p className="text-sm text-slate-500 mt-1">Track performance and submit activity reports</p>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-6 p-4 md:p-6">
+      <div>
+        <h1 className="flex items-center gap-2 text-xl font-bold md:text-2xl">
+          <Users className="h-6 w-6 text-purple-600" /> NGO Portal
+        </h1>
+        <p className="mt-1 text-sm text-gray-500">Track performance and submit activity reports</p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 space-y-8">
-        
-        {/* NGO Leaderboard */}
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gradient-to-r from-violet-50 to-purple-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-amber-500" />
-                <h2 className="text-lg font-bold text-slate-900">NGO Leaderboard</h2>
-              </div>
-              <div className="text-xs text-slate-500">Updated in real-time</div>
-            </div>
-          </div>
+      <Card className="p-4 md:p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-semibold">
+            <Trophy className="h-5 w-5 text-amber-500" /> NGO Leaderboard
+          </h2>
+          <Badge variant="outline" className="text-xs text-gray-400">
+            Updated in real-time
+          </Badge>
+        </div>
 
-          {/* Leaderboard Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rank</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">NGO Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Points</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Reports</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Last Active</th>
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-xs uppercase tracking-wide text-gray-400">
+                <th className="w-16 pb-3">Rank</th>
+                <th className="pb-3">NGO Name</th>
+                <th className="pb-3 text-right">Points</th>
+                <th className="pb-3 text-right">Reports</th>
+                <th className="pb-3 text-right">Last Active</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((ngo, i) => (
+                <tr key={ngo.user_id} className="border-b last:border-0 hover:bg-gray-50">
+                  <td className="py-3">
+                    <span className="text-lg">
+                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+                    </span>
+                  </td>
+                  <td className="py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{ngo.name}</span>
+                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                    </div>
+                  </td>
+                  <td className="py-3 text-right font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</td>
+                  <td className="py-3 text-right text-gray-500">{ngo.tasks} reports</td>
+                  <td className="py-3 text-right text-xs text-gray-400">{timeAgo(ngo.last_active)}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {leaderboardData.map((ngo) => (
-                  <tr key={ngo.rank} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{ngo.award}</span>
-                        <span className="font-bold text-slate-900 text-lg">#{ngo.rank}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-900">{ngo.name}</span>
-                        {ngo.verified && (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-amber-500" />
-                        <span className="font-bold text-slate-900">{ngo.points.toLocaleString()}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-slate-600">{ngo.reports} reports</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-slate-500">{ngo.lastActive}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Guidelines Section */}
-          <div className="bg-white rounded-2xl border shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-violet-600" />
-              <h3 className="font-bold text-slate-900">NGO Guidelines</h3>
+        <div className="space-y-2 md:hidden">
+          {leaderboard.map((ngo, i) => (
+            <div key={ngo.user_id} className="flex items-center gap-3 rounded-lg border p-2">
+              <span className="w-8 text-center text-lg">
+                {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{ngo.name}</p>
+                <p className="text-xs text-gray-400">
+                  {ngo.tasks} reports • {timeAgo(ngo.last_active)}
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-amber-600">★ {ngo.points.toLocaleString()}</span>
             </div>
-            
-            <div className="space-y-3 mb-6">
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Registration & verification process</span>
+          ))}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+        <Card className="p-4 md:p-5 lg:col-span-2">
+          <h2 className="mb-4 flex items-center gap-2 font-semibold">
+            <BookOpen className="h-5 w-5 text-blue-600" /> NGO Guidelines
+          </h2>
+          <div className="space-y-3">
+            {GUIDELINES.map((item, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
+                <span className="text-sm text-gray-700">{item}</span>
               </div>
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Reporting requirements & deadlines</span>
+            ))}
+          </div>
+          <Button variant="outline" className="mt-4 w-full gap-2">
+            <BookOpen className="h-4 w-4" /> Download Full Documentation
+          </Button>
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs text-amber-700">
+              <strong>Note:</strong> All NGOs must follow these guidelines to maintain their verification status.
+            </p>
+          </div>
+        </Card>
+
+        <Card className="p-4 md:p-5 lg:col-span-3">
+          <h2 className="mb-4 flex items-center gap-2 font-semibold">
+            <Send className="h-5 w-5 text-green-600" /> Submit Activity Report
+          </h2>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500">NGO Name *</label>
+                <Input
+                  placeholder="Enter your NGO name"
+                  value={form.ngo_name}
+                  onChange={(e) => updateField("ngo_name", e.target.value)}
+                />
               </div>
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Safety protocols to follow</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Points system explained</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Resource allocation guidelines</span>
-              </div>
-              <div className="flex items-start gap-2 text-sm text-slate-600">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                <span>Code of conduct & ethics</span>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-500">Contact Person *</label>
+                <Input
+                  placeholder="Your name"
+                  value={form.contact_person}
+                  onChange={(e) => updateField("contact_person", e.target.value)}
+                />
               </div>
             </div>
 
-            <Button 
-              onClick={handleDownloadGuidelines}
-              className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 flex items-center gap-1 text-xs font-medium text-gray-500">
+                  <MapPin className="h-3 w-3" /> Location
+                </label>
+                <Input
+                  placeholder="Area/ward where activity was done"
+                  value={form.location}
+                  onChange={(e) => updateField("location", e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="mb-1 flex items-center gap-1 text-xs font-medium text-gray-500">
+                  <Users className="h-3 w-3" /> People Helped
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Number of people"
+                  value={form.people_helped}
+                  onChange={(e) => updateField("people_helped", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 flex items-center gap-1 text-xs font-medium text-gray-500">
+                <Heart className="h-3 w-3" /> Resources Provided
+              </label>
+              <Input
+                placeholder="e.g., Food packets, Blankets, Medical supplies"
+                value={form.resources_provided}
+                onChange={(e) => updateField("resources_provided", e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500">Activity Description *</label>
+              <Textarea
+                placeholder="Describe what activities your NGO performed, impact created, and any challenges faced..."
+                rows={4}
+                value={form.activity_description}
+                onChange={(e) => updateField("activity_description", e.target.value)}
+              />
+            </div>
+
+            <Button
+              className="w-full gap-2"
+              onClick={() => submitReport.mutate()}
+              disabled={
+                submitReport.isPending ||
+                !form.ngo_name ||
+                !form.contact_person ||
+                !form.activity_description
+              }
             >
-              <Download className="h-4 w-4 mr-2" />
-              Download Full Documentation
+              <Send className="h-4 w-4" />
+              {submitReport.isPending ? "Submitting..." : "Submit Activity Report"}
             </Button>
-
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong> All NGOs must follow these guidelines to maintain their verification status.
-              </p>
-            </div>
           </div>
-
-          {/* Report Submission Form */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Upload className="h-5 w-5 text-violet-600" />
-              <h3 className="font-bold text-slate-900">Submit Activity Report</h3>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    NGO Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ngoName}
-                    onChange={(e) => setFormData({ ...formData, ngoName: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder="Enter your NGO name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Contact Person <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contactPerson}
-                    onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder="Your name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <MapPin className="h-4 w-4 inline mr-1" />
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder="Area/ward where activity was done"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    <Users className="h-4 w-4 inline mr-1" />
-                    People Helped
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.peopleHelped}
-                    onChange={(e) => setFormData({ ...formData, peopleHelped: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    placeholder="Number of people"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  <Heart className="h-4 w-4 inline mr-1" />
-                  Resources Provided
-                </label>
-                <input
-                  type="text"
-                  value={formData.resourcesProvided}
-                  onChange={(e) => setFormData({ ...formData, resourcesProvided: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                  placeholder="e.g., Food packets, Blankets, Medical supplies"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Activity Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={formData.activitiesDescription}
-                  onChange={(e) => setFormData({ ...formData, activitiesDescription: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500 min-h-32"
-                  placeholder="Describe what activities your NGO performed, impact created, and any challenges faced..."
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-violet-600 hover:bg-violet-700 text-white h-11"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Submit Report
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setFormData({
-                    ngoName: '',
-                    contactPerson: '',
-                    location: '',
-                    peopleHelped: '',
-                    resourcesProvided: '',
-                    activitiesDescription: '',
-                  })}
-                  className="px-6 h-11"
-                >
-                  Clear
-                </Button>
-              </div>
-            </form>
-
-            <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-              <p className="text-sm text-amber-800">
-                <strong>Tip:</strong> Include specific numbers, locations, and timestamps for faster verification and higher points!
-              </p>
-            </div>
-          </div>
-        </div>
-
+        </Card>
       </div>
     </div>
   );

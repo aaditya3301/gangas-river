@@ -1,73 +1,78 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Clock3, Filter, Loader2, MapPin, Search, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle, Filter, Loader2, MapPin, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { reportsAPI } from "@/lib/api";
 
-interface ReportRow {
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+
+type ReportRow = {
   id: number;
   latitude: number;
   longitude: number;
   category: string;
   description: string;
-  photo_url?: string;
   status: "pending" | "verified" | "rejected" | "resolved";
-  verification_score: number;
+  verification_score?: number;
   verification_notes?: string;
   reported_at: string;
-  verified_at?: string;
   reporter_name?: string;
-}
+};
 
-interface ReportStats {
+type ReportStats = {
   total: number;
   pending: number;
   verified: number;
   rejected: number;
   resolved: number;
-  by_status?: Record<string, number>;
   by_category?: Record<string, number>;
-}
+};
 
-const categories = ["all", "flood", "pollution", "infrastructure", "erosion", "other"] as const;
-const statuses = ["all", "pending", "verified", "rejected", "resolved"] as const;
-
-const statusBadgeClass: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  verified: "bg-emerald-100 text-emerald-800",
+const STATUS_COLORS: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800",
+  verified: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
   resolved: "bg-blue-100 text-blue-800",
 };
 
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (typeof error === "object" && error !== null && "response" in error) {
-    const response = (error as { response?: { data?: { detail?: string } } }).response;
-    if (response?.data?.detail) {
-      return response.data.detail;
-    }
-  }
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return fallback;
+const CATEGORY_ICONS: Record<string, string> = {
+  flood: "WAVE",
+  pollution: "POLL",
+  infrastructure: "INFRA",
+  erosion: "EROS",
+  other: "OTHER",
 };
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (typeof error === "object" && error !== null && "response" in error) {
+    const maybeDetail = (error as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+    if (maybeDetail) return maybeDetail;
+  }
+  if (error instanceof Error) return error.message;
+  return fallback;
+}
 
 export default function OfficialReportsPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<(typeof statuses)[number]>("all");
-  const [categoryFilter, setCategoryFilter] = useState<(typeof categories)[number]>("all");
-  const [search, setSearch] = useState("");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
-  const reportsQuery = useQuery<ReportRow[]>({
-    queryKey: ["reports", statusFilter, categoryFilter],
+  const { data: reports = [], isLoading } = useQuery<ReportRow[]>({
+    queryKey: ["official-reports", statusFilter, categoryFilter],
     queryFn: () =>
       reportsAPI.getAll({
         status: statusFilter !== "all" ? statusFilter : undefined,
@@ -77,196 +82,177 @@ export default function OfficialReportsPage() {
     refetchInterval: 30_000,
   });
 
-  const statsQuery = useQuery<ReportStats>({
+  const { data: stats } = useQuery<ReportStats>({
     queryKey: ["report-stats"],
     queryFn: reportsAPI.getStats,
     refetchInterval: 30_000,
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status, notes }: { id: number; status: "verified" | "rejected" | "resolved"; notes?: string }) =>
-      reportsAPI.updateStatus(id, { status, notes }),
+  const updateMutation = useMutation({
+    mutationFn: (args: { id: number; status: string; notes?: string }) =>
+      reportsAPI.updateStatus(args.id, { status: args.status, notes: args.notes }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["official-reports"] });
       queryClient.invalidateQueries({ queryKey: ["report-stats"] });
-      toast.success("Report status updated");
+      toast.success("Report updated");
     },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to update report status"));
-    },
+    onError: (error: unknown) => toast.error(getErrorMessage(error, "Failed to update report")),
   });
 
-  const filteredReports = useMemo(() => {
-    const rows = reportsQuery.data || [];
-    if (!search.trim()) {
-      return rows;
-    }
+  const mapMarkers = useMemo(
+    () =>
+      reports.map((report) => ({
+        id: report.id,
+        latitude: report.latitude,
+        longitude: report.longitude,
+        type: "report" as const,
+        title: `${report.category.toUpperCase()} #${report.id}`,
+        description: report.description.slice(0, 80),
+      })),
+    [reports]
+  );
 
-    const query = search.toLowerCase();
-    return rows.filter((report) => {
-      return (
-        report.description.toLowerCase().includes(query) ||
-        report.category.toLowerCase().includes(query) ||
-        (report.reporter_name || "").toLowerCase().includes(query)
-      );
-    });
-  }, [reportsQuery.data, search]);
+  const mapCenter = useMemo(() => {
+    if (!reports.length) {
+      return { latitude: 25.4358, longitude: 81.8463, zoom: 7 };
+    }
+    return {
+      latitude: reports[0].latitude,
+      longitude: reports[0].longitude,
+      zoom: 10,
+    };
+  }, [reports]);
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Report Validation</h1>
-        <p className="text-sm text-slate-500">Review incoming citizen reports and moderate their status.</p>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Community Reports</h1>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Total", value: stats?.total ?? "-", icon: "ALL" },
+          { label: "Pending", value: stats?.pending ?? "-", icon: "PEND" },
+          { label: "Verified", value: stats?.verified ?? "-", icon: "VER" },
+          { label: "Flood Reports", value: stats?.by_category?.flood ?? "-", icon: "FLOOD" },
+        ].map((item) => (
+          <Card key={item.label} className="p-4 flex items-center gap-3">
+            <span className="text-xs font-bold text-slate-400 bg-slate-100 rounded px-2 py-1">{item.icon}</span>
+            <div>
+              <p className="text-2xl font-bold">{item.value}</p>
+              <p className="text-sm text-gray-500">{item.label}</p>
+            </div>
+          </Card>
+        ))}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        <Card className="p-4">
-          <p className="text-xs text-slate-500">Total</p>
-          <p className="mt-1 text-2xl font-semibold text-slate-900">{statsQuery.data?.total ?? 0}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-slate-500">Pending</p>
-          <p className="mt-1 text-2xl font-semibold text-amber-600">{statsQuery.data?.pending ?? 0}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-slate-500">Verified</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-600">{statsQuery.data?.verified ?? 0}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-slate-500">Rejected</p>
-          <p className="mt-1 text-2xl font-semibold text-red-600">{statsQuery.data?.rejected ?? 0}</p>
-        </Card>
-      </div>
-
-      <Card className="p-4 space-y-3">
-        <div className="grid gap-3 md:grid-cols-4">
-          <div className="relative md:col-span-2">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              className="pl-9"
-              placeholder="Search by text, category, or reporter"
-            />
-          </div>
-
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value as (typeof categories)[number])}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm"
-          >
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category === "all" ? "All Categories" : category}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as (typeof statuses)[number])}
-            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm"
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status === "all" ? "All Statuses" : status}
-              </option>
-            ))}
-          </select>
+      <Card className="overflow-hidden">
+        <div className="p-4 border-b">
+          <h2 className="text-sm font-semibold text-slate-700">Report Map</h2>
         </div>
+        <MapView initialViewState={mapCenter} markers={mapMarkers} height="360px" showUserLocation={false} />
       </Card>
 
-      <div className="space-y-3">
-        {reportsQuery.isLoading && (
-          <Card className="p-5 text-sm text-slate-500 flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading reports...
-          </Card>
-        )}
+      <div className="flex gap-3 items-center">
+        <Filter className="w-4 h-4 text-gray-400" />
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="verified">Verified</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="resolved">Resolved</SelectItem>
+          </SelectContent>
+        </Select>
 
-        {!reportsQuery.isLoading && filteredReports.length === 0 && (
-          <Card className="p-5 text-sm text-slate-500">No reports found for the selected filters.</Card>
-        )}
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-44"><SelectValue placeholder="Category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="flood">Flood</SelectItem>
+            <SelectItem value="pollution">Pollution</SelectItem>
+            <SelectItem value="infrastructure">Infrastructure</SelectItem>
+            <SelectItem value="erosion">Erosion</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {filteredReports.map((report) => {
-          const scorePercent = Math.max(0, Math.min(100, Math.round((report.verification_score || 0) * 100)));
-          const isExpanded = expandedId === report.id;
-
-          return (
+      {isLoading ? (
+        <Card className="p-4 text-gray-500 flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Loading reports...</Card>
+      ) : reports.length === 0 ? (
+        <Card className="p-4 text-gray-500">No reports found.</Card>
+      ) : (
+        <div className="space-y-3">
+          {reports.map((report) => (
             <Card key={report.id} className="p-4">
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="capitalize bg-slate-100 text-slate-700">{report.category}</Badge>
-                    <Badge className={statusBadgeClass[report.status] || "bg-slate-100 text-slate-700"}>{report.status}</Badge>
-                    <span className="text-xs text-slate-400">#{report.id}</span>
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="text-[10px] font-semibold px-2 py-1 rounded bg-slate-100 text-slate-700">
+                      {CATEGORY_ICONS[report.category] || "OTHER"}
+                    </span>
+                    <span className="font-semibold capitalize">{report.category}</span>
+                    <Badge className={STATUS_COLORS[report.status] || "bg-slate-100 text-slate-700"}>{report.status}</Badge>
+                    {report.verification_score != null && (
+                      <span className="text-xs text-gray-500">AI: {Math.round(report.verification_score * 100)}%</span>
+                    )}
                   </div>
 
-                  <p className="text-sm text-slate-700">{isExpanded ? report.description : `${report.description.slice(0, 180)}${report.description.length > 180 ? "..." : ""}`}</p>
+                  <p className="text-sm text-gray-700 mb-1">{report.description}</p>
 
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><Clock3 className="h-3 w-3" /> {new Date(report.reported_at).toLocaleString()}</span>
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}</span>
-                    <span className="flex items-center gap-1"><AlertTriangle className="h-3 w-3" /> {report.reporter_name || "Anonymous"}</span>
+                  <div className="flex gap-4 text-xs text-gray-400 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {report.latitude.toFixed(4)}, {report.longitude.toFixed(4)}
+                    </span>
+                    <span>{new Date(report.reported_at).toLocaleString("en-IN")}</span>
+                    <span>By: {report.reporter_name || "Anonymous"}</span>
                   </div>
 
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>AI Verification Score</span>
-                      <span>{scorePercent}%</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-slate-100">
-                      <div
-                        className={`h-full rounded-full ${scorePercent >= 80 ? "bg-emerald-500" : scorePercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                        style={{ width: `${scorePercent}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {isExpanded && report.verification_notes && (
-                    <div className="rounded-md bg-slate-50 p-2 text-xs text-slate-600">
-                      Notes: {report.verification_notes}
-                    </div>
+                  {report.verification_notes && (
+                    <p className="text-xs text-gray-500 mt-1 italic">AI Notes: {report.verification_notes}</p>
                   )}
                 </div>
 
-                <div className="flex w-full flex-col gap-2 md:w-52">
-                  <Button variant="outline" size="sm" onClick={() => setExpandedId(isExpanded ? null : report.id)} className="gap-2">
-                    <Filter className="h-4 w-4" /> {isExpanded ? "Collapse" : "Expand"}
-                  </Button>
+                {report.status === "pending" && (
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-600 border-green-300"
+                      onClick={() => updateMutation.mutate({ id: report.id, status: "verified" })}
+                      disabled={updateMutation.isPending}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" /> Verify
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600 border-red-300"
+                      onClick={() => updateMutation.mutate({ id: report.id, status: "rejected" })}
+                      disabled={updateMutation.isPending}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" /> Reject
+                    </Button>
+                  </div>
+                )}
 
+                {report.status === "verified" && (
                   <Button
                     size="sm"
-                    className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-                    disabled={updateStatusMutation.isPending || report.status === "verified"}
-                    onClick={() => updateStatusMutation.mutate({ id: report.id, status: "verified" })}
+                    variant="outline"
+                    className="text-blue-600 border-blue-300"
+                    onClick={() => updateMutation.mutate({ id: report.id, status: "resolved" })}
+                    disabled={updateMutation.isPending}
                   >
-                    <CheckCircle2 className="h-4 w-4" /> Verify
+                    Mark Resolved
                   </Button>
-
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    className="gap-2"
-                    disabled={updateStatusMutation.isPending || report.status === "rejected"}
-                    onClick={() => updateStatusMutation.mutate({ id: report.id, status: "rejected" })}
-                  >
-                    <XCircle className="h-4 w-4" /> Reject
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                    disabled={updateStatusMutation.isPending || report.status === "resolved"}
-                    onClick={() => updateStatusMutation.mutate({ id: report.id, status: "resolved", notes: "Resolved by field team" })}
-                  >
-                    <ShieldCheck className="h-4 w-4" /> Mark Resolved
-                  </Button>
-                </div>
+                )}
               </div>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
