@@ -19,7 +19,7 @@ export default function VoiceAssistantPage() {
   return (
     <div className="flex h-[calc(100vh-10rem)] min-h-155 flex-col gap-4">
       <PageHeader
-        title="Voice Assistant"
+        title="Chat Assistant"
         description="Use voice or text to get flood safety help"
         icon={MessageCircle}
         iconColor="text-blue-600"
@@ -32,7 +32,7 @@ export default function VoiceAssistantPage() {
       />
 
       <div className="flex-1 min-h-0">
-        <VoiceAssistant language={isHindi ? "hi-IN" : "en-IN"} initialGreeting={greeting} />
+        <VoiceAssistant language={isHindi ? "hi-IN" : "en-US"} initialGreeting={greeting} />
       </div>
     </div>
   );

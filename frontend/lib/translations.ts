@@ -5,7 +5,7 @@ export const translations = {
     floodPrediction: "Flood Prediction",
     reportIncident: "Report Incident",
     safeRoutes: "Safe Routes",
-    voiceAssistant: "Voice Assistant",
+    voiceAssistant: "Chat Assistant",
     userProfile: "User",
     roleCitizen: "Citizen",
     signOut: "Sign Out",
@@ -93,7 +93,7 @@ export const translations = {
     aiVerificationNote: "Your report will be verified by our AI System instantly.",
     
     // Voice
-    voiceTitle: "Voice Assistant",
+    voiceTitle: "Chat Assistant",
     voiceDesc: "Speak to ask for help, report issues, or get updates in your language.",
     tapToSpeak: "Tap microphone to speak",
     listening: "Listening...",
@@ -115,7 +115,7 @@ export const translations = {
     floodPrediction: "बाढ़ की भविष्यवाणी",
     reportIncident: "घटना की सूचना दें",
     safeRoutes: "सुरक्षित रास्ते",
-    voiceAssistant: "वॉयस असिस्टेंट",
+    voiceAssistant: "चैट असिस्टेंट",
     userProfile: "उपयोगकर्ता",
     roleCitizen: "नागरिक",
     signOut: "साइन आउट",
@@ -203,7 +203,7 @@ export const translations = {
     aiVerificationNote: "आपकी रिपोर्ट को हमारे एआई सिस्टम द्वारा तुरंत सत्यापित किया जाएगा।",
 
     // Voice
-    voiceTitle: "वॉयस असिस्टेंट",
+    voiceTitle: "चैट असिस्टेंट",
     voiceDesc: "मदद मांगने, समस्याओं की रिपोर्ट करने, या अपनी भाषा में अपडेट प्राप्त करने के लिए बोलें।",
     tapToSpeak: "बोलने के लिए माइक्रोफ़ोन टैप करें",
     listening: "सुन रहा हूँ...",

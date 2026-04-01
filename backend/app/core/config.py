@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     TWILIO_PHONE_NUMBER: str | None = None
     TWILIO_WHATSAPP_NUMBER: str | None = None  # e.g. whatsapp:+14155238886
     FAST2SMS_API_KEY: str | None = None
+    GROQ_API_KEY: str | None = None
+    GROQ_MODEL: str = "llama-3.1-8b-instant"
     BACKEND_PUBLIC_URL: str | None = None
     SENTINEL_HUB_CLIENT_ID: str | None = None
     SENTINEL_HUB_CLIENT_SECRET: str | None = None

@@ -18,7 +18,7 @@ interface ChatMessage {
 
 interface VoiceAssistantProps {
   initialGreeting?: string;
-  language?: "en-IN" | "hi-IN";
+  language?: "en-US" | "hi-IN";
 }
 
 interface SpeechRecognitionEventLike {
@@ -71,7 +71,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 export default function VoiceAssistant({
   initialGreeting = "Hello. I can help with flood safety, nearby shelters, and live reports.",
-  language = "en-IN",
+  language = "en-US",
 }: VoiceAssistantProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -84,6 +84,7 @@ export default function VoiceAssistant({
   ]);
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const speechRetryRef = useRef(0);
   const scrollEndRef = useRef<HTMLDivElement | null>(null);
   const sendMessageRef = useRef<(text: string) => Promise<void>>(async () => {});
 
@@ -146,6 +147,22 @@ export default function VoiceAssistant({
         return;
       }
       if (event.error === "no-speech") {
+        return;
+      }
+      if (event.error === "network") {
+        // One automatic retry smooths over transient speech-service connection failures.
+        if (speechRetryRef.current === 0) {
+          speechRetryRef.current = 1;
+          setTimeout(() => {
+            try {
+              recognition.start();
+            } catch {
+              // Ignore immediate restart race; user can retry manually.
+            }
+          }, 300);
+          return;
+        }
+        toast.error("Voice input is unavailable right now. Please use text input or try again.");
         return;
       }
       toast.error(`Voice input error: ${event.error}`);
@@ -230,6 +247,7 @@ export default function VoiceAssistant({
       return;
     }
 
+    speechRetryRef.current = 0;
     recognitionRef.current?.start();
   };
 

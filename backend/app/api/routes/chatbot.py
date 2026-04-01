@@ -1,14 +1,14 @@
-"""Context-aware citizen voice assistant routes."""
+"""Context-aware citizen chat assistant routes."""
 
-import os
 from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.db import CommunityReport, get_db
 
 try:
@@ -26,7 +26,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    history: list[ChatMessage] = []
+    history: list[ChatMessage] = Field(default_factory=list)
 
 
 def _format_live_context(total: int, pending: int, flood_count: int, recent_lines: list[str]) -> str:
@@ -112,7 +112,7 @@ def _build_system_prompt(live_context: str) -> str:
 @router.post("/chat")
 async def chat_with_groq(request: ChatRequest, db: AsyncSession = Depends(get_db)):
     """Chat endpoint with optional history and live report context."""
-    api_key = os.environ.get("GROQ_API_KEY")
+    api_key = settings.GROQ_API_KEY
     if not api_key or Groq is None:
         fallback = "I can help with flood safety, safe routes, and reporting incidents, but AI service is not configured yet."
         return {"response": fallback, "reply": fallback, "context_used": False}
@@ -128,19 +128,31 @@ async def chat_with_groq(request: ChatRequest, db: AsyncSession = Depends(get_db
 
     try:
         client = Groq(api_key=api_key)  # type: ignore[operator]
-        chat_completion = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=messages,
-            temperature=0.6,
-            max_tokens=400,
-            top_p=1,
-            stream=False,
-        )
+        candidate_models = [
+            settings.GROQ_MODEL,
+            "llama-3.1-8b-instant",
+            "llama-3.3-70b-versatile",
+        ]
 
-        reply = chat_completion.choices[0].message.content
-        if not isinstance(reply, str):
-            reply = "I can help with flood safety guidance and routes."
-        return {"response": reply, "reply": reply, "context_used": True}
+        for model_name in dict.fromkeys(candidate_models):
+            try:
+                chat_completion = client.chat.completions.create(
+                    model=model_name,
+                    messages=messages,
+                    temperature=0.6,
+                    max_tokens=400,
+                    top_p=1,
+                    stream=False,
+                )
+                reply = chat_completion.choices[0].message.content
+                if not isinstance(reply, str):
+                    reply = "I can help with flood safety guidance and routes."
+                return {"response": reply, "reply": reply, "context_used": True, "model": model_name}
+            except Exception:
+                continue
+
+        fallback = "I am having trouble connecting to AI right now. Please try again shortly."
+        return {"response": fallback, "reply": fallback, "context_used": True}
     except Exception:
         fallback = "I am having trouble connecting to AI right now. Please try again shortly."
         return {"response": fallback, "reply": fallback, "context_used": True}
